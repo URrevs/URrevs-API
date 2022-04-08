@@ -20,6 +20,7 @@ jobs:
       run: |
         cd urrevs
         npm install mocha chai chai-http supertest --save-dev
+        export DB_URI=mongodb+srv://urrevs:urrevsrocks@urrevs-local.mxhif.mongodb.net/urrevs?retryWrites=true&w=majority
         npm start &
         PID=$!
         sleep 5
