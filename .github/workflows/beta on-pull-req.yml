@@ -19,8 +19,8 @@ jobs:
     - name: Testing Server
       run: |
         cd urrevs
-      # npm install mocha chai chai-http supertest --save-dev
+        npm install mocha chai chai-http supertest --save-dev
         npm start &
         PID=$!
-        sleep = 5
+        sleep 5
         kill $PID
