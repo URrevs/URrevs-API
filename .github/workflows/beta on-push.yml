@@ -55,7 +55,7 @@ jobs:
 
 
   mergeToMain:
-    needs: [DeployToHeroku]
+    needs: [DeployToHeroku1, DeployToHeroku2]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
