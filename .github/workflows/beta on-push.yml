@@ -21,13 +21,14 @@ jobs:
       run: |
         cd urrevs
         npm install mocha chai chai-http supertest --save-dev
+        export DB_URI=mongodb+srv://urrevs:urrevsrocks@urrevs-local.mxhif.mongodb.net/urrevs?retryWrites=true&w=majority
         npm start &
         PID=$!
         sleep 5
         kill $PID
 
 
-  DeployToHeroku1:
+  DeployToHerokuMobile:
     needs: [BuildAndTest]
     runs-on: ubuntu-latest
     steps:
@@ -37,11 +38,11 @@ jobs:
       with:
         heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
         heroku_email: ${{ secrets.MAIL }}
-        heroku_app_name: urrevs-api-dev-1
+        heroku_app_name: urrevs-api-dev-mobile
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
 
-  DeployToHeroku2:
-    needs: [DeployToHeroku1]
+  DeployToHerokuWeb:
+    needs: [DeployToHerokuMobile]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -50,12 +51,12 @@ jobs:
       with:
         heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
         heroku_email: ${{ secrets.MAIL }}
-        heroku_app_name: urrevs-api-dev-2
+        heroku_app_name: urrevs-api-dev-web
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
 
 
   mergeToMain:
-    needs: [DeployToHeroku2]
+    needs: [DeployToHerokuWeb]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
