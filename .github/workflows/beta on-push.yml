@@ -1,0 +1,67 @@
+name: NodeJS application
+
+on:
+  push:
+    branches: [ beta ]
+    
+jobs:  
+
+  BuildAndTest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install Dependencies
+      run: |
+        cd urrevs
+        npm install
+    - name: Testing Server
+      run: |
+        cd urrevs
+        npm install mocha chai chai-http supertest --save-dev
+        npm start &
+        PID=$!
+        sleep 5
+        kill $PID
+
+
+  DeployToHeroku1:
+    needs: [BuildAndTest]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
+        heroku_email: ${{ secrets.MAIL }}
+        heroku_app_name: urrevs-api-dev-1
+        appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
+
+  DeployToHeroku2:
+    needs: [DeployToHeroku1]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy to Heroku
+      uses: akhileshns/heroku-deploy@v3.12.12
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
+        heroku_email: ${{ secrets.MAIL }}
+        heroku_app_name: urrevs-api-dev-2
+        appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
+
+
+  mergeToMain:
+    needs: [DeployToHeroku2]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Merge staging -> main
+        uses: devmasx/merge-branch@v1.3.1
+        with:
+          type: now
+          target_branch: main
+          github_token: ${{ github.token }}
