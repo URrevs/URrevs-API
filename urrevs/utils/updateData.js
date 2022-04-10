@@ -7,6 +7,32 @@ const SOURCE = "https://www.gsmarena.com";
 const EUR_TO_USD = 1.0878;
 const USD_TO_EUR = 0.92;
 const DELAY_AMOUNT = 3000;
+const EXCHANGE_RATES_API = "http://api.exchangeratesapi.io/v1";
+let conversionFromUSDtoEur = null;
+
+const convertFromUSDtoEUR = async(conversion, backup)=>{
+  if(!conversion){
+    // Get latest conversions from USD to EUR
+    let exRates;
+    try{
+      exRates = await axios.get(EXCHANGE_RATES_API+"/latest", {params: {access_key: process.env.EXCHANGE_RATES_ACCESS_KEY, symbols:"USD,EUR"}});
+      let rates = exRates.data.rates;
+      let oneEur = rates.EUR;
+      let oneUsd = rates.USD;
+      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", oneEur / oneUsd);
+      return oneEur / oneUsd;
+    }
+    catch(e){
+      console.log("Auto Conversion failed: ", "coversion from USD to EUR = ", backup);
+      console.log(exRates);
+      return backup;
+    }
+  }
+  else{
+    return conversion;
+  }
+}
+
 
 /*
     Asynchronous delay
@@ -872,12 +898,15 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                   if(!isNaN(parseFloat(miscPriceAll[1]))){
                     currency = miscPriceAll[2];
                     if(currency.match(new RegExp("EUR", "i"))){
-                      miscPrice = parseFloat(miscPriceAll[1]);
+                      miscPrice = parseFloat(miscPriceAll[1]); // in EUR
                     }
                   }
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
-                    miscPrice = parseFloat(miscPrice[1].substring(1));
+
+                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+  
+                    miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
                   }
                 }
                 else{
@@ -885,14 +914,17 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                     let dollarPrice = miscPriceAll.filter((item)=>{
                       return item[0] == "€";
                     })[0];
-                    miscPrice = parseFloat(dollarPrice.substring(1));
+                    miscPrice = parseFloat(dollarPrice.substring(1)); // in EUR
                   }
                   catch(e){
                     try{
                       let euroPrice = miscPriceAll.filter((item)=>{
                         return item[0] == "$";
                       })[0];
-                      miscPrice = parseFloat(euroPrice.substring(1)) * USD_TO_EUR;
+
+                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+
+                      miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
                     }
                     catch(e){
                       miscPrice = null;
@@ -952,7 +984,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
               batteryCharging: batteryCharging,
               miscPrice: miscPrice,
               //-----------------------------
-              mlPrice: miscPrice,
+              mlPrice: miscPrice.toString(),
               mlName: brand.name + ' ' + newPhones[i].name,
               mlComp: brand._id,
               mlReleaseDate: launchReleaseDate,
