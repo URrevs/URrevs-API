@@ -11,9 +11,6 @@ const phoneSpecsSchema = new schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
     },
-    picture: {
-        type: String
-    },
     price: {
         type: String
     },
