@@ -1,14 +1,12 @@
 const request = require('request');
 const cheerio = require('cheerio');
 const axios = require('axios');
-const { first } = require('cheerio/lib/api/traversing');
 
 const SOURCE = "https://www.gsmarena.com";
-const EUR_TO_USD = 1.0878;
-const USD_TO_EUR = 0.92;
-const DELAY_AMOUNT = 3000;
+// const EUR_TO_USD = 1.0878;
+// const USD_TO_EUR = 0.92;
+// const DELAY_AMOUNT = 3000;
 const EXCHANGE_RATES_API = "http://api.exchangeratesapi.io/v1";
-let conversionFromUSDtoEur = null;
 
 const convertFromUSDtoEUR = async(conversion, backup)=>{
   if(!conversion){
@@ -154,10 +152,12 @@ exports.getBrandsLinks = ()=>{
     once the list of new phones is completed, we iterate over it and use the url to access the specs for each phone in the list 
 */
 exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
+  let conversionFromUSDtoEur = null;
+  let newStoredPhones = [];
+  
     return new Promise(async(resolve, reject)=>{
       let newPhones = [];
       try{
-
         let response = await axios.get(SOURCE + '/' + brandUrl);
         $ = cheerio.load(response.data);
         let phones = $('.makers').find('li');
@@ -178,7 +178,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
         }
         let nextPage = $('a.pages-next').attr('href');
         while(nextPage != "#1" && nextPage != null && goNextPage == true){
-            await delay(DELAY_AMOUNT);
+            await delay(parseInt(process.env.DELAY_AMOUNT));
             let responsePage = await axios.get(SOURCE + '/' + nextPage);
             $ = cheerio.load(responsePage.data);
             let phones = $('.makers').find('li');
@@ -200,10 +200,11 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
         }
         
         newPhones = newPhones.reverse();
-        let newStoredPhones = [];
+        
+        //let newStoredPhones = [];
 
         for(let i=0; i<newPhones.length; i++){
-            await delay(DELAY_AMOUNT);
+            await delay(parseInt(process.env.DELAY_AMOUNT));
             let sepcsResponse = await axios.get(SOURCE + '/' + newPhones[i].url);
             $ = cheerio.load(sepcsResponse.data);
             
@@ -904,7 +905,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
 
-                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, parseFloat(process.env.USD_TO_EUR));
   
                     miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
                   }
@@ -922,7 +923,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                         return item[0] == "$";
                       })[0];
 
-                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, parseFloat(process.env.USD_TO_EUR));
 
                       miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
                     }
@@ -1096,7 +1097,10 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
         resolve(newStoredPhones);
       }
       catch(err){
-        reject(err);
+        reject({
+          err: err,
+          phones: newStoredPhones
+        });
       }
     });
 }

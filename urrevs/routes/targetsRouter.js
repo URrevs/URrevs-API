@@ -99,10 +99,10 @@ targetsRouter.get("/brands/:url", (req,res,next)=>{
           res.setHeader("Content-Type", "application/json");
           res.json({success: true, num: newPhones.length ,phones: newPhones});
         })
-        .catch((err)=>{
+        .catch((errWithPhones)=>{
           res.statusCode = 500;
           res.setHeader("Content-Type", "application/json");
-          res.json({success: false, err: err});
+          res.json({success: false, num:errWithPhones.phones.length, phones: errWithPhones.phones, err: errWithPhones.err});
         });
       })
       .catch((err)=>{
