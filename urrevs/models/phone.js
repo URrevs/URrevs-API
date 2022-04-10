@@ -8,11 +8,15 @@ const schema = mongoose.Schema;
 
 const phoneSchema = new schema({
     name: {
-        type: String
+        type: String,
+        index: true
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Company"
+    },
+    picture: {
+        type: String
     },
     generalRating: {
         type: Number
@@ -45,6 +49,9 @@ const phoneSchema = new schema({
         type: Number,
         default: 0
     }
+}, 
+{
+    timestamps: true
 });
 
 module.exports = mongoose.model("Phone", phoneSchema);

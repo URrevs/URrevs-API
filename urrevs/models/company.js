@@ -10,6 +10,7 @@ const schema = mongoose.Schema;
 const companySchema = new schema({
     name:{
         type: String,
+        index: true
     },
     views:{
         type: Number,
