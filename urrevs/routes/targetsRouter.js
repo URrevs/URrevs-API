@@ -800,12 +800,14 @@ targetsRouter.get("/brands/specs/:url", async(req, res, next)=>{
                     if(currency.match(new RegExp("EUR", "i"))){
                       miscPrice = parseFloat(miscPriceAll[1]); // in EUR
                     }
+                    else if(currency.match(new RegExp("USD", "i"))){
+                      //conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+                      miscPrice = parseFloat(miscPriceAll[1]) //* conversionFromUSDtoEur;
+                    }
                   }
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
-
                     conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
-  
                     miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
                   }
                 }
