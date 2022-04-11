@@ -985,7 +985,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
               batteryCharging: batteryCharging,
               miscPrice: isNaN(miscPrice)?null:miscPrice,
               //-----------------------------
-              mlPrice: (miscPrice != null)?(miscPrice.toString()):null,
+              mlPrice: (miscPrice == null || isNaN(miscPrice))?null:miscPrice,
               mlName: brand.name + ' ' + newPhones[i].name,
               mlComp: brand._id,
               mlReleaseDate: launchReleaseDate,
