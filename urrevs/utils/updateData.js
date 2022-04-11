@@ -1,19 +1,16 @@
-const request = require('request');
 const cheerio = require('cheerio');
 const axios = require('axios');
+const config = require("../config");
+const request = require('request');
 
-const SOURCE = "https://www.gsmarena.com";
-// const EUR_TO_USD = 1.0878;
-// const USD_TO_EUR = 0.92;
-// const DELAY_AMOUNT = 3000;
-const EXCHANGE_RATES_API = "http://api.exchangeratesapi.io/v1";
+
 
 const convertFromUSDtoEUR = async(conversion, backup)=>{
   if(!conversion){
     // Get latest conversions from USD to EUR
     let exRates;
     try{
-      exRates = await axios.get(EXCHANGE_RATES_API+"/latest", {params: {access_key: process.env.EXCHANGE_RATES_ACCESS_KEY, symbols:"USD,EUR"}});
+      exRates = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"USD,EUR"}});
       let rates = exRates.data.rates;
       let oneEur = rates.EUR;
       let oneUsd = rates.USD;
@@ -31,6 +28,7 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
   }
 }
 
+//exports.convertFromUSDtoEUR = convertFromUSDtoEUR;
 
 /*
     Asynchronous delay
@@ -145,19 +143,23 @@ exports.getBrandsLinks = ()=>{
     given the name of the most recently-added phone of a certain company
     given the company profile (brand)
     given the PHONE collection
-
     it collects the name, img, and url of the phones that are later than the latest phone we have for that company
     it supports auto pagination with a 1 sec delay before each page
-
     once the list of new phones is completed, we iterate over it and use the url to access the specs for each phone in the list 
 */
 exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
-  let conversionFromUSDtoEur = null;
-  let newStoredPhones = [];
-  
     return new Promise(async(resolve, reject)=>{
+      let conversionFromUSDtoEur = null;
+      let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
+      let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
+      let SOURCE = config.SOURCE;
       let newPhones = [];
+      let newStoredPhones = [];
+
+      console.log("current delay: ", DELAY_AMOUNT);
+
       try{
+        
         let response = await axios.get(SOURCE + '/' + brandUrl);
         $ = cheerio.load(response.data);
         let phones = $('.makers').find('li');
@@ -178,7 +180,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
         }
         let nextPage = $('a.pages-next').attr('href');
         while(nextPage != "#1" && nextPage != null && goNextPage == true){
-            await delay(parseInt(process.env.DELAY_AMOUNT));
+            await delay(DELAY_AMOUNT);
             let responsePage = await axios.get(SOURCE + '/' + nextPage);
             $ = cheerio.load(responsePage.data);
             let phones = $('.makers').find('li');
@@ -200,11 +202,9 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
         }
         
         newPhones = newPhones.reverse();
-        
-        //let newStoredPhones = [];
 
         for(let i=0; i<newPhones.length; i++){
-            await delay(parseInt(process.env.DELAY_AMOUNT));
+            await delay(DELAY_AMOUNT);
             let sepcsResponse = await axios.get(SOURCE + '/' + newPhones[i].url);
             $ = cheerio.load(sepcsResponse.data);
             
@@ -348,7 +348,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
             }
 
 
-
+            console.log("Adding: ", newPhones[i].url);
             // getting specs of valid phones
             //---------------------------------
             
@@ -905,7 +905,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
 
-                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, parseFloat(process.env.USD_TO_EUR));
+                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
   
                     miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
                   }
@@ -923,7 +923,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                         return item[0] == "$";
                       })[0];
 
-                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, parseFloat(process.env.USD_TO_EUR));
+                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
 
                       miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
                     }
@@ -983,9 +983,9 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
               featuresSensors: featuresSensors,
               batteryType: batteryType,
               batteryCharging: batteryCharging,
-              miscPrice: miscPrice,
+              miscPrice: isNaN(miscPrice)?null:miscPrice,
               //-----------------------------
-              mlPrice: miscPrice.toString(),
+              mlPrice: (miscPrice != null)?(miscPrice.toString()):null,
               mlName: brand.name + ' ' + newPhones[i].name,
               mlComp: brand._id,
               mlReleaseDate: launchReleaseDate,
@@ -1104,5 +1104,3 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
       }
     });
 }
-
-

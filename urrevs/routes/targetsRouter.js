@@ -69,6 +69,11 @@ targetsRouter.get("/brands/endpoints", (req,res,next)=>{
   the "update" function returns the newly added phones for that company
   it returns the full phone profile for the newly added phones
 */
+
+targetsRouter.get("/", (req, res, next)=>{
+  res.send(process.env.TEST);
+});
+
 targetsRouter.get("/brands/:url", (req,res,next)=>{
   let url = req.params.url;
   let brandName = req.query.bname;
@@ -240,411 +245,1049 @@ targetsRouter.get("/brands/specs/:url", async(req, res, next)=>{
   }
 
 
+  let conversionFromUSDtoEur = null;
+  let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
+  let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
+  let newPhones = [];
+  let newStoredPhones = [];
+
+            // network: technology
+            try{
+              let network = spec_detail.filter((item)=>{
+                return item.category == "Network";
+              });
+              let networkTechField = network[0].specs.filter((item)=>{
+                return item.name == "Technology";
+              });
+              networkTech = networkTechField[0].value.trim();
+            }
+            catch(e){
+              networkTech = null;
+            };
+
+            // release date
+            try{
+              let release = $('span[data-spec=released-hl]').text();
+              release = release.trim();
+              let releaseArr = release.split(" ");
+              releaseArr.shift();
+              launchReleaseDate = releaseArr.join(" ");
+            }
+            catch(e){
+              launchReleaseDate = null;
+            }
+            
+            // body: weight, dimensions, sim
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Body";
+              });
+              try{
+                let allDimesnions = body[0].specs.filter((item)=>{
+                  return item.name == "Dimensions"; 
+                })[0].value.trim();
+                allDimesnions = allDimesnions.split(" ").slice(0, 6);
+                bodyDimensions = allDimesnions.join(" ");
+
+                try{
+                  length = allDimesnions[0];
+                  width = allDimesnions[2];
+                  height = allDimesnions[4];
+                }
+                catch(e){
+                  length = "0";
+                  width = "0";
+                  height = "0";
+                }
+
+              }
+              catch(e){
+                bodyDimensions = null;
+                length = "0";
+                width = "0";
+                height = "0";
+              }
+              try{
+                let allWeight = body[0].specs.filter((item)=>{
+                  return item.name == "Weight"; 
+                })[0].value.trim();
+
+                allWeight = allWeight.split(" ").slice(0, 2);
+                weightNum = allWeight[0];
+                bodyWeight = allWeight.join(" ");
+              }
+              catch(e){
+                bodyWeight = null;
+                weightNum = "0";
+              }
+              try{
+                bodySim = body[0].specs.filter((item)=>{
+                  return item.name == "SIM"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                bodySim = null;
+              }
+            }
+            catch (e){
+              bodyDimensions = null;
+              bodyWeight = null;
+              bodySim = null;
+              length = "0";
+              width = "0";
+              height = "0";
+              weightNum = "0";
+            }
+
+            // display: type, size, resolution, protection
+            try{
+              displayType = displayInfo[0].specs.filter((item)=>{
+                return item.name == "Type";
+              })[0].value.trim();
+            }
+            catch(e){
+              displayType = null;
+            }
+
+            try{
+              displayResolution = displayInfo[0].specs.filter((item)=>{
+                return item.name == "Resolution";
+              })[0].value.trim();
+
+              let resolutionElements = displayResolution.split(" ");
+
+              try{
+                resolutionLength = resolutionElements[0];
+                resolutionWidth = resolutionElements[2];
+              }
+              catch(e){
+                resolutionLength = "0"
+                resolutionWidth = "0"
+              }
+              
+              try{
+                let resolutionDensityElements = resolutionElements.filter((item)=>{
+                  return item[0] == "(";
+                });
+                resolutionDensityElements = resolutionDensityElements[0].split(" ");
+                resolutionDensity = resolutionDensityElements[0].substring(2);
+              }
+              catch(e){
+                resolutionDensity = "0";
+              }
+            }
+            catch(e){
+              displayResolution = null;
+              resolutionLength = "0";
+              resolutionWidth = "0";
+              resolutionDensity = "0";
+            }
+
+            try{
+              displayProtection = displayInfo[0].specs.filter((item)=>{
+                return item.name == "Protection";
+              })[0].value.trim();
+            }
+            catch(e){
+              displayProtection = null;
+            }
+
+            try{
+              displaySize = displaySizeObj;
+            }
+            catch(e){
+              displaySize = null;
+            }
+            // try{
+            //   let displayInfo = spec_detail.filter((item)=>{
+            //     return item.category == "Display";
+            //   });
+
+
+            // }
+            // catch(e){
+            //   displayType = null;
+            //   displayResolution = null;
+            //   displayProtection = null;
+            //   displaySize = null;
+            // }
+
+            // platform Os, Chipset, Cpu, Gpu,
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Platform";
+              });
+              try{
+                platformOs = body[0].specs.filter((item)=>{
+                  return item.name == "OS"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                platformOs = null;
+              }
+              try{
+                platformChipset = body[0].specs.filter((item)=>{
+                  return item.name == "Chipset"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                platformChipset = null;
+              }
+              try{
+                platformCpu = body[0].specs.filter((item)=>{
+                  return item.name == "CPU"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                platformCpu = null;
+              }
+              try{
+                platformGpu = body[0].specs.filter((item)=>{
+                  return item.name == "GPU"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                platformGpu = null;
+              } 
+            }
+            catch (e){
+              platformOs = null;
+              platformChipset = null;
+              platformCpu = null;
+              platformGpu = null;
+            }
+
+            // memory: CardSlot, Internal
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Memory";
+              });
+              try{
+                memoryCardSlot = body[0].specs.filter((item)=>{
+                  return item.name == "Card slot"; 
+                })[0].value.trim();
+              }
+              catch(e){
+                memoryCardSlot = null;
+              }
+              try{
+                memoryInternal = body[0].specs.filter((item)=>{
+                  return item.name == "Internal"; 
+                })[0].value.trim();
+
+                intMemArr = memoryInternal.split(",");
+                for(let c=0; c<intMemArr.length; c++){
+                  intMemArr[c] = intMemArr[c].trim();
+                }
+              }
+              catch(e){
+                memoryInternal = null;
+                intMemArr = [];
+              }
+            }
+            catch (e){
+              memoryInternal = null;
+              memoryCardSlot = null;
+              intMemArr = [];
+            }
+
+
+            // main camera: mainCameraTypeSpaceDetails
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Main Camera";
+              });
+              try{
+                let cameraType = body[0].specs[0].name.trim();
+                let cameraDetails = body[0].specs[0].value.trim();
+                mainCameraTypeSpaceDetails = (cameraType + " " + cameraDetails).trim();
+                if(mainCameraTypeSpaceDetails == ""){
+                  mainCameraTypeSpaceDetails = null;
+                }
+              }
+              catch(e){
+                mainCameraTypeSpaceDetails = null;
+              }
+            }
+            catch (e){
+              mainCameraTypeSpaceDetails = null;
+            }
+
+
+            // selfie camera: selfieCameraTypeSpaceDetails
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Selfie camera";
+              });
+              try{
+                let cameraType = body[0].specs[0].name.trim();
+                let cameraDetails = body[0].specs[0].value.trim();
+                selfieCameraTypeSpaceDetails = (cameraType + " " + cameraDetails).trim();
+                if(selfieCameraTypeSpaceDetails == ""){
+                  selfieCameraTypeSpaceDetails = null;
+                }
+              }
+              catch(e){
+                selfieCameraTypeSpaceDetails = null;
+              }
+            }
+            catch (e){
+              selfieCameraTypeSpaceDetails = null;
+            }
+
+            // sound: LoudSpeaker, 3.5mm,
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Sound";
+              });
+              try{
+                soundLoudSpeaker = body[0].specs.filter((item)=>{
+                  return item.name == "Loudspeaker";
+                })[0].value.trim();
+
+                loudSpeaker = (soundLoudSpeaker.match(new RegExp("yes", "i")))? true: false;
+                withSterio = (soundLoudSpeaker.match(new RegExp("stereo", "i")))? true: false;
+              }
+              catch(e){
+                soundLoudSpeaker = null;
+                loudSpeaker = false;
+                withSterio = false;
+              }
+              try{
+                sound3p5mm = body[0].specs.filter((item)=>{
+                  return item.name == "3.5mm jack";
+                })[0].value.trim();
+
+                sound3p5mmBool = (sound3p5mm.match(new RegExp("yes", "i")))?true:false;
+              }
+              catch(e){
+                sound3p5mm = null;
+                sound3p5mmBool = false;
+              }
+            }
+            catch (e){
+              soundLoudSpeaker = null;
+              sound3p5mm = null;
+              loudSpeaker = false;
+              withSterio = false;
+              sound3p5mmBool = false;
+            }
+
+            // comms: Wlan, Bluetooth, Gps, Nfc, Radio, Usb
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Comms";
+              });
+              try{
+                commsWlan = body[0].specs.filter((item)=>{
+                  return item.name == "WLAN";
+                })[0].value.trim();
+              }
+              catch(e){
+                commsWlan = null;
+              }
+              try{
+                commsBluetooth = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "Bluetooth";
+                })[0].value.trim();
+
+                bluetoothVersion = commsBluetooth.split(",").filter((item)=>{
+                  return !(isNaN(parseFloat(item)));
+                });
+                
+                if(bluetoothVersion.length > 0){
+                  bluetoothVersion = bluetoothVersion[0].trim();
+                }
+                else{
+                  bluetoothVersion = "0";
+                }
+              }
+              catch(e){
+                commsBluetooth = null;
+                bluetoothVersion = "0";
+              }
+              try{
+                commsGps = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "GPS";
+                })[0].value.trim();
+              }
+              catch(e){
+                commsGps = null;
+              }
+              try{
+                commsNfc = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "NFC";
+                })[0].value.trim();
+
+                nfcBool = (commsNfc.match(new RegExp("yes", "i")))?true:false;
+              }
+              catch(e){
+                commsNfc = null;
+                nfcBool = false;
+              }
+              try{
+                commsRadio = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "Radio";
+                })[0].value.trim();
+              }
+              catch(e){
+                commsRadio = null;
+              }
+              try{
+                commsUsb = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "USB";
+                })[0].value.trim();
+
+                usbVersion = "0";
+                let usbTypeElems = [];
+                let commUsbElems = commsUsb.split(",");
+                
+                // Handling "Lightening" word that appears before the USB details in apple phones
+                if(commUsbElems[0].trim().match(new RegExp("Lightning", "i"))){
+                  commUsbElems = commUsbElems[1].trim().split(" ");
+                }
+                else{
+                  commUsbElems = commUsbElems[0].trim().split(" ");
+                }
+
+                for(let c=0; c<commUsbElems.length; c++){
+                  if(isNaN(parseFloat(commUsbElems[c]))){
+                    usbTypeElems.push(commUsbElems[c]);
+                  }
+                  else{
+                    usbVersion = commUsbElems[c];
+                    break;
+                  }
+                }
+                usbType = usbTypeElems.join(" ");
+              }
+              catch(e){
+                commsUsb = null;
+                usbType = "";
+                usbVersion = "0";
+              }
+            }
+            catch (e){
+              commsUsb = null;
+              commsRadio = null;
+              commsNfc = null;
+              commsGps = null;
+              commsBluetooth = null;
+              commsWlan = null;
+              nfcBool = false;
+              bluetoothVersion = "0";
+              usbType = "";
+              usbVersion = "0";
+            }  
+
+            // features: Sensors
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Features";
+              });
+              try{
+                featuresSensors = body[0].specs.filter((item)=>{
+                  return item.name == "Sensors";
+                })[0].value.trim();
+
+                gyro = false;
+                proximity = false;
+                fingerprintDetails = "";
+                
+                let featuresSensorsElems = featuresSensors.split(",");
+                for(let c=0; c<featuresSensorsElems.length; c++){
+                  if((featuresSensorsElems[c].match(new RegExp("gyro", "i"))) || 
+                  featuresSensorsElems[c].match(new RegExp("gyroscope", "i"))){
+                    gyro = true;
+                  }
+                  else if(featuresSensorsElems[c].match(new RegExp("proximity", "i"))){
+                    proximity = true;
+                  }
+                  else if(featuresSensorsElems[c].match(new RegExp("Fingerprint", "i"))){
+                    fingerprintDetails = featuresSensorsElems[c];
+                  }
+                }
+
+              }
+              catch(e){
+                featuresSensors = null;
+                gyro = false;
+                proximity = false;
+                fingerprintDetails = "";
+              }
+            }
+            catch (e){
+              featuresSensors = null;
+              gyro = false;
+              proximity = false;
+              fingerprintDetails = "";
+            }
+
+            // battery: Type, Charging
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Battery";
+              });
+              try{
+                batteryType = body[0].specs.filter((item)=>{
+                  return item.name == "Type";
+                })[0].value.trim();
+
+                let batteryTypeElemes = batteryType.split(" ");
+                try{
+                  batteryCapacity = batteryTypeElemes.filter((item)=>{
+                    return !(isNaN(parseFloat(item)));
+                  });
+                  batteryCapacity = batteryCapacity[0].trim();
+                }
+                catch(e){
+                  batteryCapacity = "0";
+                }
+              }
+              catch(e){
+                batteryType = null;
+                batteryCapacity = "0";
+              }
+              try{
+                batteryCharging = body[0].specs.filter((item)=>{
+                  return item.name.trim() == "Charging";
+                })[0].value.trim();
+
+                fastCharging = (batteryCharging.match(new RegExp("fast", "i")))?true:false;
+
+                let batteryChargingElems = batteryCharging.split(",")[0].split(" ");
+                chargingPower = "0";
+
+                for(let c=0; c<batteryChargingElems.length; c++){
+                  let item = parseFloat(batteryChargingElems[c].substring(0, batteryChargingElems[c].length - 1));
+                  if(!isNaN(item)){
+                    chargingPower = item.toString();
+                    break;
+                  }
+                }
+              }
+              catch(e){
+                batteryCharging = null;
+                fastCharging = false;
+                chargingPower = "0";
+              }
+            }
+            catch (e){
+              batteryType = null;
+              batteryCharging = null;
+              batteryCapacity = "0";
+              fastCharging = false;
+              chargingPower = "0";
+            }  
+
+            // MISC: price
+            try{
+              let body = spec_detail.filter((item)=>{
+                return item.category == "Misc";
+              });
+              try{
+                let miscPriceAll = body[0].specs.filter((item)=>{
+                  return item.name == "Price";
+                })[0].value.trim().replace(",", "");
+
+                miscPriceAll = miscPriceAll.split(" ");
+                miscPrice = miscPriceAll;
+
+                if(miscPriceAll[0].match(new RegExp("About", "i"))){
+                  let currency;
+                  if(!isNaN(parseFloat(miscPriceAll[1]))){
+                    currency = miscPriceAll[2];
+                    if(currency.match(new RegExp("EUR", "i"))){
+                      miscPrice = parseFloat(miscPriceAll[1]); // in EUR
+                    }
+                  }
+                  else if(miscPriceAll[1][0] == "$"){
+                    // currency = "usd";
+
+                    conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+  
+                    miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
+                  }
+                }
+                else{
+                  try{
+                    let dollarPrice = miscPriceAll.filter((item)=>{
+                      return item[0] == "€";
+                    })[0];
+                    miscPrice = parseFloat(dollarPrice.substring(1)); // in EUR
+                  }
+                  catch(e){
+                    try{
+                      let euroPrice = miscPriceAll.filter((item)=>{
+                        return item[0] == "$";
+                      })[0];
+
+                      conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
+
+                      miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
+                    }
+                    catch(e){
+                      miscPrice = null;
+                    }
+                  }
+
+                  // if(miscPriceAll[0][0] == "$"){
+                  //   miscPrice = parseFloat(miscPriceAll[0].substring(1));
+                  // }
+                  // else if(miscPriceAll[0][0] == "€"){
+                  //   miscPrice = parseFloat(miscPriceAll[0].substring(1)) * EUR_TO_USD;
+                  // }
+                }
+              }
+              catch(e){
+                miscPrice = null;
+              }
+            }
+            catch (e){
+              miscPrice = null;
+            }
+
+  console.log({
+    networkTech: networkTech,
+    launchReleaseDate: launchReleaseDate,
+    bodyDimensions: bodyDimensions,
+    bodyWeight: bodyWeight,
+    bodySim: bodySim,
+    displayType: displayType,
+    displaySize: displaySize,
+    displayResolution: displayResolution,
+    displayProtection: displayProtection,
+    platformOs: platformOs,
+    platformChipset: platformChipset,
+    platformCpu: platformCpu,
+    platformGpu: platformGpu,
+    memoryCardSlot: memoryCardSlot,
+    memoryInternal: memoryInternal,
+    mainCameraTypeSpaceDetails: mainCameraTypeSpaceDetails,
+    selfieCameraTypeSpaceDetails: selfieCameraTypeSpaceDetails,
+    soundLoudSpeaker: soundLoudSpeaker,
+    sound3p5mm: sound3p5mm,
+    commsWlan: commsWlan,
+    commsBluetooth: commsBluetooth,
+    commsGps: commsGps,
+    commsNfc: commsNfc,
+    commsRadio: commsRadio,
+    commsUsb: commsUsb,
+    featuresSensors: featuresSensors,
+    batteryType: batteryType,
+    batteryCharging: batteryCharging,
+    miscPrice: miscPrice
+  });
+
+
+
+
+
 
   // getting specs of valid phones
   //---------------------------------
   
-  // network: technology
-  try{
-    let network = spec_detail.filter((item)=>{
-      return item.category == "Network";
-    });
-    let networkTechField = network[0].specs.filter((item)=>{
-      return item.name == "Technology";
-    });
-    networkTech = networkTechField[0].value;
-  }
-  catch(e){
-    networkTech = null;
-  };
+  // // network: technology
+  // try{
+  //   let network = spec_detail.filter((item)=>{
+  //     return item.category == "Network";
+  //   });
+  //   let networkTechField = network[0].specs.filter((item)=>{
+  //     return item.name == "Technology";
+  //   });
+  //   networkTech = networkTechField[0].value;
+  // }
+  // catch(e){
+  //   networkTech = null;
+  // };
 
-  // release date
-  try{
-    let release = $('span[data-spec=released-hl]').text();
-    release = release.trim();
-    let releaseArr = release.split(" ");
-    releaseArr.shift();
-    launchReleaseDate = releaseArr.join(" ");
-  }
-  catch(e){
-    launchReleaseDate = null;
-  }
+  // // release date
+  // try{
+  //   let release = $('span[data-spec=released-hl]').text();
+  //   release = release.trim();
+  //   let releaseArr = release.split(" ");
+  //   releaseArr.shift();
+  //   launchReleaseDate = releaseArr.join(" ");
+  // }
+  // catch(e){
+  //   launchReleaseDate = null;
+  // }
   
-  // body: weight, dimensions, sim
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Body";
-    });
-    try{
-      let allDimesnions = body[0].specs.filter((item)=>{
-        return item.name == "Dimensions"; 
-      })[0].value;
-      allDimesnions = allDimesnions.split(" ").slice(0, 6);
-      bodyDimensions = allDimesnions.join(" ");
-    }
-    catch(e){
-      bodyDimensions = null;
-    }
-    try{
-      let allWeight = body[0].specs.filter((item)=>{
-        return item.name == "Weight"; 
-      })[0].value;
-      allWeight = allWeight.split(" ").slice(0, 2);
-      bodyWeight = allWeight.join(" ");
-    }
-    catch(e){
-      bodyWeight = null;
-    }
-    try{
-      bodySim = body[0].specs.filter((item)=>{
-        return item.name == "SIM"; 
-      })[0].value;
-    }
-    catch(e){
-      bodySim = null;
-    }
-  }
-  catch (e){
-    bodyDimensions = null;
-    bodyWeight = null;
-    bodySim = null;
-  }
+  // // body: weight, dimensions, sim
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Body";
+  //   });
+  //   try{
+  //     let allDimesnions = body[0].specs.filter((item)=>{
+  //       return item.name == "Dimensions"; 
+  //     })[0].value;
+  //     allDimesnions = allDimesnions.split(" ").slice(0, 6);
+  //     bodyDimensions = allDimesnions.join(" ");
+  //   }
+  //   catch(e){
+  //     bodyDimensions = null;
+  //   }
+  //   try{
+  //     let allWeight = body[0].specs.filter((item)=>{
+  //       return item.name == "Weight"; 
+  //     })[0].value;
+  //     allWeight = allWeight.split(" ").slice(0, 2);
+  //     bodyWeight = allWeight.join(" ");
+  //   }
+  //   catch(e){
+  //     bodyWeight = null;
+  //   }
+  //   try{
+  //     bodySim = body[0].specs.filter((item)=>{
+  //       return item.name == "SIM"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     bodySim = null;
+  //   }
+  // }
+  // catch (e){
+  //   bodyDimensions = null;
+  //   bodyWeight = null;
+  //   bodySim = null;
+  // }
 
-  // display: type, size, resolution, protection
-  try{
-    let displayInfo = spec_detail.filter((item)=>{
-      return item.category == "Display";
-    });
+  // // display: type, size, resolution, protection
+  // try{
+  //   let displayInfo = spec_detail.filter((item)=>{
+  //     return item.category == "Display";
+  //   });
 
-    try{
-      displayType = displayInfo[0].specs.filter((item)=>{
-        return item.name == "Type";
-      })[0].value;
-    }
-    catch(e){
-      displayType = null;
-    }
+  //   try{
+  //     displayType = displayInfo[0].specs.filter((item)=>{
+  //       return item.name == "Type";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     displayType = null;
+  //   }
 
-    try{
-      displayResolution = displayInfo[0].specs.filter((item)=>{
-        return item.name == "Resolution";
-      })[0].value;
-    }
-    catch(e){
-      displayResolution = null;
-    }
+  //   try{
+  //     displayResolution = displayInfo[0].specs.filter((item)=>{
+  //       return item.name == "Resolution";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     displayResolution = null;
+  //   }
 
-    try{
-      displayProtection = displayInfo[0].specs.filter((item)=>{
-        return item.name == "Protection";
-      })[0].value;
-    }
-    catch(e){
-      displayProtection = null;
-    }
+  //   try{
+  //     displayProtection = displayInfo[0].specs.filter((item)=>{
+  //       return item.name == "Protection";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     displayProtection = null;
+  //   }
 
-    try{
-      displaySize = displayInfo[0].specs.filter((item)=>{
-        return item.name == "Size";
-      })[0].value;
-    }
-    catch(e){
-      displaySize = null;
-    }
-  }
-  catch(e){
-    displayType = null;
-    displayResolution = null;
-    displayProtection = null;
-    displaySize = null;
-  }
+  //   try{
+  //     displaySize = displayInfo[0].specs.filter((item)=>{
+  //       return item.name == "Size";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     displaySize = null;
+  //   }
+  // }
+  // catch(e){
+  //   displayType = null;
+  //   displayResolution = null;
+  //   displayProtection = null;
+  //   displaySize = null;
+  // }
 
-  // platform Os, Chipset, Cpu, Gpu,
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Platform";
-    });
-    try{
-      platformOs = body[0].specs.filter((item)=>{
-        return item.name == "OS"; 
-      })[0].value;
-    }
-    catch(e){
-      platformOs = null;
-    }
-    try{
-      platformChipset = body[0].specs.filter((item)=>{
-        return item.name == "Chipset"; 
-      })[0].value;
-    }
-    catch(e){
-      platformChipset = null;
-    }
-    try{
-      platformCpu = body[0].specs.filter((item)=>{
-        return item.name == "CPU"; 
-      })[0].value;
-    }
-    catch(e){
-      platformCpu = null;
-    }
-    try{
-      platformGpu = body[0].specs.filter((item)=>{
-        return item.name == "GPU"; 
-      })[0].value;
-    }
-    catch(e){
-      platformGpu = null;
-    } 
-  }
-  catch (e){
-    platformOs = null;
-    platformChipset = null;
-    platformCpu = null;
-    platformGpu = null;
-  }
+  // // platform Os, Chipset, Cpu, Gpu,
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Platform";
+  //   });
+  //   try{
+  //     platformOs = body[0].specs.filter((item)=>{
+  //       return item.name == "OS"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     platformOs = null;
+  //   }
+  //   try{
+  //     platformChipset = body[0].specs.filter((item)=>{
+  //       return item.name == "Chipset"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     platformChipset = null;
+  //   }
+  //   try{
+  //     platformCpu = body[0].specs.filter((item)=>{
+  //       return item.name == "CPU"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     platformCpu = null;
+  //   }
+  //   try{
+  //     platformGpu = body[0].specs.filter((item)=>{
+  //       return item.name == "GPU"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     platformGpu = null;
+  //   } 
+  // }
+  // catch (e){
+  //   platformOs = null;
+  //   platformChipset = null;
+  //   platformCpu = null;
+  //   platformGpu = null;
+  // }
 
-  // memory: CardSlot, Internal
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Memory";
-    });
-    try{
-      memoryCardSlot = body[0].specs.filter((item)=>{
-        return item.name == "Card slot"; 
-      })[0].value;
-    }
-    catch(e){
-      memoryCardSlot = null;
-    }
-    try{
-      memoryInternal = body[0].specs.filter((item)=>{
-        return item.name == "Internal"; 
-      })[0].value;
-    }
-    catch(e){
-      memoryInternal = null;
-    }
-  }
-  catch (e){
-    memoryInternal = null;
-    memoryCardSlot = null;
-  }
-
-
-  // main camera: mainCameraTypeSpaceDetails
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Main Camera";
-    });
-    try{
-      let cameraType = body[0].specs[0].name;
-      let cameraDetails = body[0].specs[0].value;
-      mainCameraTypeSpaceDetails = cameraType + " " + cameraDetails;
-    }
-    catch(e){
-      mainCameraTypeSpaceDetails = null;
-    }
-  }
-  catch (e){
-    mainCameraTypeSpaceDetails = null;
-  }
+  // // memory: CardSlot, Internal
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Memory";
+  //   });
+  //   try{
+  //     memoryCardSlot = body[0].specs.filter((item)=>{
+  //       return item.name == "Card slot"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     memoryCardSlot = null;
+  //   }
+  //   try{
+  //     memoryInternal = body[0].specs.filter((item)=>{
+  //       return item.name == "Internal"; 
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     memoryInternal = null;
+  //   }
+  // }
+  // catch (e){
+  //   memoryInternal = null;
+  //   memoryCardSlot = null;
+  // }
 
 
-  // selfie camera: selfieCameraTypeSpaceDetails
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Selfie camera";
-    });
-    try{
-      let cameraType = body[0].specs[0].name;
-      let cameraDetails = body[0].specs[0].value;
-      selfieCameraTypeSpaceDetails = cameraType + " " + cameraDetails;
-    }
-    catch(e){
-      selfieCameraTypeSpaceDetails = null;
-    }
-  }
-  catch (e){
-    selfieCameraTypeSpaceDetails = null;
-  }
+  // // main camera: mainCameraTypeSpaceDetails
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Main Camera";
+  //   });
+  //   try{
+  //     let cameraType = body[0].specs[0].name;
+  //     let cameraDetails = body[0].specs[0].value;
+  //     mainCameraTypeSpaceDetails = cameraType + " " + cameraDetails;
+  //   }
+  //   catch(e){
+  //     mainCameraTypeSpaceDetails = null;
+  //   }
+  // }
+  // catch (e){
+  //   mainCameraTypeSpaceDetails = null;
+  // }
 
-  // sound: LoudSpeaker, 3.5mm,
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Sound";
-    });
-    try{
-      soundLoudSpeaker = body[0].specs.filter((item)=>{
-        return item.name == "Loudspeaker";
-      })[0].value;
-    }
-    catch(e){
-      soundLoudSpeaker = null;
-    }
-    try{
-      sound3p5mm = body[0].specs.filter((item)=>{
-        return item.name == "3.5mm jack";
-      })[0].value;
-    }
-    catch(e){
-      sound3p5mm = null;
-    }
-  }
-  catch (e){
-    soundLoudSpeaker = null;
-    sound3p5mm = null;
-  }
 
-  // comms: Wlan, Bluetooth, Gps, Nfc, Radio, Usb
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Comms";
-    });
-    try{
-      commsWlan = body[0].specs.filter((item)=>{
-        return item.name == "WLAN";
-      })[0].value;
-    }
-    catch(e){
-      commsWlan = null;
-    }
-    try{
-      commsBluetooth = body[0].specs.filter((item)=>{
-        return item.name == "Bluetooth";
-      })[0].value;
-    }
-    catch(e){
-      commsBluetooth = null;
-    }
-    try{
-      commsGps = body[0].specs.filter((item)=>{
-        return item.name == "GPS";
-      })[0].value;
-    }
-    catch(e){
-      commsGps = null;
-    }
-    try{
-      commsNfc = body[0].specs.filter((item)=>{
-        return item.name == "NFC";
-      })[0].value;
-    }
-    catch(e){
-      commsNfc = null;
-    }
-    try{
-      commsRadio = body[0].specs.filter((item)=>{
-        return item.name == "Radio";
-      })[0].value;
-    }
-    catch(e){
-      commsRadio = null;
-    }
-    try{
-      commsUsb = body[0].specs.filter((item)=>{
-        return item.name == "USB";
-      })[0].value;
-    }
-    catch(e){
-      commsUsb = null;
-    }
-  }
-  catch (e){
-    commsUsb = null;
-    commsRadio = null;
-    commsNfc = null;
-    commsGps = null;
-    commsBluetooth = null;
-    commsWlan = null;
-  }  
+  // // selfie camera: selfieCameraTypeSpaceDetails
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Selfie camera";
+  //   });
+  //   try{
+  //     let cameraType = body[0].specs[0].name;
+  //     let cameraDetails = body[0].specs[0].value;
+  //     selfieCameraTypeSpaceDetails = cameraType + " " + cameraDetails;
+  //   }
+  //   catch(e){
+  //     selfieCameraTypeSpaceDetails = null;
+  //   }
+  // }
+  // catch (e){
+  //   selfieCameraTypeSpaceDetails = null;
+  // }
 
-  // features: Sensors
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Features";
-    });
-    try{
-      featuresSensors = body[0].specs.filter((item)=>{
-        return item.name == "Sensors";
-      })[0].value;
-    }
-    catch(e){
-      featuresSensors = null;
-    }
-  }
-  catch (e){
-    featuresSensors = null;
-  }
+  // // sound: LoudSpeaker, 3.5mm,
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Sound";
+  //   });
+  //   try{
+  //     soundLoudSpeaker = body[0].specs.filter((item)=>{
+  //       return item.name == "Loudspeaker";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     soundLoudSpeaker = null;
+  //   }
+  //   try{
+  //     sound3p5mm = body[0].specs.filter((item)=>{
+  //       return item.name == "3.5mm jack";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     sound3p5mm = null;
+  //   }
+  // }
+  // catch (e){
+  //   soundLoudSpeaker = null;
+  //   sound3p5mm = null;
+  // }
 
-  // battery: Type, Charging
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Battery";
-    });
-    try{
-      batteryType = body[0].specs.filter((item)=>{
-        return item.name == "Type";
-      })[0].value;
-    }
-    catch(e){
-      batteryType = null;
-    }
-    try{
-      batteryCharging = body[0].specs.filter((item)=>{
-        return item.name == "Charging";
-      })[0].value;
-    }
-    catch(e){
-      batteryCharging = null;
-    }
-  }
-  catch (e){
-    batteryType = null;
-    batteryCharging = null;
-  }  
+  // // comms: Wlan, Bluetooth, Gps, Nfc, Radio, Usb
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Comms";
+  //   });
+  //   try{
+  //     commsWlan = body[0].specs.filter((item)=>{
+  //       return item.name == "WLAN";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsWlan = null;
+  //   }
+  //   try{
+  //     commsBluetooth = body[0].specs.filter((item)=>{
+  //       return item.name == "Bluetooth";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsBluetooth = null;
+  //   }
+  //   try{
+  //     commsGps = body[0].specs.filter((item)=>{
+  //       return item.name == "GPS";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsGps = null;
+  //   }
+  //   try{
+  //     commsNfc = body[0].specs.filter((item)=>{
+  //       return item.name == "NFC";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsNfc = null;
+  //   }
+  //   try{
+  //     commsRadio = body[0].specs.filter((item)=>{
+  //       return item.name == "Radio";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsRadio = null;
+  //   }
+  //   try{
+  //     commsUsb = body[0].specs.filter((item)=>{
+  //       return item.name == "USB";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     commsUsb = null;
+  //   }
+  // }
+  // catch (e){
+  //   commsUsb = null;
+  //   commsRadio = null;
+  //   commsNfc = null;
+  //   commsGps = null;
+  //   commsBluetooth = null;
+  //   commsWlan = null;
+  // }  
 
-  // MISC: price
-  try{
-    let body = spec_detail.filter((item)=>{
-      return item.category == "Misc";
-    });
-    try{
-      let miscPriceAll = body[0].specs.filter((item)=>{
-        return item.name == "Price";
-      })[0].value;
-      miscPriceAll = miscPriceAll.split(" ");
-      miscPrice = miscPriceAll;
+  // // features: Sensors
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Features";
+  //   });
+  //   try{
+  //     featuresSensors = body[0].specs.filter((item)=>{
+  //       return item.name == "Sensors";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     featuresSensors = null;
+  //   }
+  // }
+  // catch (e){
+  //   featuresSensors = null;
+  // }
 
-      if(miscPriceAll[0] == "About"){
-        let currency;
-        if(!isNaN(parseFloat(miscPriceAll[1]))){
-          currency = miscPriceAll[2];
-          if(currency == "EUR"){
-            miscPrice = parseFloat(miscPriceAll[1]) * EUR_TO_USD;
-          }
-        }
-        else if(miscPriceAll[1][0] == "$"){
-          currency = "usd";
-          miscPrice = parseFloat(miscPrice[1].substring(1));
-        }
-      }
-      else{
-        if(miscPriceAll[0][0] == "$"){
-          miscPrice = parseFloat(miscPriceAll[0].substring(1));
-        }
-        else if(miscPriceAll[0][0] == "€"){
-          miscPrice = parseFloat(miscPriceAll[0].substring(1)) * EUR_TO_USD;
-        }
-      }
-    }
-    catch(e){
-      miscPrice = null;
-    }
-  }
-  catch (e){
-    miscPrice = null;
-  }
+  // // battery: Type, Charging
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Battery";
+  //   });
+  //   try{
+  //     batteryType = body[0].specs.filter((item)=>{
+  //       return item.name == "Type";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     batteryType = null;
+  //   }
+  //   try{
+  //     batteryCharging = body[0].specs.filter((item)=>{
+  //       return item.name == "Charging";
+  //     })[0].value;
+  //   }
+  //   catch(e){
+  //     batteryCharging = null;
+  //   }
+  // }
+  // catch (e){
+  //   batteryType = null;
+  //   batteryCharging = null;
+  // }  
+
+  // // MISC: price
+  // try{
+  //   let body = spec_detail.filter((item)=>{
+  //     return item.category == "Misc";
+  //   });
+  //   try{
+  //     let miscPriceAll = body[0].specs.filter((item)=>{
+  //       return item.name == "Price";
+  //     })[0].value;
+  //     miscPriceAll = miscPriceAll.split(" ");
+  //     miscPrice = miscPriceAll;
+
+  //     if(miscPriceAll[0] == "About"){
+  //       let currency;
+  //       if(!isNaN(parseFloat(miscPriceAll[1]))){
+  //         currency = miscPriceAll[2];
+  //         if(currency == "EUR"){
+  //           miscPrice = parseFloat(miscPriceAll[1]) * EUR_TO_USD;
+  //         }
+  //       }
+  //       else if(miscPriceAll[1][0] == "$"){
+  //         currency = "usd";
+  //         miscPrice = parseFloat(miscPrice[1].substring(1));
+  //       }
+  //     }
+  //     else{
+  //       if(miscPriceAll[0][0] == "$"){
+  //         miscPrice = parseFloat(miscPriceAll[0].substring(1));
+  //       }
+  //       else if(miscPriceAll[0][0] == "€"){
+  //         miscPrice = parseFloat(miscPriceAll[0].substring(1)) * EUR_TO_USD;
+  //       }
+  //     }
+  //   }
+  //   catch(e){
+  //     miscPrice = null;
+  //   }
+  // }
+  // catch (e){
+  //   miscPrice = null;
+  // }
 
 
   // console.log(networkTech);
