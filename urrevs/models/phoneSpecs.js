@@ -12,7 +12,7 @@ const phoneSpecsSchema = new schema({
         ref: "Phone"
     },
     price: {
-        type: String
+        type: Number
     },
     releaseDate: {
         type: String
@@ -100,4 +100,4 @@ const phoneSpecsSchema = new schema({
     }
 });
 
-module.exports = mongoose.model("Pspecs", phoneSpecsSchema);
+module.exports = mongoose.model("Pspec", phoneSpecsSchema);

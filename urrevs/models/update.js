@@ -6,12 +6,30 @@
 const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
+const companiesSchema = new schema({
+    _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Company"
+    }
+});
+
+const phonesSchema = new schema({
+    _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Phone"
+    }
+});
+
 const updateSchema = new schema({
-    numPhones: {
-        type: Number
+    phones: [phonesSchema],
+    companies: [companiesSchema],
+    isUpdating: {
+        type: Boolean,
+        default: true
     },
-    numCompanies: {
-        type: Number
+    failed: {
+        type: Boolean,
+        default: true
     }
 }, 
 {

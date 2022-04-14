@@ -10,6 +10,9 @@ const schema = mongoose.Schema;
 const companySchema = new schema({
     name:{
         type: String,
+    },
+    nameLower:{
+        type: String,
         index: true
     },
     views:{

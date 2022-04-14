@@ -1,17 +1,18 @@
 const cheerio = require('cheerio');
 const axios = require('axios');
+const request = require("request");
 const config = require("../config");
-const request = require('request');
+const https = require("https");
 
 
 
 const convertFromUSDtoEUR = async(conversion, backup)=>{
   if(!conversion){
     // Get latest conversions from USD to EUR
-    let exRates;
+    let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
     try{
-      exRates = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"USD,EUR"}});
-      let rates = exRates.data.rates;
+      const {data: exRates} = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"USD,EUR"}}, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+      let rates = exRates.rates;
       let oneEur = rates.EUR;
       let oneUsd = rates.USD;
       console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", oneEur / oneUsd);
@@ -19,7 +20,7 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
     }
     catch(e){
       console.log("Auto Conversion failed: ", "coversion from USD to EUR = ", backup);
-      console.log(exRates);
+      //console.log(exRates);
       return backup;
     }
   }
@@ -28,7 +29,6 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
   }
 }
 
-//exports.convertFromUSDtoEUR = convertFromUSDtoEUR;
 
 /*
     Asynchronous delay
@@ -42,77 +42,14 @@ const delay = (milliseconds)=>{
     });
 }
 
-/*
-    given a list of companies names
-    it adds only the companies whose names are not in the database
-    the companies names are trimmed, so that they have no spaces from right or left
-    no capitalization effort is done
-    part of "updateCompaniesFromSource"
-*/
-const updateCompaniesIntoDB = (brandNames, collection)=>{
-    return new Promise(async(resolve, reject)=>{
-      let AddedCompanies = [];
-      try{
-        for(let i=0; i<brandNames.length; i++){
-          let brandName = brandNames[i].trim();
-          let comp = await collection.findOne({name: brandName});
-          if(!comp){
-           let newBrand =  await collection.create({name: brandNames[i][0].toUpperCase() + brandNames[i].substring(1)});
-           AddedCompanies.push({name: newBrand.name, id: newBrand._id});
-          }
-        }
-        resolve(AddedCompanies);
-      }
-      catch(err){
-        reject(err);
-      }
-    });
-  }
-
-
-/*
-    given a COMPANY collection
-    it loads the names of all companies from the source
-    it uses the "updateCompaniesIntoDB" function to store the new companies
-*/  
-exports.updateCompaniesFromSource = (collection)=>{
-    return new Promise((resolve, reject)=>{
-        request({
-            url: SOURCE + '/makers.php3',
-            headers: {
-              "User-Agent": "request"
-            }
-          }, (err, resp, html)=>{
-            if (!err){
-              $ = cheerio.load(html);
-              let brandNames = [];
-              let brands = $('table').find('td');
-        
-              brands.each((i, el) => {
-                let name =  $(el).find('a').text().replace(' devices', '').replace(/[0-9]/g, "");
-                brandNames.push(name);
-              });
-              
-              updateCompaniesIntoDB(brandNames, collection).then((addedCompanies)=>{
-                resolve(addedCompanies);
-              })
-              .catch((err)=>{
-                reject(err);
-              });
-            }
-            else{
-              reject(err);
-            }
-        });
-    });
-}
 
 /*
     it loads the names and urls of all companies from the source
     the urls are used to access the products list of that company
 */ 
-exports.getBrandsLinks = ()=>{
+const getBrandsInfo = ()=>{
     return new Promise((resolve, reject)=>{
+        const SOURCE = config.SOURCE;
         request({
             url: SOURCE + '/makers.php3',
             headers: {
@@ -121,15 +58,15 @@ exports.getBrandsLinks = ()=>{
           }, (err, resp, html)=>{
             if (!err){
               $ = cheerio.load(html);
-              let brandUrls = [];
+              let brandsInfo = [];
               let brands = $('table').find('td');
         
               brands.each((i, el) => {
-                let url = $(el).find('a').attr('href');
-                let name =  $(el).find('a').text().replace(' devices', '').replace(/[0-9]/g, "");
-                brandUrls.push({name: name, url: url});
+                let url = $(el).find('a').attr('href').trim();
+                let name =  $(el).find('a').text().replace(' devices', '').replace(/[0-9]/g, "").trim();
+                brandsInfo.push({name: name, url: url});
               });
-              resolve(brandUrls);
+              resolve(brandsInfo);
             }
             else{
               reject(err);
@@ -138,75 +75,147 @@ exports.getBrandsLinks = ()=>{
     });
 }
 
+
 /*
-    given an url of a phone
-    given the name of the most recently-added phone of a certain company
-    given the company profile (brand)
-    given the PHONE collection
-    it collects the name, img, and url of the phones that are later than the latest phone we have for that company
-    it supports auto pagination with a 1 sec delay before each page
-    once the list of new phones is completed, we iterate over it and use the url to access the specs for each phone in the list 
+    * uses the function "getBrandsInfo" to load the names and urls of all available brands on source
+    * for each brand, do the following:
+        1- look for the brand in the db
+        2- if found, obtain the latest phone we have for this brand. if not, consider the latest phone as null
+        3- get the list of new phones for this brand from the source. ("new phones" means all phones that are newer than latest phone we have for this brand)
+        4- reverse the list of new phones, so that the oldest phone in the list comes first
+        5- for each phone in the list of new phones, do the followig
+          5.1- request the phone page from the source
+          5.2- check if its specs match the pre-defined criterea
+          5.3- if the specs match and the current brand is not in the DB, add it to the DB
+          5.4- if the specs match, collect the specs and add them to the DB. if not, skip this phone and go to the next one
+    * document the update opertaion by storing, the number of phones added, number of companies added, the list of added companies, and the date of the operation
+    * return the following:
+        the list of added companies
+        the number of phones
+    * in case of error, return the following:
+        the list of added companies
+        the number of phones
+        the error
+    * delays: (amount: 3000 ms)
+        from one page to another in the same brand (pagination in brand)
+        from the specs page of a phone to another
+        from one brand to another
 */
-exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
+exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCollection, nPhoneCollection, updateCollection) =>{
     return new Promise(async(resolve, reject)=>{
       let conversionFromUSDtoEur = null;
       let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
       let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
+      let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
       let SOURCE = config.SOURCE;
-      let newPhones = [];
       let newStoredPhones = [];
+      let brands = [];
+      let newBrands = [];
+      let updateLog;
 
       console.log("current delay: ", DELAY_AMOUNT);
 
       try{
+        // console.log("Beginning of update process..........................");
         
-        let response = await axios.get(SOURCE + '/' + brandUrl);
-        $ = cheerio.load(response.data);
-        let phones = $('.makers').find('li');
-        let goNextPage = true;
-        for(let j=0; j<phones.length; j++){
-            let phone = {
-                name: $(phones[j]).find('span').text(),
-                img: $(phones[j]).find('img').attr('src'),
-                url: $(phones[j]).find('a').attr('href'),
-            };
-            if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
-                goNextPage = false;
-                break;
+        //getting brands' names and urls
+        brands = await getBrandsInfo();
+        
+        // brands = [{
+        //   "name": "bq",
+        //   "url": "bq-phones-108.php"
+        // }];
+
+        // initialize an update log (isUpdating: true)
+        updateLog =  await updateCollection.create({}); 
+        
+        
+        // for each brand, do the following
+        for(let x=0; x<brands.length; x++){
+          await delay(DELAY_AMOUNT);
+
+          // declaring vars
+          let newPhones = [];
+          let latestPhone; 
+          let brand;  // if null, it indeicates that the brand doesn't exist
+          
+          console.log("scanning brand: ", brands[x].name);
+
+          // get company document to get its id
+          brand = await brandCollection.findOne({nameLower: brands[x].name.toLowerCase()});
+          // if the company doesn't exist, it has no latest phone
+          if(!brand){
+            console.log("brand: ", brands[x].name, " is not in the DB");
+            latestPhone == null;
+          }
+          else{
+            // if the company exists, use its id to get its the latest phone from DB
+            let latestphoneDoc = await phoneCollection.find({company: brand._id}, {name:1, _id: 0}).sort({createdAt: -1}).limit(1);
+            if(latestphoneDoc.length > 0){
+              latestPhone = latestphoneDoc[0].name;
             }
             else{
-                newPhones.push(phone);
+              latestPhone == null;
             }
-        }
-        let nextPage = $('a.pages-next').attr('href');
-        while(nextPage != "#1" && nextPage != null && goNextPage == true){
+          }
+
+          // get the new phones made by the brand, (new phones: phones that are newer than the latest phone)
+          const {data: response} = await axios.get(SOURCE + '/' + brands[x].url, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+          $ = cheerio.load(response);
+          let phones = $('.makers').find('li');
+          let goNextPage = true;
+          for(let j=0; j<phones.length; j++){
+              let phone = {
+                  name: $(phones[j]).find('span').text().trim(),
+                  img: $(phones[j]).find('img').attr('src').trim(),
+                  url: $(phones[j]).find('a').attr('href').trim(),
+              };
+              if(!brand){
+                newPhones.push(phone);
+              }
+              else if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
+                  goNextPage = false;
+                  break;
+              }
+              else{
+                  newPhones.push(phone);
+              }
+          }
+          // handle pagination
+          let nextPage = $('a.pages-next').attr('href');
+          while(nextPage != "#1" && nextPage != null && goNextPage == true){
             await delay(DELAY_AMOUNT);
-            let responsePage = await axios.get(SOURCE + '/' + nextPage);
-            $ = cheerio.load(responsePage.data);
+            const {data: responsePage} = await axios.get(SOURCE + '/' + nextPage, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+            $ = cheerio.load(responsePage);
             let phones = $('.makers').find('li');
             for(let j=0; j<phones.length; j++){
-                let phone = {
-                    name: $(phones[j]).find('span').text(),
-                    img: $(phones[j]).find('img').attr('src'),
-                    url: $(phones[j]).find('a').attr('href'),
-                };
-                if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
-                    goNextPage = false;
-                    break;
-                }
-                else{
-                    newPhones.push(phone);
-                }
+              let phone = {
+                  name: $(phones[j]).find('span').text(),
+                  img: $(phones[j]).find('img').attr('src'),
+                  url: $(phones[j]).find('a').attr('href'),
+              };
+              if(!brand){
+                newPhones.push(phone);
+              }
+              else if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
+                  goNextPage = false;
+                  break;
+              }
+              else{
+                  newPhones.push(phone);
+              }
             }
             nextPage = $('a.pages-next').attr('href');
-        }
-        
-        newPhones = newPhones.reverse();
+          }
 
-        for(let i=0; i<newPhones.length; i++){
+          // reversing the new phones list, so that the older phones are stored first
+          newPhones = newPhones.reverse();
+
+          // itertating over the new phones to test them then add them if they pass the test
+          for(let i=0; i<newPhones.length; i++){
             await delay(DELAY_AMOUNT);
-            let sepcsResponse = await axios.get(SOURCE + '/' + newPhones[i].url);
-            $ = cheerio.load(sepcsResponse.data);
+            const {data: sepcsResponse} = await axios.get(SOURCE + '/' + newPhones[i].url, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+            $ = cheerio.load(sepcsResponse);
             
             // gathering specs from source
             let specNode = $('table');
@@ -329,7 +338,7 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
               
               /* 
                 only inlude the following: (advance to the next condition only if the current one fails)
-                  1- 3.4 < screen size < 7
+                  1- 3.4 <= screen size < 7
                   2- 7 <= screen size <= 8.1  and  screen to body ratio >= 77
                   3- screen to body ratio >= 140
               */
@@ -348,8 +357,21 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
             }
 
 
+            // by now, we are certain that there is a phone that passed the tests
+            // if brand is null, then we need to create a document for that brand
+            if(!brand){
+              // adding / creating new brand / company document
+              brand = await brandCollection.create({name: brands[x].name, 
+                nameLower: brands[x].name.toLowerCase()});
+              newBrands.push({
+                name: brand.name,
+                id: brand._id
+              });
+              console.log("Brand: ", brand.name, " is added to the DB");
+            }
+
             console.log("Adding: ", newPhones[i].url);
-            // getting specs of valid phones
+            // getting processed specs of valid phones
             //---------------------------------
             
             // network: technology
@@ -499,19 +521,6 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
             catch(e){
               displaySize = null;
             }
-            // try{
-            //   let displayInfo = spec_detail.filter((item)=>{
-            //     return item.category == "Display";
-            //   });
-
-
-            // }
-            // catch(e){
-            //   displayType = null;
-            //   displayResolution = null;
-            //   displayProtection = null;
-            //   displaySize = null;
-            // }
 
             // platform Os, Chipset, Cpu, Gpu,
             try{
@@ -592,7 +601,6 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
               intMemArr = [];
             }
 
-
             // main camera: mainCameraTypeSpaceDetails
             try{
               let body = spec_detail.filter((item)=>{
@@ -613,7 +621,6 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
             catch (e){
               mainCameraTypeSpaceDetails = null;
             }
-
 
             // selfie camera: selfieCameraTypeSpaceDetails
             try{
@@ -933,13 +940,6 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
                       miscPrice = null;
                     }
                   }
-
-                  // if(miscPriceAll[0][0] == "$"){
-                  //   miscPrice = parseFloat(miscPriceAll[0].substring(1));
-                  // }
-                  // else if(miscPriceAll[0][0] == "€"){
-                  //   miscPrice = parseFloat(miscPriceAll[0].substring(1)) * EUR_TO_USD;
-                  // }
                 }
               }
               catch(e){
@@ -952,157 +952,140 @@ exports.updatePhonesFromSource = (brandUrl, latestPhone, brand, collection) =>{
       
             // Here add to the DB
             //---------------------
-            newStoredPhones.push({
-              url: newPhones[i].url,
+            let phoneBasic;
+
+            // creating a document for the phone
+            phoneBasic = await phoneCollection.create({
               name: brand.name + ' ' + newPhones[i].name,
-              picture: newPhones[i].img,
               company: brand._id,
-              networkTech: networkTech,
-              launchReleaseDate: launchReleaseDate,
-              bodyDimensions: bodyDimensions,
-              bodyWeight: bodyWeight,
-              bodySim: bodySim,
-              displayType: displayType,
-              displaySize: displaySize,
-              displayResolution: displayResolution,
-              displayProtection: displayProtection,
-              platformOs: platformOs,
-              platformChipset: platformChipset,
-              platformCpu: platformCpu,
-              platformGpu: platformGpu,
-              memoryCardSlot: memoryCardSlot,
-              memoryInternal: memoryInternal,
-              mainCameraTypeSpaceDetails: mainCameraTypeSpaceDetails,
-              selfieCameraTypeSpaceDetails: selfieCameraTypeSpaceDetails,
-              soundLoudSpeaker: soundLoudSpeaker,
-              sound3p5mm: sound3p5mm,
-              commsWlan: commsWlan,
-              commsBluetooth: commsBluetooth,
-              commsGps: commsGps,
-              commsNfc: commsNfc,
-              commsRadio: commsRadio,
-              commsUsb: commsUsb,
-              featuresSensors: featuresSensors,
-              batteryType: batteryType,
-              batteryCharging: batteryCharging,
-              miscPrice: isNaN(miscPrice)?null:miscPrice,
-              //-----------------------------
-              mlPrice: (miscPrice == null || isNaN(miscPrice))?null:miscPrice.toString(),
-              mlName: brand.name + ' ' + newPhones[i].name,
-              mlComp: brand._id,
-              mlReleaseDate: launchReleaseDate,
-              dimLength: length,
-              dimWidth: width,
-              dimHeight: height,
-              mlNetwork: networkTech,
-              mlWeight: weightNum,
-              mlSim: bodySim,
-              mlDisplayType: displayType,
-              dispSizeInch: displaySizeInch,
-              mlscreen2body: screen2BodyRatio,
+              picture: newPhones[i].img,
+            });
+
+            // creating a document for the specs of the phone
+            await phoneSpecsCollection.create({
+              _id: phoneBasic._id,
+              price: isNaN(miscPrice)?null:miscPrice,
+              releaseDate: launchReleaseDate,
+              dimensions: bodyDimensions,
+              newtork: networkTech,
+              weight: bodyWeight,
+              sim: bodySim,
+              screenType: displayType,
+              screenSize: displaySize,
+              screenResolution: displayResolution,
+              screenProtection: displayProtection,
+              os: platformOs,
+              chipset: platformChipset,
+              cpu: platformCpu,
+              gpu: platformGpu,
+              exMem: memoryCardSlot,
+              intMem: memoryInternal,
+              mainCam: mainCameraTypeSpaceDetails,
+              selfieCam: selfieCameraTypeSpaceDetails,
+              loudspeaker: soundLoudSpeaker,
+              slot3p5mm: sound3p5mm,
+              wlan: commsWlan,
+              bluetooth: commsBluetooth,
+              gps: commsGps,
+              nfc: commsNfc,
+              radio: commsRadio,
+              usb: commsUsb,
+              sensors: featuresSensors,
+              battery: batteryType,
+              charging: batteryCharging
+            });
+
+            // creating a document for phone specs for AI
+            await nPhoneCollection.create({
+              _id: phoneBasic._id,
+              price: (miscPrice == null || isNaN(miscPrice))?null:miscPrice.toString(),
+              name: brand.name + ' ' + newPhones[i].name,
+              company: brand._id,
+              releaseDate: launchReleaseDate,
+              length: length,
+              width: width,
+              height: height,
+              network: networkTech,
+              weight: weightNum,
+              sim: bodySim,
+              screenType: displayType,
+              screenSize: displaySizeInch,
+              screen2bodyRatio: screen2BodyRatio,
               resolutionLength: resolutionLength,
               resolutionWidth: resolutionWidth,
               resolutionDensity: resolutionDensity,
-              mlOs: platformOs,
-              mlChipse: platformChipset,
-              mlCpu: platformCpu,
-              mlGpu: platformGpu,
-              mlIntMem: intMemArr, // array
+              screenProtection: displayProtection,
+              os: platformOs,
+              chipset: platformChipset,
+              cpu: platformCpu,
+              gpu: platformGpu,
+              intMem: intMemArr, // array
               mainCam: mainCameraTypeSpaceDetails,
-              selfCam: selfieCameraTypeSpaceDetails,
+              selfieCam: selfieCameraTypeSpaceDetails,
               hasLoudspeaker: loudSpeaker, // boolean
               hasStereo: withSterio, // boolean
               has3p5mm: sound3p5mmBool, // boolean
-              mlWlan: commsWlan,
+              wlan: commsWlan,
               bluetoothVersion: bluetoothVersion,
-              nfcBool: nfcBool, // boolean
-              mlRadio: commsRadio,
+              hasNfc: nfcBool, // boolean
+              radio: commsRadio,
               usbType: usbType,
               usbVersion: usbVersion,
               hasGyro: gyro, // boolean
               hasProximity: proximity, // boolean
               fingerprintDetails: fingerprintDetails,
               batteryCapacity: batteryCapacity,
-              fastCharging: fastCharging, // boolean
+              hasFastCharging: fastCharging, // boolean
               chargingPower: chargingPower
             });
 
+            newStoredPhones.push({
+              _id: phoneBasic._id
+            });
+          }
 
-
-
-            // // Apply checks over the phone specs
-            // let skipThis = false;
-            // for(let j=0; j<spec_detail.length && skipThis == false; j++){
-          
-            //   let currentCategory = spec_detail[j];
-          
-            //   // only include "Available" and "Discontinuous" status in launch
-            //   if(currentCategory.category == "Launch"){
-            //     for(let k=0; k<currentCategory.specs.length; k++){
-            //       if(currentCategory.specs[k].name == "Status"){
-            //         if(!(currentCategory.specs[k].value.match(new RegExp("Available")) || currentCategory.specs[k].value.match(new RegExp("Discontinued")))){
-            //           skipThis = true;
-            //           break;
-            //         }
-            //       }
-            //     }
-            //   }
-          
-            //   /* 
-            //     only inlude the following:
-            //       3.5 < screen size < 7
-            //       7 <= screen size <= 8.1  and  screen to body ratio >= 77
-            //       screen to body ratio >= 140
-            //   */
-            //   if(currentCategory.category == "Display"){
-            //     for(let k=0; k<currentCategory.specs.length; k++){
-            //       if(currentCategory.specs[k].name == "Size"){
-            //         let sizeString = currentCategory.specs[k].value;
-            //         let sizeElements = sizeString.split(" ");
-            //         let sizeInInches = parseFloat(sizeElements[0]);
-            //         let screenToBodyRatioString = sizeElements[4];
-            //         let screenToBodyRatioElements = screenToBodyRatioString.split(" ");
-            //         let screenToBodyRatio = parseFloat(screenToBodyRatioElements[0].substring(2));
-          
-            //         console.log("size in inches: ", sizeInInches, "\nscreen to body ratio: ", screenToBodyRatio);
-            //         if(!
-            //           ((sizeInInches > 3.5 && sizeInInches < 7) || 
-            //           (sizeInInches >= 7 && sizeInInches <= 8.1 && screenToBodyRatio >= 77) ||
-            //           (screenToBodyRatio > 140))){
-            //             skipThis = true;
-            //             break;
-            //         }
-            //       }
-            //     }
-            //   }
-            // }
-          
-            // if(!skipThis){
-            //   // gather specs
-
-            // }
-            // else{
-            //   console.log(newPhones[i].url)
-            //   continue;
-            // }
-            
-
-
-            // let newPhone = await collection.create({
-            //     name: brand.name + ' ' + newPhones[i].name,
-            //     picture: newPhones[i].img,
-            //     company: brand._id
-            // });
-            // newStoredPhones.push(newPhone);
+          console.log("brand: ", brands[x].name, " is completed successfully");
         }
 
-        resolve(newStoredPhones);
+
+        // updating the update log with the update operation result
+
+        let companiesList = [];
+        for(let b of newBrands){
+          companiesList.push({
+            _id: b.id
+          });
+        }
+
+        await updateCollection.updateOne({_id: updateLog._id}, {$set: {
+          phones: newStoredPhones,
+          companies: companiesList,
+          isUpdating: false,
+          failed: false
+        }});
+        
+        // final output
+        resolve(); /*{brands: newBrands, phones: newStoredPhones}*/
       }
-      catch(err){
-        reject({
-          err: err,
-          phones: newStoredPhones
-        });
+      catch(error){
+        try{
+          // error handling
+          let companiesList = [];
+          for(let b of newBrands){
+            companiesList.push({
+              _id: b.id
+            });
+          }
+          await updateCollection.updateOne({_id: updateLog._id}, {$set: {
+            phones: newStoredPhones,
+            companies: companiesList,
+            isUpdating: false
+          }});
+          reject({err: error}); /*{err: error, brands: newBrands, numPhones: newStoredPhones.length}*/
+        }
+        catch(e){
+          reject({err: e}); /*{err: error, secondCatchError: e, brands: newBrands, numPhones: newStoredPhones.length}*/
+        }
       }
     });
 }
