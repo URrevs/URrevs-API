@@ -88,14 +88,12 @@ const getBrandsInfo = ()=>{
           5.2- check if its specs match the pre-defined criterea
           5.3- if the specs match and the current brand is not in the DB, add it to the DB
           5.4- if the specs match, collect the specs and add them to the DB. if not, skip this phone and go to the next one
-    * document the update opertaion by storing, the number of phones added, number of companies added, the list of added companies, and the date of the operation
+    * document the update opertaion by storing, the list of phones added, list of companies added, and the date of the operation, setting isUpdating to false, setting failed to false
     * return the following:
-        the list of added companies
-        the number of phones
-    * in case of error, return the following:
-        the list of added companies
-        the number of phones
-        the error
+        NOTHING
+    * in case of error:
+        set the isUpdating to false
+        reutrn the error
     * delays: (amount: 3000 ms)
         from one page to another in the same brand (pagination in brand)
         from the specs page of a phone to another
