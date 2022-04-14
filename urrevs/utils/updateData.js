@@ -111,6 +111,12 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       let newBrands = [];
       let updateLog;
 
+      let toxicBrands = ['amoi', 'at&t', 'benefon', 'benq-siemens', 'bird', 'bosch', 
+      'chea', 'emporia', 'ericsson', 'fujitsu siemens', 'innostream', 'maxon', 
+      'mitsubishi', 'modu', 'mwg', 'nec', 'neonode', 'nvidia', 'palm', 'sagem', 
+      'sendo', 'sewon', 'siemens', 'tel.me.', 'telit', 'thuraya', 
+      'vk mobile', 'wnd', 'xcute'];
+
       console.log("current delay: ", DELAY_AMOUNT);
 
       try{
@@ -138,6 +144,12 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
           let brand;  // if null, it indeicates that the brand doesn't exist
           
           console.log("scanning brand: ", brands[x].name);
+
+          // Skipping toxic brands (old brands with very old phones)
+          if(toxicBrands.includes(brands[x].name.toLowerCase())){
+            console.log("skipping brand: ", brands[x].name);
+            continue;
+          }
 
           // get company document to get its id
           brand = await brandCollection.findOne({nameLower: brands[x].name.toLowerCase()});
@@ -303,7 +315,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
 
             /*
               only inlude the following:
-                3.4 < screen size < 7
+                3.4 <= screen size < 7
                 7 <= screen size <= 8.1  and  screen to body ratio >= 77
                 screen to body ratio >= 140
               if "Display" or "Display: Size" don't exist, refuse the phone
@@ -411,6 +423,9 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 bodyDimensions = allDimesnions.join(" ");
 
                 try{
+                  if(allDimesnions[0].match(new RegExp("unfolded", "i"))){
+                    allDimesnions = allDimesnions.slice(1);
+                  }
                   length = allDimesnions[0];
                   width = allDimesnions[2];
                   height = allDimesnions[4];
