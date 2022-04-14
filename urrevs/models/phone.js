@@ -19,7 +19,8 @@ const phoneSchema = new schema({
         type: String
     },
     generalRating: {
-        type: Number
+        type: Number,
+        default: 0
     },
     uiRating: {
         type: Number,

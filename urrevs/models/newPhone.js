@@ -6,35 +6,38 @@
 const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
-const newPhoneSchema = new schema({
+var nPhoneSchema = new schema({
     _id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
-    },
-    name: {
-        type: String
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Company"
     },
-    picture: {
+    name: {
         type: String
     },
     price: {
-        type: String
+        type: String    // numerical
     },
     releaseDate: {
         type: String
     },
-    dimensions: {
-        type: String
+    length: {
+        type: String    // numerical
     },
-    newtork: {
+    width: {
+        type: String    // numerical
+    },
+    height: {
+        type: String    // numerical
+    },
+    network: {
         type: String
     },
     weight: {
-        type: String
+        type: String    // numerical
     },
     sim: {
         type: String
@@ -43,10 +46,19 @@ const newPhoneSchema = new schema({
         type: String
     },
     screenSize: {
-        type: String
+        type: String    // numerical
     },
-    screenResolution: {
-        type: String
+    screen2bodyRatio: {
+        type: String    // numerical
+    },
+    resolutionLength: {
+        type: String    // numerical
+    },
+    resolutionWidth: {
+        type: String    // numerical
+    },
+    resolutionDensity: {
+        type: String    // numerical
     },
     screenProtection: {
         type: String
@@ -63,11 +75,8 @@ const newPhoneSchema = new schema({
     gpu: {
         type: String
     },
-    exMem: {
-        type: String
-    },
     intMem: {
-        type: String
+        type: Array     // array of strings
     },
     mainCam: {
         type: String
@@ -75,39 +84,54 @@ const newPhoneSchema = new schema({
     selfieCam: {
         type: String
     },
-    loudspeaker: {
-        type: String
+    hasLoudspeaker: {
+        type: Boolean
     },
-    slot3p5mm: {
-        type: String
+    hasStereo: {
+        type: Boolean
+    },
+    has3p5mm: {
+        type: Boolean
     },
     wlan: {
         type: String
     },
-    bluetooth: {
-        type: String
+    bluetoothVersion: {
+        type: String        // numerical
     },
-    gps: {
-        type: String
-    },
-    nfc: {
-        type: String
+    hasNfc: {
+        type: Boolean
     },
     radio: {
         type: String
     },
-    usb: {
+    usbType: {
         type: String
     },
-    sensors: {
+    usbVersion: {
         type: String
     },
-    battery: {
+    hasGyro: {
+        type: Boolean
+    },
+    hasProximity: {
+        type: Boolean
+    },
+    fingerprintDetails: {
         type: String
     },
-    charging: {
-        type: String
+    batteryCapacity: {
+        type: String        // numerical
+    },
+    hasFastCharging: {
+        type: Boolean
+    },
+    chargingPower: {
+        type: String        // numerical
     }
+}, 
+{
+    timestamps: true
 });
 
-module.exports = mongoose.model("Nphone", newPhoneSchema);
+module.exports = mongoose.model("Nphone", nPhoneSchema);
