@@ -60,25 +60,18 @@ targetsRouter.get("/update", (req,res,next)=>{
 
 // get the info of the latest update operation (icluding current update)
 targetsRouter.get("/update/latest", (req, res, next)=>{
-  UPDATE.find({}).sort({createdAt: -1}).limit(1).populate("companies._id").populate("phones._id").then((operation)=>{
+  UPDATE.find({}).sort({createdAt: -1}).limit(1).populate("companies._id","name").populate("phones._id", "name").then((operation)=>{
     if(operation.length > 0){
-      
       let compList = [];
       let pList = [];
       let op = operation[0];
       
       for(let comp of op.companies){
-        compList.push({
-          name: comp._id.name,
-          id: comp._id._id
-        });
+        compList.push(comp._id);
       }
 
       for(let p of op.phones){
-        pList.push({
-          name: p._id.name,
-          id: p._id._id
-        });
+        pList.push(p._id);
       }
 
       let d = op.createdAt;
