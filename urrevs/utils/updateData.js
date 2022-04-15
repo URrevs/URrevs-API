@@ -3,6 +3,7 @@ const axios = require('axios');
 const request = require("request");
 const config = require("../config");
 const https = require("https");
+const CONSTANT = require("../models/constants");
 
 
 
@@ -10,18 +11,43 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
   if(!conversion){
     // Get latest conversions from USD to EUR
     let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
+    let rates, oneEur, oneUsd, usdToeur;
     try{
       const {data: exRates} = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"USD,EUR"}}, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
-      let rates = exRates.rates;
-      let oneEur = rates.EUR;
-      let oneUsd = rates.USD;
-      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", oneEur / oneUsd);
-      return oneEur / oneUsd;
+      rates = exRates.rates;
+      oneEur = rates.EUR;
+      oneUsd = rates.USD;
+      usdToeur = oneEur / oneUsd;
+      
+      let constDoc = await CONSTANT.findOne({type: "USDToEUR"});
+      
+      if(constDoc == null){
+        // create a new document
+        await CONSTANT.create({type: "USDToEUR", value: usdToeur});
+      }
+      else{
+        // update the current document
+        await CONSTANT.updateOne({type: "USDToEUR"}, {$set: {value: usdToeur}});
+      }
+      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
+      return usdToeur;
     }
     catch(e){
-      console.log("Auto Conversion failed: ", "coversion from USD to EUR = ", backup);
-      //console.log(exRates);
-      return backup;
+      try{
+        let constDoc = await CONSTANT.findOne({type: "USDToEUR"});
+        if(constDoc == null){
+          console.log("Auto Conversion failed due to API connection error: Using the backup value which is ", backup);
+          return backup;
+        }
+        else{
+          console.log("Auto Conversion failed due to API connection error: Using the latest stored value which is ", constDoc.value);
+          return constDoc.value;
+        }
+      }
+      catch(e){
+        console.log("Auto Conversion failed due to API connection error and we couldn't fetch the latest value from the database: Using the backup value which is ", backup);
+        return backup;
+      }
     }
   }
   else{
@@ -111,11 +137,39 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       let newBrands = [];
       let updateLog;
 
-      let toxicBrands = ['amoi', 'at&t', 'benefon', 'benq-siemens', 'bird', 'bosch', 
-      'chea', 'emporia', 'ericsson', 'fujitsu siemens', 'innostream', 'maxon', 
-      'mitsubishi', 'modu', 'mwg', 'nec', 'neonode', 'nvidia', 'palm', 'sagem', 
-      'sendo', 'sewon', 'siemens', 'tel.me.', 'telit', 'thuraya', 
-      'vk mobile', 'wnd', 'xcute'];
+      // latest phone from each toxic brand (brands with very old phones)
+      let latestToxic = {
+        "amoi": "e860",
+        "at&t": "quickfire",
+        benefon: "twig discovery pro",
+        "benq-siemens": "sf71",
+        bird: "m32",
+        bosch: "909 dual s",
+        chea: "a90",
+        emporia: "glam",
+        ericsson: "r600",
+        eten: "glofiish x610",
+        "fujitsu siemens": "t830",
+        innostream: "inno a20",
+        maxon: "mx-c90",
+        mitsubishi: "m430i/m900",
+        modu: "t",
+        mwg: "zinc ii",
+        nec: "terrain",
+        neonode: "n2",
+        nvidia: "shield k1",
+        palm: "palm",
+        sagem: "puma phone",
+        sendo: "x2",
+        sewon: "srs-3300",
+        siemens: "al21",
+        "tel.me.": "t939",
+        telit: "t800",
+        thuraya: "sg-2520",
+        "vk mobile": "vk2030",
+        wnd: "wind van gogh 2100",
+        xcute: "dv80"
+      };
 
       console.log("current delay: ", DELAY_AMOUNT);
 
@@ -145,11 +199,11 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
           
           console.log("scanning brand: ", brands[x].name);
 
-          // Skipping toxic brands (old brands with very old phones)
-          if(toxicBrands.includes(brands[x].name.toLowerCase())){
-            console.log("skipping brand: ", brands[x].name);
-            continue;
-          }
+          // // Skipping toxic brands (old brands with very old phones)
+          // if(toxicBrands.includes(brands[x].name.toLowerCase())){
+          //   console.log("skipping brand: ", brands[x].name);
+          //   continue;
+          // }
 
           // get company document to get its id
           brand = await brandCollection.findOne({nameLower: brands[x].name.toLowerCase()});
@@ -181,7 +235,22 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                   url: $(phones[j]).find('a').attr('href').trim(),
               };
               if(!brand){
-                newPhones.push(phone);
+                if(latestToxic[brands[x].name.toLowerCase()]){
+                  // toxic brand
+                  if(latestToxic[brands[x].name.toLowerCase()] == phone.name.toLowerCase()){
+                    console.log("Brand ", brands[x].name, " is considered toxic and its currently latest phone is toxic as well")
+                    goNextPage = false;
+                    break;
+                  }
+                  else{
+                    // toxic brands but has new phones
+                    newPhones.push(phone);
+                  }
+                }
+                else{
+                  // new brand
+                  newPhones.push(phone);
+                }
               }
               else if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
                   goNextPage = false;
