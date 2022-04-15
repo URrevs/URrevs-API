@@ -16,7 +16,8 @@ var nPhoneSchema = new schema({
         ref: "Company"
     },
     name: {
-        type: String
+        type: String,
+        index: true
     },
     price: {
         type: String    // numerical

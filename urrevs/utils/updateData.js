@@ -126,12 +126,12 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         brands = await getBrandsInfo();
         
         // brands = [{
-        //   "name": "bq",
-        //   "url": "bq-phones-108.php"
+        //   "name": "Microsoft",
+        //   "url": "microsoft-phones-64.php"
         // }];
 
         // initialize an update log (isUpdating: true)
-        updateLog =  await updateCollection.create({}); 
+        updateLog =  await updateCollection.create({createdAt: new Date()}); 
         
         
         // for each brand, do the following
@@ -423,7 +423,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 bodyDimensions = allDimesnions.join(" ");
 
                 try{
-                  if(allDimesnions[0].match(new RegExp("unfolded", "i"))){
+                  if(allDimesnions[0].match(new RegExp("unfold", "i"))){
                     allDimesnions = allDimesnions.slice(1);
                   }
                   length = allDimesnions[0];

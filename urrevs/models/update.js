@@ -30,10 +30,10 @@ const updateSchema = new schema({
     failed: {
         type: Boolean,
         default: true
+    },
+    createdAt: {
+        type: Date
     }
-}, 
-{
-    timestamps: true
 });
 
 module.exports = mongoose.model("Update", updateSchema);
