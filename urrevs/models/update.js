@@ -33,6 +33,9 @@ const updateSchema = new schema({
     },
     createdAt: {
         type: Date
+    },
+    automatic: {
+        type: Boolean
     }
 });
 
