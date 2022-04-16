@@ -177,7 +177,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       console.log("current delay: ", DELAY_AMOUNT);
 
       try{
-        // console.log("Beginning of update process..........................");
         
         //getting brands' names and urls
         brands = await getBrandsInfo();
