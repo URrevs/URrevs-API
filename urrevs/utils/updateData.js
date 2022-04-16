@@ -138,6 +138,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       let updateLog;
 
       // latest phone from each toxic brand (brands with very old phones)
+      // type the name of brand in lowercase letters
       let latestToxic = {
         "amoi": "e860",
         "at&t": "quickfire",
@@ -157,8 +158,10 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         modu: "t",
         mwg: "zinc ii",
         nec: "terrain",
+        o: "XDA Serra",
         neonode: "n2",
         palm: "palm",
+        qtek: "9600",
         sagem: "puma phone",
         sendo: "x2",
         sewon: "srs-3300",
@@ -170,10 +173,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         wnd: "wind van gogh 2100",
         xcute: "dv80"
       };
-
-      let latestSemiToxicBrands = {
-        "amazon": "Fire HD 10 Plus (2021)"
-      }
 
       console.log("current delay: ", DELAY_AMOUNT);
 
@@ -247,18 +246,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 }
                 else{
                   // new brand
-                  newPhones.push(phone);
-                }
-              }
-              else if(latestSemiToxicBrands[brands[x].name.toLowerCase()]){
-                // semi toxic
-                if(latestSemiToxicBrands[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
-                  console.log("Brand ", brands[x].name, " is considered semi toxic and its currently latest phone is toxic")
-                  goNextPage = false;
-                  break;
-                }
-                else{
-                  // semi toxic brands but has new phones
                   newPhones.push(phone);
                 }
               }
