@@ -8,6 +8,11 @@ var app = require('../app');
 var debug = require('debug')('urrevs:server');
 var http = require('http');
 
+/*
+  Importing scheduled tasks
+*/
+const convertEURtoEGP = require("../scheduled/currencyConversion");
+
 /**
  * Get port from environment and store in Express.
  */
@@ -84,6 +89,7 @@ function onError(error) {
  */
 
 function onListening() {
+  convertEURtoEGP();
   var addr = server.address();
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
