@@ -116,8 +116,13 @@ const getBrandsInfo = ()=>{
         from one page to another in the same brand (pagination in brand)
         from the specs page of a phone to another
         from one brand to another
+    * scheduling:
+        this function is scheduled to run on the first day of each month at 12:00 PM
+        if it runs first, then an admin requested manual update, an error will be returned to the admin indication that there is a currently running update process
+        if the manual update runs first, then the scheduling time came, the function will check the status of the latest update. If it is updating, the function will exit, else the function will continue
+        since the manual update runs first, so the status of the latest update must be (isUpdating = true) 
 */
-exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCollection, nPhoneCollection, updateCollection) =>{
+exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCollection, nPhoneCollection, updateCollection, scheduled=false) =>{
     return new Promise(async(resolve, reject)=>{
       let conversionFromUSDtoEur = null;
       let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
@@ -166,6 +171,16 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         xcute: "dv80"
       };
 
+      if(scheduled){
+        let latestUpdate = await updateCollection.find({}).sort({createdAt: -1}).limit(1);
+        if(latestUpdate.length > 0){
+          if(latestUpdate[0].isUpdating == true){
+            console.log("Seems to be a manual update is running, cancelling the scheduled job");
+            return resolve();
+          }
+        }
+      }
+
       console.log("current delay: ", DELAY_AMOUNT);
 
       try{
@@ -179,7 +194,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         // }];
 
         // initialize an update log (isUpdating: true)
-        updateLog =  await updateCollection.create({createdAt: new Date()}); 
+        updateLog =  await updateCollection.create({createdAt: new Date(), automatic: scheduled}); 
         
         
         // for each brand, do the following
