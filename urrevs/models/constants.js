@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const constantsSchema = new schema({
-    type: {
+    name: {
         type: String,
         index: true
     },

@@ -19,22 +19,14 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
       oneUsd = rates.USD;
       usdToeur = oneEur / oneUsd;
       
-      let constDoc = await CONSTANT.findOne({type: "USDToEUR"});
+      await CONSTANT.findOneAndUpdate({name: "USDToEUR"}, {$set: {value: usdToeur}}, {upsert: true});
       
-      if(constDoc == null){
-        // create a new document
-        await CONSTANT.create({type: "USDToEUR", value: usdToeur});
-      }
-      else{
-        // update the current document
-        await CONSTANT.updateOne({type: "USDToEUR"}, {$set: {value: usdToeur}});
-      }
       console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
       return usdToeur;
     }
     catch(e){
       try{
-        let constDoc = await CONSTANT.findOne({type: "USDToEUR"});
+        let constDoc = await CONSTANT.findOne({name: "USDToEUR"});
         if(constDoc == null){
           console.log("Auto Conversion failed due to API connection error: Using the backup value which is ", backup);
           return backup;
@@ -106,7 +98,7 @@ const getBrandsInfo = ()=>{
     * uses the function "getBrandsInfo" to load the names and urls of all available brands on source
     * for each brand, do the following:
         1- look for the brand in the db
-        2- if found, obtain the latest phone we have for this brand. if not, consider the latest phone as null
+        2- if found, obtain the latest phone we have for this brand. if not, check if it's a potential toxic brand and act accordingly
         3- get the list of new phones for this brand from the source. ("new phones" means all phones that are newer than latest phone we have for this brand)
         4- reverse the list of new phones, so that the oldest phone in the list comes first
         5- for each phone in the list of new phones, do the followig
