@@ -150,6 +150,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         ericsson: "r600",
         eten: "glofiish x610",
         "fujitsu siemens": "t830",
+        "i-mate": "810-f",
         innostream: "inno a20",
         maxon: "mx-c90",
         mitsubishi: "m430i/m900",
@@ -157,7 +158,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         mwg: "zinc ii",
         nec: "terrain",
         neonode: "n2",
-        nvidia: "shield k1",
         palm: "palm",
         sagem: "puma phone",
         sendo: "x2",
@@ -170,6 +170,10 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         wnd: "wind van gogh 2100",
         xcute: "dv80"
       };
+
+      let latestSemiToxicBrands = {
+        "amazon": "Fire HD 10 Plus (2021)"
+      }
 
       console.log("current delay: ", DELAY_AMOUNT);
 
@@ -198,12 +202,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
           let brand;  // if null, it indeicates that the brand doesn't exist
           
           console.log("scanning brand: ", brands[x].name);
-
-          // // Skipping toxic brands (old brands with very old phones)
-          // if(toxicBrands.includes(brands[x].name.toLowerCase())){
-          //   console.log("skipping brand: ", brands[x].name);
-          //   continue;
-          // }
 
           // get company document to get its id
           brand = await brandCollection.findOne({nameLower: brands[x].name.toLowerCase()});
@@ -237,7 +235,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               if(!brand){
                 if(latestToxic[brands[x].name.toLowerCase()]){
                   // toxic brand
-                  if(latestToxic[brands[x].name.toLowerCase()] == phone.name.toLowerCase()){
+                  if(latestToxic[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
                     console.log("Brand ", brands[x].name, " is considered toxic and its currently latest phone is toxic as well")
                     goNextPage = false;
                     break;
@@ -249,6 +247,18 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 }
                 else{
                   // new brand
+                  newPhones.push(phone);
+                }
+              }
+              else if(latestSemiToxicBrands[brands[x].name.toLowerCase()]){
+                // semi toxic
+                if(latestSemiToxicBrands[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
+                  console.log("Brand ", brands[x].name, " is considered semi toxic and its currently latest phone is toxic")
+                  goNextPage = false;
+                  break;
+                }
+                else{
+                  // semi toxic brands but has new phones
                   newPhones.push(phone);
                 }
               }
@@ -361,6 +371,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               });
               
               // only include "Available" and "Discontinuous" status in launch
+              // launch and status checks are applied here
               if(!(launchAvailability[0].value.match(new RegExp("Available")) || launchAvailability[0].value.match(new RegExp("Discontinued")))){
                 // res.setHeader("Content-Type", "application/json");
                 // res.json({status: "skipped"});
@@ -421,6 +432,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                   2- 7 <= screen size <= 8.1  and  screen to body ratio >= 77
                   3- screen to body ratio >= 140
               */
+              // display checks are applied here
               if(!((sizeInInches >= 3.4 && sizeInInches < 7))){
                 if(!((sizeInInches >= 7 && sizeInInches <= 8.1 && screenToBodyRatio >= 77))){
                   if(!((screenToBodyRatio >= 140))){
