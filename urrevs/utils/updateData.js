@@ -290,11 +290,8 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
             nextPage = $('a.pages-next').attr('href');
           }
 
-          // reversing the new phones list, so that the older phones are stored first
-          newPhones = newPhones.reverse();
-
-          // itertating over the new phones to test them then add them if they pass the test
-          for(let i=0; i<newPhones.length; i++){
+          // itertating over the new phones backwards (so that the older phones are stored first) to test them then add them if they pass the test
+          for(let i=newPhones.length-1; i>=0; i--){
             await delay(DELAY_AMOUNT);
             const {data: sepcsResponse} = await axios.get(SOURCE + '/' + newPhones[i].url, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
             $ = cheerio.load(sepcsResponse);
