@@ -77,6 +77,7 @@ targetsRouter.get("/update/latest", (req, res, next)=>{
       let d = op.createdAt;
       let updating = op.isUpdating;
       let failure = op.failed;
+      let auto = op.automatic;
       
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
@@ -87,6 +88,7 @@ targetsRouter.get("/update/latest", (req, res, next)=>{
           numPhones: pList.length,
           numCompanies: compList.length,
           date: d,
+          automatic: auto,
           isUpdating: updating,
           failed: failure
         });
