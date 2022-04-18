@@ -67,11 +67,23 @@ targetsRouter.get("/update/latest", (req, res, next)=>{
       let op = operation[0];
       
       for(let comp of op.companies){
-        compList.push(comp._id);
+        let i = comp._id._id;
+        let n = comp._id.name;
+        compList.push({
+          _id: i,
+          name: n,
+          type: "company"
+        });
       }
 
       for(let p of op.phones){
-        pList.push(p._id);
+        let i = p._id._id;
+        let n = p._id.name;
+        pList.push({
+          _id: i,
+          name: n,
+          type: "phone"
+        });
       }
 
       let d = op.createdAt;
@@ -99,11 +111,11 @@ targetsRouter.get("/update/latest", (req, res, next)=>{
       res.json({success: false, status: "no update operations yet"});
     }
   })
-  .catch((err)=>{
-    res.statusCode = 500;
-    res.setHeader("Content-Type", "application/json");
-    res.json({success: false, status: "process failed"});
-  });
+  // .catch((err)=>{
+  //   res.statusCode = 500;
+  //   res.setHeader("Content-Type", "application/json");
+  //   res.json({success: false, status: "process failed"});
+  // });
 });
 
 
