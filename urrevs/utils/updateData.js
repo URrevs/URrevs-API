@@ -171,6 +171,25 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         xcute: "dv80"
       };
 
+      // semi-toxic means that the brand's latest phone is a tablet or a not-modern phone which we don't want to add to the DB
+      // type the name of brand in lowercase letters
+      let latestSemiToxic = {
+        "acer": "Chromebook Tab 10",
+        "amazon": "Fire HD 10 Plus (2021)",
+        "archos": "Diamond",
+        "cat": "S22 Flip",
+        "dell": "Venue 10 7000",
+        "garmin-asus": "A10",
+        "haier": "C300",
+        "icemobile": "G8 LTE",
+        "lenovo": "Legion Y700",
+        "pantech": "Breeze IV",
+        "parla": "Minu P124",
+        "plum": "Ram 10 LTE",
+        "spice": "Smart Pulse (M-9010)",
+        "toshiba": "Excite Go"
+      };
+
       if(scheduled){
         let latestUpdate = await updateCollection.find({}).sort({createdAt: -1}).limit(1);
         if(latestUpdate.length > 0){
@@ -252,6 +271,18 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 }
                 else{
                   // new brand
+                  newPhones.push(phone);
+                }
+              }
+              else if(latestSemiToxic[brands[x].name.toLowerCase()]){
+                // semi-toxic brand
+                if(latestSemiToxic[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
+                  console.log("Brand ", brands[x].name, " is considered semi-toxic and its currently latest product is considered semi-toxic as well")
+                  goNextPage = false;
+                  break;
+                }
+                else{
+                  // semi-toxic brands but has new phones
                   newPhones.push(phone);
                 }
               }
