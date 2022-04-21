@@ -6,6 +6,7 @@
 var dotenv = require('dotenv').config();
 var express = require('express');
 var logger = require('morgan');
+const cors = require('cors');
 
 // Importing config files
 
@@ -34,6 +35,7 @@ var app = express();
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cors({origin: "*"})); // TODO: (PRODUCTION) Change this to the domain of the web frontend (https://urrevs.com)
 
 
 // Applying Routers
