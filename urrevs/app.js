@@ -9,7 +9,6 @@ var logger = require('morgan');
 
 // Importing config files
 const config = require("./config");
-const cors = require("./configs/cors");
 
 // Importing DB config
 const db = require("./configs/dBconfig");
