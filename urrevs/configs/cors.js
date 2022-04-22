@@ -5,7 +5,6 @@
 
 const cors = require("cors");
 const CONSTANT = require("../models/constants");
-const config = require("../config");
 
 const corsOptions = async(req, callback)=>{
     let whitelist = [];
@@ -13,10 +12,11 @@ const corsOptions = async(req, callback)=>{
         // getting allowd domains from the DB. AllowedDomains are one string separated by ","
         let allowed = await CONSTANT.findOne({name: "AllowedDomains"}); // don't forget to add front domain to the allowed domains in the first time you created it
         whitelist = allowed.value.split(",");
+        whitelist.push(process.env.FRONT_DOMAIN);
     }
     catch(err){
         // making sure that the front-end domain is in the whitelist
-        whitelist = [process.env.FRONT_DOMAIN || config.FRONT_DOMAIN];
+        whitelist = [process.env.FRONT_DOMAIN];
     }
 
     if(whitelist.indexOf(req.header('Origin')) !== -1){
@@ -27,5 +27,8 @@ const corsOptions = async(req, callback)=>{
     }
 }
 
-exports.corsUsOnly = cors({origin: "*"});   // TODO: (PRODUCTION) Change this to the domain of the web frontend (https://urrevs.com)
-exports.corsUsAndSpecificOthers = cors(corsOptions);    // for future use to allow specific domains to access the API
+// only allow our front domain to access the api
+exports.corsUsOnly = cors({origin: [(process.env.FRONT_DOMAIN)]});
+
+// for future use to allow other specific domains (along with our front domain) to access the API
+exports.corsUsAndSpecificOthers = cors(corsOptions);
