@@ -7,7 +7,7 @@
   
   
   const url = process.env.DB_URI;
-  exports.connect = Mongoose.connect(url).then((db) => {
+  module.exports = Mongoose.connect(url).then((db) => {
       console.log("DB Connected Successfully!");
     })
     .catch((err) => {
