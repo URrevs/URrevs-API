@@ -111,11 +111,11 @@ targetsRouter.get("/update/latest", (req, res, next)=>{
       res.json({success: false, status: "no update operations yet"});
     }
   })
-  // .catch((err)=>{
-  //   res.statusCode = 500;
-  //   res.setHeader("Content-Type", "application/json");
-  //   res.json({success: false, status: "process failed"});
-  // });
+  .catch((err)=>{
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "process failed"});
+  });
 });
 
 
