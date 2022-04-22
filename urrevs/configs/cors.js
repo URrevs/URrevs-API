@@ -6,7 +6,7 @@ const corsOptions = async(req, callback)=>{
     let whitelist = [];
     try{
         // getting allowd domains from the DB. AllowedDomains are one string separated by ","
-        let allowed = await CONSTANT.findOne({name: "AllowedDomains"});
+        let allowed = await CONSTANT.findOne({name: "AllowedDomains"}); // don't forget to add front domain to the allowed domains in the first time you created it
         whitelist = allowed.value.split(",");
     }
     catch(err){
