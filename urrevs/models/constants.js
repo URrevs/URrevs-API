@@ -12,7 +12,7 @@ const constantsSchema = new schema({
         index: true
     },
     value: {
-        type: Number
+        type: String
     }
 });
 

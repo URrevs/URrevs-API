@@ -17,14 +17,14 @@ module.exports = ()=>{
             oneEgp = rates.EGP;
             eurToEgp = oneEgp / oneEur;
 
-            CONSTANT.findOneAndUpdate({name: "EURToEGP"}, {$set: {value: eurToEgp}}, {upsert: true}).then(()=>{
-                console.log("End of scheduled curreny update (SUCCESS)..........................");
+            CONSTANT.findOneAndUpdate({name: "EURToEGP"}, [{$set: {value: eurToEgp.toString()}}], {upsert: true}).then(()=>{
+                console.log("End of scheduled EUR to EGP currency update (SUCCESS)..........................");
             })
             .catch((e)=>{
-                console.log("End of scheduled curreny update (FAILURE)..........................");
+                console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................");
             });
         }).catch((e)=>{
-            console.log("End of scheduled curreny update (FAILURE)..........................");
+            console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................");
         });
     });
 };

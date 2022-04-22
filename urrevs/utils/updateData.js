@@ -19,7 +19,7 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
       oneUsd = rates.USD;
       usdToeur = oneEur / oneUsd;
       
-      await CONSTANT.findOneAndUpdate({name: "USDToEUR"}, {$set: {value: usdToeur}}, {upsert: true});
+      await CONSTANT.findOneAndUpdate({name: "USDToEUR"}, [{$set: {value: usdToeur.toString()}}], {upsert: true});
       
       console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
       return usdToeur;
@@ -32,8 +32,8 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
           return backup;
         }
         else{
-          console.log("Auto Conversion failed due to API connection error: Using the latest stored value which is ", constDoc.value);
-          return constDoc.value;
+          console.log("Auto Conversion failed due to API connection error: Using the latest stored value which is ", parseFloat(constDoc.value));
+          return parseFloat(constDoc.value);
         }
       }
       catch(e){
