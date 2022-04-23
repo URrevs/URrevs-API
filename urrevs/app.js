@@ -27,7 +27,16 @@ var targetsRouter = require('./routes/targetsRouter');
 
 
 const redis = require("redis");
-const redisClient = redis.createClient().connect();
+const fn = async () =>{
+  try{
+    const redisClient = await redis.createClient().connect();
+    console.log("Redis connected successfully");
+  }
+  catch(err){
+    console.log("redis error", err);
+  }
+}
+fn();
 
 
 // Importing Zone Ends Here
