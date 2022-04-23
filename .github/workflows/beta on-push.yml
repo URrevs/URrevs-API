@@ -39,8 +39,8 @@ jobs:
         heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
         heroku_email: ${{ secrets.MAIL }}
         heroku_app_name: urrevs-api-dev-mobile
-        buildpack: "https://github.com/ddollar/heroku-buildpack-multi.git"
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
+        buildpack: "https://github.com/ddollar/heroku-buildpack-multi.git"
 
   DeployToHerokuWeb:
     needs: [DeployToHerokuMobile]
@@ -53,8 +53,8 @@ jobs:
         heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
         heroku_email: ${{ secrets.MAIL }}
         heroku_app_name: urrevs-api-dev-web
-        buildpack: "https://github.com/ddollar/heroku-buildpack-multi.git"
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
+        buildpack: "https://github.com/ddollar/heroku-buildpack-multi.git"
 
 
   mergeToMain:
