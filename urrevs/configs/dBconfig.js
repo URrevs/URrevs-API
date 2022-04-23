@@ -11,5 +11,6 @@
       console.log("DB Connected Successfully!");
     })
     .catch((err) => {
+      console.log("DB Not Connected...");
       console.log(err);
     });
