@@ -59,7 +59,8 @@ targetsRouter.get("/update", (req,res,next)=>{
 
 
 // get the info of the latest update operation (icluding current update)
-targetsRouter.get("/update/latest", (req, res, next)=>{
+//const rateLimit = require("../utils/rateLimit");
+targetsRouter.get("/update/latest" ,(req, res, next)=>{
   UPDATE.find({}).sort({createdAt: -1}).limit(1).populate("companies._id","name").populate("phones._id", "name").then((operation)=>{
     if(operation.length > 0){
       let compList = [];

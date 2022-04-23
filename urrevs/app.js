@@ -26,6 +26,10 @@ var indexRouter = require('./routes/index');
 var targetsRouter = require('./routes/targetsRouter');
 
 
+const redis = require("redis");
+const redisClient = redis.createClient().connect();
+
+
 // Importing Zone Ends Here
 //-----------------------------------------------------------------------------------------
 
