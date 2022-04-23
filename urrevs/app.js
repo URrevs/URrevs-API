@@ -30,7 +30,7 @@ const redis = require("redis");
 const fn = async () =>{
   try{
     const redisClient = await redis.createClient().connect();
-    console.log("Redis connected successfully");
+    console.log("Redis connected successfully"); 
   }
   catch(err){
     console.log("redis error", err);
