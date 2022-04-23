@@ -3,6 +3,7 @@
   Created on: 23-Apr-2022
 */
 
+// Algorithm: Sliding Window Counter
 const rateLimitter = require('express-rate-limit').rateLimit;
 
 module.exports = rateLimitter({
