@@ -13,6 +13,9 @@ const constantsSchema = new schema({
     },
     value: {
         type: String
+    },
+    date: {
+        type: Date
     }
 });
 

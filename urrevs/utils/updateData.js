@@ -19,7 +19,7 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
       oneUsd = rates.USD;
       usdToeur = oneEur / oneUsd;
       
-      await CONSTANT.findOneAndUpdate({name: "USDToEUR"}, [{$set: {value: usdToeur.toString()}}], {upsert: true});
+      await CONSTANT.findOneAndUpdate({name: "USDToEUR"}, [{$set: {value: usdToeur.toString(), date: new Date()}}], {upsert: true});
       
       console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and USD = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
       return usdToeur;
@@ -1115,7 +1115,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               _id: phoneBasic._id,
               price: (miscPrice == null || isNaN(miscPrice))?null:miscPrice.toString(),
               name: brand.name + ' ' + newPhones[i].name,
-              company: brand._id,
+              company: brand.name,
               releaseDate: launchReleaseDate,
               length: length,
               width: width,
