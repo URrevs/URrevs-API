@@ -91,8 +91,8 @@ function onError(error) {
 
 function onListening() {
   // scheduled tasks
-  convertEURtoEGP();  // Every day at 3:00 AM
-  updateDataFromSource(); // On the first day of each month at 3:00 AM
+  //convertEURtoEGP();  // Every day at 3:00 AM
+  //updateDataFromSource(); // On the first day of each month at 3:00 AM
   
   var addr = server.address();
   var bind = typeof addr === 'string'
