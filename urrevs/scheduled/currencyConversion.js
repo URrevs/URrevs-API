@@ -17,7 +17,7 @@ module.exports = ()=>{
             oneEgp = rates.EGP;
             eurToEgp = oneEgp / oneEur;
 
-            CONSTANT.findOneAndUpdate({name: "EURToEGP"}, [{$set: {value: eurToEgp.toString()}}], {upsert: true}).then(()=>{
+            CONSTANT.findOneAndUpdate({name: "EURToEGP"}, [{$set: {value: eurToEgp.toString(), date: new Date()}}], {upsert: true}).then(()=>{
                 console.log("End of scheduled EUR to EGP currency update (SUCCESS)..........................");
             })
             .catch((e)=>{

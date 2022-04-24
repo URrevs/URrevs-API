@@ -12,12 +12,10 @@ var nPhoneSchema = new schema({
         ref: "Phone"
     },
     company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Company"
+        type: String
     },
     name: {
-        type: String,
-        index: true
+        type: String
     },
     price: {
         type: String    // numerical
