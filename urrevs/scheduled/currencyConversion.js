@@ -5,7 +5,7 @@ const config = require("../config");
 const https = require("https");
 
 module.exports = ()=>{
-    cron.schedule("00 03 * * *", ()=>{  // Every day at 3:00 AM
+    cron.schedule(process.env.CURRENCY_UPDATE_SCHEDULE_PATTERN , ()=>{  // Every day at 3:00 AM
         // Get latest conversions from EUR to EGP
         let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
         let rates, oneEur, oneEgp, eurToEgp;
