@@ -39,4 +39,6 @@ const updateSchema = new schema({
     }
 });
 
+updateSchema.index({createdAt: -1});
+
 module.exports = mongoose.model("Update", updateSchema);

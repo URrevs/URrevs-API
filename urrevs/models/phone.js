@@ -8,12 +8,12 @@ const schema = mongoose.Schema;
 
 const phoneSchema = new schema({
     name: {
-        type: String,
-        index: true
+        type: String
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Company"
+        ref: "Company",
+        index: true
     },
     picture: {
         type: String
@@ -54,7 +54,5 @@ const phoneSchema = new schema({
 {
     timestamps: true
 });
-
-phoneSchema.index({createdAt: -1});
 
 module.exports = mongoose.model("Phone", phoneSchema);
