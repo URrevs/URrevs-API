@@ -133,4 +133,6 @@ var nPhoneSchema = new schema({
     timestamps: true
 });
 
+nPhoneSchema.index({createdAt: -1});
+
 module.exports = mongoose.model("Nphone", nPhoneSchema);
