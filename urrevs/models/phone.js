@@ -54,6 +54,6 @@ const phoneSchema = new schema({
     timestamps: true
 });
 
-phoneSchema.index({company: 1, createdAt: -1});
+phoneSchema.index({company: 1, createdAt: 1});
 
 module.exports = mongoose.model("Phone", phoneSchema);
