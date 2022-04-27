@@ -12,8 +12,7 @@ const phoneSchema = new schema({
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
-        index: true
+        ref: "Company"
     },
     picture: {
         type: String
@@ -55,6 +54,6 @@ const phoneSchema = new schema({
     timestamps: true
 });
 
-phoneSchema.index({createdAt: -1});
+phoneSchema.index({company: 1, createdAt: 1});
 
 module.exports = mongoose.model("Phone", phoneSchema);
