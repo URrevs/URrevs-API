@@ -9,10 +9,12 @@ const schema = mongoose.Schema;
 const userSchema = new schema({
     uid: {
         type: String,
-        index: true
+        index: true,
+        required: true
     },
     name: {
-        type: String
+        type: String,
+        required: true
     },
     picture: {
         type: String

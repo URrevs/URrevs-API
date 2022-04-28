@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 
 const USER = require("../models/user");
+const UPRODUCTS = require("../models/uproducts");
 
 
 const getTheRefCodeOfLatestUser = () => {
@@ -59,15 +60,20 @@ exports.authorize = (req) => {
                     getTheRefCodeOfLatestUser().then((latestUser)=>{
                         let u = decodedToken.uid;
                         let n = decodedToken.name;
-                        let p = decodedToken.picture
+                        let p = decodedToken.picture;
                         USER.create({
                             uid: u,
                             name: n,
                             picture: p,
                             refCode: "UR" + ((latestUser.length > 0)?(parseInt(latestUser[0].refCode.slice(2))+1):1),
                         }).then((newUser)=>{
-                            let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
-                            return resolve(token);
+                            UPRODUCTS.create({_id: newUser._id}).then(()=>{
+                                let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
+                                return resolve(token);
+                            })
+                            .catch((err)=>{
+                                return reject(err);
+                            });
                         })
                         .catch((err)=>{
                             return reject(err);
