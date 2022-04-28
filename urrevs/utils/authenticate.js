@@ -10,6 +10,8 @@ const config = require("../config");
 
 // login or signup
 exports.authorize = (req) => {
+    let secretKey = (process.env.JWT_SECRET || config.JWT_SECRET);
+    let expiresIn = (process.env.JWT_EXPIRES_IN || config.JWT_EXPIRES_IN);
     return new Promise((resolve, reject)=>{
             // checking if there is a token
     let idToken;
@@ -28,8 +30,8 @@ exports.authorize = (req) => {
         .verifyIdToken(idToken, checkRevoked)
         .then((decodedToken) => {
             // user is authenticated
-            let token = jwt.sign({_id: decodedToken.uid}, (process.env.JWT_SECRET || config.JWT_SECRET), 
-                        {expiresIn: (process.env.JWT_EXPIRES_IN || config.JWT_EXPIRES_IN)});
+            let token = jwt.sign({_id: decodedToken.uid}, secretKey, 
+                        {expiresIn: expiresIn});
             return resolve(token);
         })
         .catch((err) => {
