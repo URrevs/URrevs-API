@@ -1,5 +1,12 @@
-const admin = require("firebase-admin");
+/*
+  Author: Abdelrahman Hany
+  Created on: 28-Apr-2022
+*/
 
+const admin = require("firebase-admin");
+const jwt = require("jsonwebtoken");
+
+const config = require("../config");
 
 // login or signup
 exports.authorize = (req) => {
@@ -21,7 +28,9 @@ exports.authorize = (req) => {
         .verifyIdToken(idToken, checkRevoked)
         .then((decodedToken) => {
             // user is authenticated
-            return resolve(decodedToken);
+            let token = jwt.sign({_id: decodedToken.uid}, (process.env.JWT_SECRET || config.JWT_SECRET), 
+                        {expiresIn: (process.env.JWT_EXPIRES_IN || config.JWT_EXPIRES_IN)});
+            return resolve(token);
         })
         .catch((err) => {
             // token is expired
