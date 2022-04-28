@@ -100,6 +100,35 @@ userRouter.get("/myprofile", authenticate.verifyUser, (req, res, next)=>{
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "process failed"});
     });
-})
+});
+
+
+// get user profile
+userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
+    USER.findById(req.params.userId).then((user)=>{
+        if(!user){
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "user not found"});
+        }
+        else{
+            let result = {};
+            result._id = user._id;
+            result.name = user.name;
+            result.picture = user.picture;
+            result.points = user.absPoints;
+
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: true, user: result});
+        }
+    })
+    .catch((err)=>{
+        console.log("Error from /users/:userId/profile: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    })
+});
 
 module.exports = userRouter;
