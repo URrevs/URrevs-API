@@ -8,6 +8,20 @@ const jwt = require("jsonwebtoken");
 
 const config = require("../config");
 
+const USER = require("../models/user");
+
+
+const getTheRefCodeOfLatestUser = () => {
+    return new Promise((resolve, reject)=>{
+        USER.find({}, {_id: 0, refCode: 1}).sort({_id: -1}).then((user)=>{
+            return resolve(user);
+        })
+        .catch((err)=>{
+            return reject(err);
+        })
+    })
+}
+
 // login or signup
 exports.authorize = (req) => {
     let secretKey = (process.env.JWT_SECRET || config.JWT_SECRET);
@@ -30,9 +44,40 @@ exports.authorize = (req) => {
         .verifyIdToken(idToken, checkRevoked)
         .then((decodedToken) => {
             // user is authenticated
-            let token = jwt.sign({_id: decodedToken.uid}, secretKey, 
-                        {expiresIn: expiresIn});
-            return resolve(token);
+            // checking if user exists
+            USER.findOne({firebaseId: decodedToken.uid}).then((user)=>{
+                if(user){
+                    // user exists
+                    // isssue a jwt token
+                    let token = jwt.sign({_id: user._id}, secretKey, {expiresIn: expiresIn});
+                    return resolve(token);
+                }
+                else{
+                    // user does not exist
+                    // create a new user, then issue a jwt token
+                    // get the refCode of the latest user
+                    getTheRefCodeOfLatestUser().then((latestUser)=>{
+                        USER.create({
+                            firebaseId: decodedToken.uid,
+                            name: decodedToken.name,
+                            picture: decodedToken.picture,
+                            refCode: "UR" + ((latestUser.length > 0)?(parseInt(latestUser[0].refCode.slice(2))+1):1),
+                        }).then((newUser)=>{
+                            let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
+                            return resolve(token);
+                        })
+                        .catch((err)=>{
+                            return reject(err);
+                        })
+                    })
+                    .catch((err)=>{
+                        return reject(err);
+                    })
+                }
+            })
+            .catch((err)=>{
+                return reject(err);
+            });
         })
         .catch((err) => {
             // token is expired
@@ -45,7 +90,7 @@ exports.authorize = (req) => {
             }
             else{
                 // process error
-                return reject("error");
+                return reject(err);
             }
         });
     });
@@ -53,16 +98,26 @@ exports.authorize = (req) => {
 
 
 // revoke all access and refresh tokens for a certain user
-exports.revoke = (firebase_uid) => {
+exports.revoke = (id) => {
     return new Promise((resolve, reject)=>{
-        admin
-        .auth()
-        .revokeRefreshTokens(firebase_uid).then(()=>{
-            resolve();
+        USER.findById(id).then((user)=>{
+            if(user){
+                admin
+                    .auth()
+                    .revokeRefreshTokens(user.firebaseId)
+                    .then(()=>{
+                        return resolve();
+                    })
+                    .catch((err)=>{
+                        return reject(err);
+                    });
+            }
+            else{
+                return reject("not found");
+            }
         })
         .catch((err)=>{
-            // process error
-            reject(err);
-        })
+            return reject(err);
+        });
     });
 }
