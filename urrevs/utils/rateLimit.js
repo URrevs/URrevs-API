@@ -12,9 +12,16 @@ we can achieve small memory consumption.
 */
 const rateLimitter = require('express-rate-limit').rateLimit;
 
-module.exports = rateLimitter({
+exports.regular = rateLimitter({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS),
   max: parseInt(process.env.RATE_LIMIT_MAX),
+  message: {success: false, status: "too many requests"}, 
+  headers: true
+}); 
+
+exports.search = rateLimitter({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS_SEARCH),
+  max: parseInt(process.env.RATE_LIMIT_MAX_SEARCH),
   message: {success: false, status: "too many requests"}, 
   headers: true
 }); 

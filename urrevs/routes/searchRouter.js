@@ -5,6 +5,7 @@
 
 const express = require("express");
 
+const rateLimit = require("../utils/rateLimit");
 const cors = require("../utils/cors");
 
 const PHONE = require("../models/phone");
@@ -12,15 +13,13 @@ const phone = require("../models/phone");
 
 const searchRouter = express.Router();
 
-// Applying important middlewares
-searchRouter.use(cors.cors);
 
 //--------------------------------------------------------------------
 
 // Endpoints Implementation
 
 
-searchRouter.get("/products/phones", (req, res, next)=>{
+searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, next)=>{
   let searchWord = req.query.q;
   if(!searchWord){
     res.statusCode = 400;

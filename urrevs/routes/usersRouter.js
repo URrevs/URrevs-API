@@ -16,7 +16,6 @@ const OWNED_PHONE = require("../models/ownedPhone");
 const userRouter = express.Router();
 
 // Applying important middlewares
-userRouter.use(rateLimit);
 userRouter.use(cors.cors);
 
 //--------------------------------------------------------------------
@@ -26,7 +25,7 @@ userRouter.use(cors.cors);
 
 
 // login or sign up
-userRouter.get("/authenticate", (req, res, next)=>{
+userRouter.get("/authenticate", rateLimit.regular, cors.cors, (req, res, next)=>{
     authenticate.authorize(req).then((token)=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -59,7 +58,7 @@ userRouter.get("/authenticate", (req, res, next)=>{
 
 
 // give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
-userRouter.put("/login/mobile", authenticate.verifyUser, (req, res, next)=>{
+userRouter.put("/login/mobile", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     USER.findOne({_id: req.user._id}).then((user)=>{
         if(user){
             if(!(user.loggedInUsingMobile)){
@@ -100,7 +99,7 @@ userRouter.put("/login/mobile", authenticate.verifyUser, (req, res, next)=>{
 
 
 // logout from all devices
-userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/logout", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     authenticate.revoke(req.user.uid).then(()=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -123,7 +122,7 @@ userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get my profile
-userRouter.get("/profile", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/profile", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     USER.findById(req.user._id).then((user)=>{
         let result = {};
         result._id = user._id;
@@ -146,7 +145,7 @@ userRouter.get("/profile", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get user profile
-userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/profile", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     USER.findById(req.params.userId).then((user)=>{
         if(!user){
             res.statusCode = 404;
@@ -175,7 +174,7 @@ userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get my owned phones
-userRouter.get("/phones", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/phones", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = 20;
     let roundNum = req.query.round;
 
@@ -215,7 +214,7 @@ userRouter.get("/phones", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get user's owned phones
-userRouter.get("/:userId/phones", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/phones", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = 20;
     let roundNum = req.query.round;
 

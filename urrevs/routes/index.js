@@ -9,11 +9,13 @@ var router = express.Router();
 const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit");
 
-router.use(cors.cors);
-router.use(rateLimit);
+//--------------------------------------------------------------------
+
+// Endpoints Implementation
+
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', rateLimit.regular, cors.cors, function(req, res, next) {
   res.json({"status": "deployed successfully"});
 });
 
