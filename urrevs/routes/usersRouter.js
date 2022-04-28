@@ -123,7 +123,7 @@ userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get my profile
-userRouter.get("/myprofile", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/profile", authenticate.verifyUser, (req, res, next)=>{
     USER.findById(req.user._id).then((user)=>{
         let result = {};
         result._id = user._id;
@@ -175,7 +175,7 @@ userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
 
 
 // get my owned phones
-userRouter.get("/myphones", authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/phones", authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = 20;
     let roundNum = req.query.round;
 
