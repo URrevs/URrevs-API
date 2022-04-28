@@ -57,7 +57,7 @@ userRouter.get("/authenticate", (req, res, next)=>{
 
 // logout from all devices
 userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
-    authenticate.revoke(req.user._id).then(()=>{
+    authenticate.revoke(req.user.uid).then(()=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json({success: true, status: "user logged out successfully"});
@@ -77,5 +77,9 @@ userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
     });
 });
 
+
+userRouter.get("/", authenticate.verifyUser, (req, res, next)=>{
+    res.json(req.user);
+})
 
 module.exports = userRouter;

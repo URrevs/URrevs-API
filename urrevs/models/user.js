@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const userSchema = new schema({
-    firebaseId: {
+    uid: {
         type: String,
         index: true
     },

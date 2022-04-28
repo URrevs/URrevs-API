@@ -45,7 +45,7 @@ exports.authorize = (req) => {
         .then((decodedToken) => {
             // user is authenticated
             // checking if user exists
-            USER.findOne({firebaseId: decodedToken.uid}).then((user)=>{
+            USER.findOne({uid: decodedToken.uid}).then((user)=>{
                 if(user){
                     // user exists
                     // isssue a jwt token
@@ -57,10 +57,13 @@ exports.authorize = (req) => {
                     // create a new user, then issue a jwt token
                     // get the refCode of the latest user
                     getTheRefCodeOfLatestUser().then((latestUser)=>{
+                        let u = decodedToken.uid;
+                        let n = decodedToken.name;
+                        let p = decodedToken.picture
                         USER.create({
-                            firebaseId: decodedToken.uid,
-                            name: decodedToken.name,
-                            picture: decodedToken.picture,
+                            uid: u,
+                            name: n,
+                            picture: p,
                             refCode: "UR" + ((latestUser.length > 0)?(parseInt(latestUser[0].refCode.slice(2))+1):1),
                         }).then((newUser)=>{
                             let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
@@ -98,27 +101,17 @@ exports.authorize = (req) => {
 
 
 // revoke all access and refresh tokens for a certain user
-exports.revoke = (id) => {
+exports.revoke = (uid) => {
     return new Promise((resolve, reject)=>{
-        USER.findById(id).then((user)=>{
-            if(user){
-                admin
-                    .auth()
-                    .revokeRefreshTokens(user.firebaseId)
-                    .then(()=>{
-                        return resolve();
-                    })
-                    .catch((err)=>{
-                        return reject(err);
-                    });
-            }
-            else{
-                return reject("not found");
-            }
-        })
-        .catch((err)=>{
-            return reject(err);
-        });
+        admin
+            .auth()
+            .revokeRefreshTokens(uid)
+            .then(()=>{
+                return resolve();
+            })
+            .catch((err)=>{
+                return reject(err);
+            });
     });
 }
 
@@ -133,9 +126,9 @@ exports.verifyUser = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            USER.findById(decoded._id, {admin: 1}).then((user)=>{
+            USER.findById(decoded._id, {admin: 1, uid: 1}).then((user)=>{
                 if(user){
-                    req.user = {_id: user._id, admin: user.admin};
+                    req.user = {_id: user._id, admin: user.admin, uid: user.uid};
                     return next();
                 }
                 else{
@@ -187,7 +180,7 @@ exports.verifyFlexible = (req, res, next)=>{
             let decoded = jwt.verify(token, secretKey);
             USER.findById(decoded._id, {admin: 1}).then((user)=>{
                 if(user){
-                    req.user = {_id: user._id, admin: user.admin};
+                    req.user = {_id: user._id};
                     return next();
                 }
                 else{
