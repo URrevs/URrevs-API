@@ -10,6 +10,7 @@ const cors = require("../utils/cors");
 const authenticate = require("../utils/authenticate");
 
 const USER = require("../models/user");
+const OWNED_PHONE = require("../models/ownedPhone");
 
 const userRouter = express.Router();
 
@@ -128,7 +129,46 @@ userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "process failed"});
+    });
+});
+
+
+// get user's owned phones
+userRouter.get("/myphones", authenticate.verifyUser, (req, res, next)=>{
+    let itemsPerRound = 20;
+    let roundNum = req.query.round;
+
+    if(roundNum == null){
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "bad request"});
+        return;
+    }
+
+    OWNED_PHONE.find({user: req.user._id})
+    .sort({ownedAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("phone", {name: 1})
+    .then((phones)=>{
+        let result = [];
+        for(let phone of phones){
+            result.push({
+                _id: phone.phone._id,
+                name: phone.phone.name,
+                type: "phone"
+            });
+        }
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, phones: result});
     })
+    .catch((err)=>{
+        console.log("Error from /users/:userId/profile: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
 });
 
 module.exports = userRouter;
