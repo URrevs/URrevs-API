@@ -144,7 +144,7 @@ searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
 
 
 // get my recent searches
-searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+searchRouter.get("/recent", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
   UPRODUCT.findOne({_id: req.user._id}, {recentSearches: 1}).populate("recentSearches._id", {name: 1}).then((user)=>{
     let searches = [];
     for(s of user.recentSearches){
