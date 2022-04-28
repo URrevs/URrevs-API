@@ -8,6 +8,7 @@ const express = require("express");
 const rateLimit = require("../utils/rateLimit");
 const cors = require("../utils/cors");
 const authenticate = require("../utils/authenticate");
+const config = require("../config");
 
 const USER = require("../models/user");
 const OWNED_PHONE = require("../models/ownedPhone");
@@ -57,6 +58,46 @@ userRouter.get("/authenticate", (req, res, next)=>{
 });
 
 
+// give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
+userRouter.put("/login/mobile", authenticate.verifyUser, (req, res, next)=>{
+    USER.findOne({_id: req.user._id}).then((user)=>{
+        if(user){
+            if(!(user.loggedInUsingMobile)){
+                user.loggedInUsingMobile = true;
+                user.comPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
+                user.save().then((user)=>{
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: true, status: "points added successfully"});
+                })
+                .catch((err)=>{
+                    console.log("Error from /authenticate/mobile: ", err);
+                    res.statusCode = 500;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "process failed"});
+                });
+            }
+            else{
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: true, status: "user already logged in using mobile before"});
+            }
+        }
+        else{
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "you do not exist in the system"});
+        }
+    })
+    .catch((err)=>{
+        console.log("Error from /authenticate/mobile: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
+});
+
+
 
 // logout from all devices
 userRouter.get("/logout", authenticate.verifyUser, (req, res, next)=>{
@@ -89,7 +130,7 @@ userRouter.get("/myprofile", authenticate.verifyUser, (req, res, next)=>{
         result.name = user.name;
         result.picture = user.picture;
         result.refCode = user.refCode;
-        result.points = user.absPoints;
+        result.points = user.absPoints + user.comPoints;
         
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -117,7 +158,7 @@ userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
             result._id = user._id;
             result.name = user.name;
             result.picture = user.picture;
-            result.points = user.absPoints;
+            result.points = user.absPoints + user.comPoints;
 
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
