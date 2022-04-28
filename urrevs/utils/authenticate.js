@@ -72,7 +72,12 @@ exports.authorize = (req) => {
                                 return resolve(token);
                             })
                             .catch((err)=>{
-                                return reject(err);
+                                USER.findByIdAndDelete(newUser._id).then(()=>{
+                                    return reject(err);
+                                })
+                                .catch((err2)=>{
+                                    return reject(err2);
+                                });
                             });
                         })
                         .catch((err)=>{
