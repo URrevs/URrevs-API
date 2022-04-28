@@ -22,6 +22,11 @@ const companySchema = new schema({
     avgRating: {
         type: Number,
         default: 0
+    },
+    totalRevsCount: {
+        type: Number,
+        default: 0,
+        index: true
     }
 });
 
