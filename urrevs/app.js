@@ -23,6 +23,7 @@ const newPhoneSchema = require("./models/newPhone");
 const phoneSchema = require("./models/phone");
 const phoneSpecsSchema = require("./models/phoneSpecs");
 const updateSchema = require("./models/update");
+const userSchema = require("./models/user");
 
 // Importing Routers
 var indexRouter = require('./routes/index');
