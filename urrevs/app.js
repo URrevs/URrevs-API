@@ -34,9 +34,6 @@ var targetsRouter = require('./routes/targetsRouter');
 var searchRouter = require('./routes/searchRouter');
 
 
-// Importing rate limiter
-const rateLimit = require("./utils/rateLimit");
-
 // Importing Zone Ends Here
 //-----------------------------------------------------------------------------------------
 
@@ -45,7 +42,7 @@ var app = express();
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(rateLimit);
+
 
 // Applying Routers
 app.use('/', indexRouter);
