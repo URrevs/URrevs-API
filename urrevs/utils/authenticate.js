@@ -121,3 +121,96 @@ exports.revoke = (id) => {
         });
     });
 }
+
+//--------------------------------------------------------------------------------------
+
+// Middlewars
+
+// proceed only if the user is authenticated
+exports.verifyUser = (req, res, next)=>{
+    let secretKey = (process.env.JWT_SECRET || config.JWT_SECRET);
+    if(req.headers.authorization && req.headers.authorization.startsWith("bearer ")){
+        try{
+            let token = req.headers.authorization.split("bearer ")[1];
+            let decoded = jwt.verify(token, secretKey);
+            USER.findById(decoded._id, {admin: 1}).then((user)=>{
+                if(user){
+                    req.user = {_id: user._id, admin: user.admin};
+                    return next();
+                }
+                else{
+                    res.statusCode = 401;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "you do not exist in the system"});
+                }
+            })
+            .catch((err)=>{
+                console.log("Error from verifyUser: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
+            });
+        }
+        catch(err){
+            res.statusCode = 401;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "invalid token"});
+        }
+    }
+    else{
+        res.statusCode = 401;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "invalid token"});
+    }
+}
+
+
+// proceed only if the user is an admin (requires verifyUser)
+exports.verifyAdmin = (req, res, next)=>{
+    if(req.user && req.user.admin){
+        return next();
+    }
+    else{
+        res.statusCode = 403;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "you are not an admin"});
+    }
+};
+
+
+// proceed anyways, but add the user (if exists) to the request via req.user
+exports.verifyFlexible = (req, res, next)=>{
+    let secretKey = (process.env.JWT_SECRET || config.JWT_SECRET);
+    if(req.headers.authorization && req.headers.authorization.startsWith("bearer ")){
+        try{
+            let token = req.headers.authorization.split("bearer ")[1];
+            let decoded = jwt.verify(token, secretKey);
+            USER.findById(decoded._id, {admin: 1}).then((user)=>{
+                if(user){
+                    req.user = {_id: user._id, admin: user.admin};
+                    return next();
+                }
+                else{
+                    res.statusCode = 401;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "you do not exist in the system"});
+                }
+            })
+            .catch((err)=>{
+                console.log("Error from verifyUser: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
+            });
+        }
+        catch(err){
+            res.statusCode = 401;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "invalid token"});
+        }
+    }
+    else{
+        req.user = null;
+        return next();
+    }
+}
