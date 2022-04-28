@@ -171,8 +171,39 @@ searchRouter.put("/recent", rateLimit.regular, cors.cors, authenticate.verifyUse
     }
     // finding the recent searches for the user
     UPRODUCT.findOne({_id: req.user._id}).then((uproduct)=>{
-      // if the search result already exists, stop. Otherwise, add it
-      if(uproduct.recentSearches.id(req.body._id)){
+      if(!uproduct){
+        // if the user has no recent searches, create the document
+        UPRODUCT.create({_id: req.user._id}).then((uproduct)=>{
+          // add the new search result to the recent searches
+          addToRecentSearches(collection, req.body._id, type, onModel, uproduct)
+          .then((result)=>{
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: true, status: "result added successfully"});
+          })
+          .catch((err)=>{
+            if(err == 404){
+              res.statusCode = 404;
+              res.setHeader("Content-Type", "application/json");
+              res.json({success: false, status: "item not found"});
+            }
+            else{
+              console.log("Error from POST /search/recent: ", err);
+              res.statusCode = 500;
+              res.setHeader("Content-Type", "application/json");
+              res.json({success: false, status: "process failed"});
+            }
+          });
+        })
+        .catch((err)=>{
+          console.log("Error from /search/recent: ", err);
+          res.statusCode = 500;
+          res.setHeader("Content-Type", "application/json");
+          res.json({success: false, status: "process failed"});
+        })
+      }
+      else if(uproduct.recentSearches.id(req.body._id)){
+        // if the search result already exists, stop. Otherwise, add it
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json({success: true, status: "result already exists"});
@@ -220,6 +251,17 @@ searchRouter.put("/recent", rateLimit.regular, cors.cors, authenticate.verifyUse
 // get my recent searches
 searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser, (req, res, next)=>{
   UPRODUCT.findOne({_id: req.user._id}, {recentSearches: 1}).populate("recentSearches._id", {name: 1}).then((user)=>{
+    
+    // if the user has no recent searches, create the document
+    if(!user){
+      UPRODUCT.create({_id: req.user._id}).then((user)=>{
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, recent: user.recentSearches});
+      });
+      return;
+    }
+
     let searches = [];
     for(s of user.recentSearches){
       searches.push({
