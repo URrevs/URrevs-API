@@ -241,5 +241,26 @@ searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser
 });
 
 
+// delete a recent search result
+searchRouter.delete("/recent", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+  if(!(req.body._id)){
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "bad request"});
+    return;
+  }
+  // delete a certain search result given its id
+  UPRODUCT.findOneAndUpdate({_id: req.user._id}, {$pull: {recentSearches: {_id: req.body._id}}}).then((user)=>{
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: true, status: "result deleted successfully"});
+  })
+  .catch((err)=>{
+    console.log("Error from DELETE /search/recent: ", err);
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "process failed"});
+  })
+});
 
 module.exports = searchRouter;
