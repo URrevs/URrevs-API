@@ -9,13 +9,16 @@ const schema = mongoose.Schema;
 var nPhoneSchema = new schema({
     _id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Phone"
+        ref: "Phone",
+        required: true
     },
     company: {
-        type: String
+        type: String,
+        required: true
     },
     name: {
-        type: String
+        type: String,
+        required: true
     },
     price: {
         type: String    // numerical

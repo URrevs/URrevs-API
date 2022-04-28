@@ -9,7 +9,8 @@ const schema = mongoose.Schema;
 const phoneSpecsSchema = new schema({
     _id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Phone"
+        ref: "Phone",
+        required: true
     },
     price: {
         type: Number
