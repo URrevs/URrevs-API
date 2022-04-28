@@ -9,7 +9,7 @@ const schema = mongoose.Schema;
 const recentSearchesSchema = new schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
-    refPath: 'onModel',
+    refPath: 'recentSearches.onModel',
     required: true
   },
   type: {

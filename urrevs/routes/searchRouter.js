@@ -7,9 +7,11 @@ const express = require("express");
 
 const rateLimit = require("../utils/rateLimit");
 const cors = require("../utils/cors");
+const authenticate = require("../utils/authenticate");
 
 const PHONE = require("../models/phone");
 const COMPANY = require("../models/company");
+const UPRODUCT = require("../models/uproducts");
 
 const searchRouter = express.Router();
 
@@ -138,5 +140,26 @@ searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
     res.json({success: false, status: "process failed"});
   });
 });
+
+
+
+// get my recent searches
+searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+  UPRODUCT.findOne({_id: req.user._id}, {recentSearches: 1}).populate("recentSearches._id", {name: 1}).then((user)=>{
+    let searches = [];
+    for(s of user.recentSearches){
+      searches.push({
+        _id: s._id._id,
+        name: s._id.name,
+        type: s.type
+      });
+    }
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: true, recent: searches});
+  });
+});
+
+
 
 module.exports = searchRouter;
