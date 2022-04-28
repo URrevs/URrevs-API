@@ -31,6 +31,7 @@ const ownedPhonesSchema = require("./models/ownedPhone");
 var indexRouter = require('./routes/index');
 var userRouter = require('./routes/usersRouter');
 var targetsRouter = require('./routes/targetsRouter');
+var searchRouter = require('./routes/searchRouter');
 
 
 // Importing rate limiter
@@ -50,6 +51,7 @@ app.use(rateLimit);
 app.use('/', indexRouter);
 app.use('/users', userRouter);
 app.use('/targets', targetsRouter);
+app.use('/search', searchRouter);
 
 
 module.exports = app;

@@ -9,7 +9,8 @@ const schema = mongoose.Schema;
 const phoneSchema = new schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        index: true
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
