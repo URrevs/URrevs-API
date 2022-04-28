@@ -50,6 +50,47 @@ searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, nex
 });
 
 
+
+// search all products (No companies)
+searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
+  let searchWord = req.query.q;
+  if(!searchWord){
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "bad request"});
+    return;
+  }
+  
+  let promises = [];
+  // push promises for other products here
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
+
+  Promise.all(promises).then((results)=>{
+    let phonesRes = results[0];
+    let phones = [];
+    
+    for(p of phonesRes){
+      phones.push({
+        _id: p._id,
+        name: p.name,
+        type: "phone"
+      });
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: true, phones: phones});
+  })
+  .catch((err)=>{
+    console.log("Error from /search/products: ", err);
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "process failed"});
+  });
+});
+
+
+
 // search all products and companies
 searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
   let searchWord = req.query.q;
