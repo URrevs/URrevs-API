@@ -10,6 +10,7 @@ const userSchema = new schema({
     uid: {
         type: String,
         index: true,
+        unique: true,
         required: true
     },
     name: {
