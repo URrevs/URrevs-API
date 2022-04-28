@@ -8,5 +8,6 @@ module.exports = {
     FRONT_DOMAIN: "https://urrevs.com",
     FIREBASE_ADMIN_KEY: "./service_acc/dev/urrev-da6af-firebase-adminsdk-b6l2t-87d293fa78.json",
     JWT_SECRET: "ZEYAD-HANY-FADY-AMR-GIMMY-MOHAMED-MALAK",
-    JWT_EXPIRES_IN: "1h"
+    JWT_EXPIRES_IN: "1h",
+    POINTS_FOR_SIGNING_IN_WITH_MOBILE: "25"
 };
