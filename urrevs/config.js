@@ -5,5 +5,6 @@ module.exports = {
     DELAY_AMOUNT: 3000,
     EXCHANGE_RATES_API: "http://api.exchangeratesapi.io/v1",
     TIMEOUT: 3600000,
-    FRONT_DOMAIN: "https://urrevs.com"
+    FRONT_DOMAIN: "https://urrevs.com",
+    FIREBASE_ADMIN_KEY: "./service_acc/dev/urrev-da6af-firebase-adminsdk-b6l2t-87d293fa78.json"
 };

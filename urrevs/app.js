@@ -13,6 +13,9 @@ const config = require("./config");
 // Importing DB config
 const db = require("./configs/dBconfig");
 
+// Importing firebase config
+const firebase = require("./configs/firebase");
+
 
 // Importing Models
 const companySchema = require("./models/company");
@@ -23,6 +26,7 @@ const updateSchema = require("./models/update");
 
 // Importing Routers
 var indexRouter = require('./routes/index');
+var userRouter = require('./routes/usersRouter');
 var targetsRouter = require('./routes/targetsRouter');
 
 
@@ -41,6 +45,7 @@ app.use(rateLimit);
 
 // Applying Routers
 app.use('/', indexRouter);
+app.use('/users', userRouter);
 app.use('/targets', targetsRouter);
 
 
