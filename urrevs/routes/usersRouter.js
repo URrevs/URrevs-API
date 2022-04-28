@@ -133,7 +133,7 @@ userRouter.get("/:userId/profile", authenticate.verifyUser, (req, res, next)=>{
 });
 
 
-// get user's owned phones
+// get my owned phones
 userRouter.get("/myphones", authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = 20;
     let roundNum = req.query.round;
@@ -170,5 +170,48 @@ userRouter.get("/myphones", authenticate.verifyUser, (req, res, next)=>{
         res.json({success: false, status: "process failed"});
     });
 });
+
+
+
+// get user's owned phones
+userRouter.get("/:userId/phones", authenticate.verifyUser, (req, res, next)=>{
+    let itemsPerRound = 20;
+    let roundNum = req.query.round;
+
+    if(roundNum == null){
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "bad request"});
+        return;
+    }
+
+    OWNED_PHONE.find({user: req.params.userId})
+    .sort({ownedAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("phone", {name: 1})
+    .then((phones)=>{
+        let result = [];
+        for(let phone of phones){
+            result.push({
+                _id: phone.phone._id,
+                name: phone.phone.name,
+                type: "phone"
+            });
+        }
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, phones: result});
+    })
+    .catch((err)=>{
+        console.log("Error from /users/:userId/profile: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
+});
+
+
+
 
 module.exports = userRouter;
