@@ -4,6 +4,9 @@
 */
 
 const express = require("express");
+const axios = require("axios");
+const https = require("https");
+
 const phoneRouter = express.Router();
 
 const cors = require("../utils/cors");
@@ -348,6 +351,55 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", rateLimit.regular, cors.cors, au
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "process failed"});
+    });
+});
+
+
+
+
+// get similar phones to the given phone
+phoneRouter.get("/:phoneId/similar", rateLimit.regular, cors.cors, (req, res, next)=>{
+    PHONE.findById(req.params.phoneId, {_id: 1}).then(async (phone)=>{
+
+        // if the phone doesn't exist, abort
+        if(!phone){
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "phone not found"});
+            return;
+        }
+
+        // first let's try to contact the AI service
+        try{
+            let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
+            
+            const {data: resp} = await axios.get(process.env.AI_LINK + "/phones/" + phone._id + "/recommend",
+            {headers: {'X-Api-Key': process.env.AI_API_KEY}},
+            {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+
+            let similar_ids = resp.similiar_phones;
+            
+            PHONE.find({_id: {$in: similar_ids}}, {name: 1, picture: 1}).then((phones)=>{
+                let result = [];
+                for(phone of phones){
+                    result.push({
+                        _id: phone._id,
+                        name: phone.name,
+                        picture: phone.picture,
+                        type: "phone"
+                    });
+                }
+
+                console.log("--------------------Similar phones is done by AI--------------------")
+
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: true, phones: result});
+            });
+        }
+        catch(err){
+            console.log(err);
+        }
     });
 });
 
