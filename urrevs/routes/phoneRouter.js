@@ -91,4 +91,34 @@ phoneRouter.get("/by/:compId", rateLimit.regular, cors.cors, (req, res, next)=>{
 });
 
 
+
+// get the manufacturing company of a phone
+phoneRouter.get("/:phoneId/company", rateLimit.regular, cors.cors, (req, res, next)=>{
+    PHONE.findById(req.params.phoneId).populate("company", {name: 1})
+    .then((phone)=>{
+        
+        if(!phone){
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "phone not found"});
+            return;
+        }
+
+        let result = {};
+        result._id = phone.company._id;
+        result.name = phone.company.name;
+        result.type = "company";
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, company: result});
+    })
+    .catch((err)=>{
+        console.log("Error from /phones/:phoneId/company: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    })
+});
+
 module.exports = phoneRouter;
