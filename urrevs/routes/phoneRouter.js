@@ -390,6 +390,16 @@ phoneRouter.get("/:phoneId/similar", rateLimit.regular, cors.cors, (req, res, ne
                     });
                 }
 
+                // sort the result by the the order in similar_ids
+                let resultObj = {};
+                for(phone of result){
+                    resultObj[phone._id] = phone;
+                }
+                result = [];
+                for(let id of similar_ids){
+                    result.push(resultObj[id]);
+                }
+                
                 console.log("--------------------Similar phones is done by AI--------------------")
 
                 res.statusCode = 200;
