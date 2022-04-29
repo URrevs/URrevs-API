@@ -26,6 +26,11 @@ const updateSchema = require("./models/update");
 const userSchema = require("./models/user");
 const uproductsSchema = require("./models/uproducts");
 const ownedPhonesSchema = require("./models/ownedPhone");
+const phoneComparisonSchema = require("./models/phoneComparison");
+const questionsAboutMyPhonesVisitSchema = require("./models/questionsAboutMyPhonesVisit");
+const phoneProfileVisitsSchema = require("./models/phoneProfileVisit");
+const competitionSchema = require('./models/competition');
+
 
 // Importing Routers
 var indexRouter = require('./routes/index');
