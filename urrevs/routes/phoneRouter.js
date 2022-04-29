@@ -8,11 +8,13 @@ const phoneRouter = express.Router();
 
 const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit");
+const authenticate = require("../utils/authenticate");
 
 const PHONE = require("../models/phone");
 const PSPECS = require("../models/phoneSpecs");
 const COMPANY = require("../models/company");
 const CONSTANT = require("../models/constants");
+const PHONEPROFILEVISIT = require("../models/phoneProfileVisit");
 
 const config = require("../config");
 
@@ -246,6 +248,67 @@ phoneRouter.get("/:phoneId/specs", rateLimit.regular, cors.cors, (req, res, next
         res.json({success: false, status: "process failed"});
     });
 });
+
+
+
+// get phone's stats   (increase the view count) (indicate the user has visited this phone profile)
+phoneRouter.get("/:phoneId/stats", rateLimit.regular, cors.cors, 
+authenticate.verifyFlexible, (req, res, next)=>{
+    // increase the view count
+    PHONE.findByIdAndUpdate(req.params.phoneId, {$inc: {views: 1}}, {new: false})
+    .populate("company", {avgRating: 1})
+    .then((phone)=>{
+        
+        if(!phone){
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "phone not found"});
+            return;
+        }
+
+        if(req.user){
+            // an authenticated user has triggered the tracker
+            // track the activity
+            PHONEPROFILEVISIT.create({
+                user: req.user._id,
+                phone: req.params.phoneId
+            }).then((visit)=>{})
+            .catch((err)=>{
+                console.log("Error from /phones/:phoneId/stats: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
+            })
+        }
+
+        // get the stats of the phone then send them
+        let result = {};
+                
+        result._id = req.params.phoneId;
+        result.name = phone.name;
+        result.type = "phone";
+        result.views = phone.views;
+        result.generalRating = phone.generalRating;
+        result.companyRating = phone.company.avgRating;
+        result.uiRating = phone.uiRating;
+        result.manufacturingQuality = phone.manQuality;
+        result.valueForMoney = phone.valFMon;
+        result.camera = phone.cam;
+        result.callQuality = phone.callQuality;
+        result.battery = phone.batteryRating;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, stats: result});
+    })
+    .catch((err)=>{
+        console.log("Error from /phones/:phoneId/stats: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
+});
+
 
 
 module.exports = phoneRouter;
