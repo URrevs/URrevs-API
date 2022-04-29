@@ -32,6 +32,7 @@ var indexRouter = require('./routes/index');
 var userRouter = require('./routes/usersRouter');
 var targetsRouter = require('./routes/targetsRouter');
 var searchRouter = require('./routes/searchRouter');
+var companyRouter = require('./routes/companyRouter');
 
 
 // Importing Zone Ends Here
@@ -49,6 +50,7 @@ app.use('/', indexRouter);
 app.use('/users', userRouter);
 app.use('/targets', targetsRouter);
 app.use('/search', searchRouter);
+app.use('/companies', companyRouter);
 
 
 module.exports = app;
