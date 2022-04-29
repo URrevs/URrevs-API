@@ -395,13 +395,180 @@ phoneRouter.get("/:phoneId/similar", rateLimit.regular, cors.cors, (req, res, ne
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "application/json");
                 res.json({success: true, phones: result});
+            })
+            .catch((err)=>{
+                console.log("Error from ai way /phones/:phoneId/similar: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
             });
         }
         catch(err){
-            console.log(err);
+            console.log("--------------------Similar phones AI failed--------------------");
+            console.log(err.stack);
+            // Now, let's do it my way
+
+            // get the release date of the phone
+            PSPECS.findOne({_id: phone._id}, {releaseDate: 1, price: 1, _id: 0}).then((currentPhone)=>{
+
+                // if the current phone doesn't exist in nphones, abort
+                if(!currentPhone){
+                    console.log("Error from my way /phones/:phoneId/similar: the phone does not exist in nphones");
+                    res.statusCode = 500;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "process failed"});
+                    return;
+                }
+
+                // make sure that the phones has a price and a release date
+                if(!currentPhone.price){
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: true, phones: [], status: "the phone does not have price"});
+                    return;
+                }
+
+                if(!currentPhone.releaseDate){
+                    res.statusCode = 200;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: true, phones: [], status: "the phone does not have release date"});
+                    return;
+                }
+
+                // get the current phone's price and the year of its release
+                let price = currentPhone.price;
+                let price20Percent = price * 0.2;
+                let upperLimit = (price + price20Percent);
+                let lowerLimit = (price - price20Percent);
+                let year = currentPhone.releaseDate.split(" ")[0];
+
+               
+                /*
+                    get all phones that have the same year of release and the price difference 
+                    is less than or equal to 20% of the current phone's price
+                */
+
+                PSPECS.aggregate([
+                    {$match: {releaseDate: {$regex: year}, price: {$ne: null}, _id: {$ne: phone._id}}},
+                    {$project: {_id: 1, price: 1, releaseDate: 1}},
+                    {$match: {price: {$gt: lowerLimit, $lt: upperLimit}}},
+                    {$sort: {price: -1}},
+                    {$limit: 20},
+                ])
+                .then((sortedSimilarPhones)=>{
+                    // extract the ids of the similar phones
+                    let similarIds = [];
+                    for(phone of sortedSimilarPhones){
+                        similarIds.push(phone._id);
+                    }
+
+                    // get the similar phones
+                    PHONE.find({_id: {$in: similarIds}}, {name: 1, picture: 1}).then((phones)=>{
+                        
+                        let result = [];
+                        for(phone of phones){
+                            result.push({
+                                _id: phone._id,
+                                name: phone.name,
+                                picture: phone.picture,
+                                type: "phone"
+                            });
+                        }
+
+                        console.log("--------------------Similar phones is done by my way--------------------")
+
+                        res.statusCode = 200;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: true, phones: result}); 
+                    })
+                    .catch((err)=>{
+                        console.log("Error from my way /phones/:phoneId/similar: ", err);
+                        res.statusCode = 500;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: false, status: "process failed"});
+                    });
+                })
+                .catch((err)=>{
+                    console.log("Error from my way /phones/:phoneId/similar: ", err);
+                    res.statusCode = 500;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "process failed"});
+                });
+            })
+            .catch((err)=>{
+                console.log("Error from my way /phones/:phoneId/similar: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
+            });
         }
+    }).catch((err)=>{
+        console.log("Error from /phones/:phoneId/similar: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
     });
 });
 
 
 module.exports = phoneRouter;
+
+
+/*
+                NPHONE.find({releaseDate: {$regex: year}, price: {$ne: null}}, {price: 1})
+                .then((closePhones)=>{
+                    let unSortedSimilarPhones = [];
+                    for(phone of closePhones){
+                        phone.price = Math.abs(phone.price - price);
+                        if(phone.price <= price20Percent){
+                            unSortedSimilarPhones.push({_id: phone._id, price: phone.price});
+                            if(unSortedSimilarPhones.length == 20){
+                                break;
+                            }
+                        }
+                    }
+
+                    // sort the similar phones by price difference ascendingly
+                    let sortedSimilarPhones = unSortedSimilarPhones.sort((a, b)=>{
+                        return a.price - b.price;
+                    });
+
+                    // extract the ids of the similar phones
+                    let similarIds = [];
+                    for(phone of sortedSimilarPhones){
+                        similarIds.push(phone._id);
+                    }
+
+                    // get the similar phones
+                    PHONE.find({_id: {$in: similarIds}}, {name: 1, picture: 1}).then((phones)=>{
+                        
+                        let result = [];
+                        for(phone of phones){
+                            result.push({
+                                _id: phone._id,
+                                name: phone.name,
+                                picture: phone.picture,
+                                type: "phone"
+                            });
+                        }
+
+                        console.log("--------------------Similar phones is done by my way--------------------")
+
+                        res.statusCode = 200;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: true, phones: result}); 
+                    })
+                    .catch((err)=>{
+                        console.log("Error from my way /phones/:phoneId/similar: ", err);
+                        res.statusCode = 500;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: false, status: "process failed"});
+                    });
+                })
+                .catch((err)=>{
+                    console.log("Error from my way /phones/:phoneId/similar: ", err);
+                    res.statusCode = 500;
+                    res.setHeader("Content-Type", "application/json");
+                    res.json({success: false, status: "process failed"});
+                })
+*/

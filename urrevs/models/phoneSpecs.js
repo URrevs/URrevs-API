@@ -16,7 +16,8 @@ const phoneSpecsSchema = new schema({
         type: Number
     },
     releaseDate: {
-        type: String
+        type: String,
+        index: true
     },
     dimensions: {
         type: String
