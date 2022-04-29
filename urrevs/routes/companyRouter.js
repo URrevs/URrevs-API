@@ -45,4 +45,29 @@ companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, 
 });
 
 
+
+// get all companies sorted by total number of reviews on its products
+companyRouter.get("/all", rateLimit.regular, cors.cors, (req, res, next)=>{
+    COMPANY.find({}).sort({totalRevsCount: -1}).then((companies)=>{
+        let result = [];
+        for(let c of companies){
+            result.push({
+                _id: c._id,
+                name: c.name,
+                logo: c.logo
+            });
+        }
+        
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, companies: result});
+    })
+    .catch((err)=>{
+        console.log("Error from /companies/all: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
+});
+
 module.exports = companyRouter;
