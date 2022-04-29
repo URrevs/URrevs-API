@@ -15,6 +15,7 @@ const PSPECS = require("../models/phoneSpecs");
 const COMPANY = require("../models/company");
 const CONSTANT = require("../models/constants");
 const PHONEPROFILEVISIT = require("../models/phoneProfileVisit");
+const PHONECOMPARISON = require("../models/phoneComparison");
 
 const config = require("../config");
 
@@ -309,6 +310,46 @@ authenticate.verifyFlexible, (req, res, next)=>{
     });
 });
 
+
+
+
+// indicate that the user has compared between two phones
+phoneRouter.put("/:phone1Id/compare/:phone2Id", rateLimit.regular, cors.cors, authenticate.verifyUser, 
+(req, res, next)=>{
+    PHONE.find({_id: {$in: [req.params.phone1Id, req.params.phone2Id]}}, {_id: 1}).then((phones)=>{
+        
+        if(phones.length != 2){
+            res.statusCode = 404;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "phone not found"});
+            return;
+        }
+        else{
+            PHONECOMPARISON.create({
+                user: req.user._id,
+                srcPhone: req.params.phone1Id,
+                dstPhone: req.params.phone2Id 
+            })
+            .then((compare)=>{
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: true, status: "tracked successfully"});
+            })
+            .catch((err)=>{
+                console.log("Error from /phones/:phone1Id/compare/:phone2Id: ", err);
+                res.statusCode = 500;
+                res.setHeader("Content-Type", "application/json");
+                res.json({success: false, status: "process failed"});
+            });
+        }
+    })
+    .catch((err)=>{
+        console.log("Error from /phones/:phone1Id/compare/:phone2Id: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
+    });
+});
 
 
 module.exports = phoneRouter;

@@ -15,7 +15,7 @@ const pComparisonSchema = new schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
     },
-    targetPhone: {
+    dstPhone: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
     }
