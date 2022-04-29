@@ -58,5 +58,6 @@ const phoneSchema = new schema({
 });
 
 phoneSchema.index({company: 1, createdAt: 1});
+phoneSchema.index({createdAt: 1});
 
 module.exports = mongoose.model("Phone", phoneSchema);
