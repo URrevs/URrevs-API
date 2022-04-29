@@ -507,23 +507,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               let releaseArr = release.split(" ");
               releaseArr.shift();
               launchReleaseDate = releaseArr.join(" ");
-
-              // replacing the Q1, Q2, Q3, Q4 from the release date
-              let month = launchReleaseDate.match(new RegExp("q[1-4]", "i"));
-              if(month){
-                if(month[0] == "q1" || month[0] == "Q1"){
-                  launchReleaseDate = launchReleaseDate.replace(new RegExp("q1", "i"), "January");
-                }
-                else if(month[0] == "q2" || month[0] == "Q2"){
-                  launchReleaseDate = launchReleaseDate.replace(new RegExp("q2", "i"), "April");
-                }
-                else if(month[0] == "q3" || month[0] == "Q3"){
-                  launchReleaseDate = launchReleaseDate.replace(new RegExp("q3", "i"), "July");
-                }
-                else if(month[0] == "q4" || month[0] == "Q4"){
-                  launchReleaseDate = launchReleaseDate.replace(new RegExp("q4", "i"), "October");
-                }
-              }
             }
             catch(e){
               launchReleaseDate = null;
@@ -1126,6 +1109,24 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               battery: batteryType,
               charging: batteryCharging
             });
+
+
+            // replacing the Q1, Q2, Q3, Q4 in the release date before adding to nPhone collection
+            let month = launchReleaseDate.match(new RegExp("q[1-4]", "i"));
+            if(month){
+              if(month[0] == "q1" || month[0] == "Q1"){
+                launchReleaseDate = launchReleaseDate.replace(new RegExp("q1", "i"), "January");
+              }
+              else if(month[0] == "q2" || month[0] == "Q2"){
+                launchReleaseDate = launchReleaseDate.replace(new RegExp("q2", "i"), "April");
+              }
+              else if(month[0] == "q3" || month[0] == "Q3"){
+                launchReleaseDate = launchReleaseDate.replace(new RegExp("q3", "i"), "July");
+              }
+              else if(month[0] == "q4" || month[0] == "Q4"){
+                launchReleaseDate = launchReleaseDate.replace(new RegExp("q4", "i"), "October");
+              }
+            }
 
             // creating a document for phone specs for AI
             await nPhoneCollection.create({
