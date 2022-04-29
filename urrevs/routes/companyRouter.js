@@ -26,15 +26,30 @@ companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, 
             return; 
         }
         
-        let result = {};
-        result._id = company._id;
-        result.name = company.name;
-        result.views = company.views;
-        result.rating = company.avgRating;
+        // increase the view count
+        if(company.views){
+            company.views += 1;
+        }else{
+            company.views = 1;
+        }
 
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json({success: true, stats: result});
+        company.save().then((company)=>{
+            let result = {};
+            result._id = company._id;
+            result.name = company.name;
+            result.views = company.views;
+            result.rating = company.avgRating;
+
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: true, stats: result});
+        })
+        .catch((err)=>{
+            console.log("Error from /:companyId/stats: ", err);
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "process failed"});
+        });
     })
     .catch((err)=>{
         console.log("Error from /:companyId/stats: ", err);
