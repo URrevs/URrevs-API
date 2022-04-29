@@ -15,8 +15,6 @@ const OWNED_PHONE = require("../models/ownedPhone");
 
 const userRouter = express.Router();
 
-// Applying important middlewares
-userRouter.use(cors.cors);
 
 //--------------------------------------------------------------------
 
