@@ -137,7 +137,7 @@ phoneRouter.get("/:phoneId/specs", rateLimit.regular, cors.cors, (req, res, next
         if(!specs){
             res.statusCode = 404;
             res.setHeader("Content-Type", "application/json");
-            res.json({success: false, status: "specs not found"});
+            res.json({success: false, status: "phone not found"});
             return;
         }
 
