@@ -18,46 +18,34 @@ const COMPANY = require("../models/company");
 
 // get statistical info about a company
 companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, next)=>{
-    COMPANY.findById(req.params.companyId).then((company)=>{
+    COMPANY.findByIdAndUpdate(req.params.companyId, {$inc: {views: 1}}, {new: false})
+    .then((company)=>{
+        
         if(!company){
             res.statusCode = 404;
             res.setHeader("Content-Type", "application/json");
             res.json({success: false, status: "company not found"});
             return; 
         }
-        
-        // increase the view count
-        if(company.views){
-            company.views += 1;
-        }else{
-            company.views = 1;
-        }
 
-        company.save().then((company)=>{
-            let result = {};
-            result._id = company._id;
-            result.name = company.name;
-            result.type = "company";
-            result.views = company.views;
-            result.rating = company.avgRating;
+        let result = {};
 
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.json({success: true, stats: result});
-        })
-        .catch((err)=>{
-            console.log("Error from /:companyId/stats: ", err);
-            res.statusCode = 500;
-            res.setHeader("Content-Type", "application/json");
-            res.json({success: false, status: "process failed"});
-        });
+        result._id = company._id;
+        result.name = company.name;
+        result.type = "company";
+        result.views = company.views;
+        result.rating = company.avgRating;
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: true, stats: result});
     })
     .catch((err)=>{
-        console.log("Error from /:companyId/stats: ", err);
+        console.log("Error from /company/:companyId/stats: ", err);
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "process failed"});
-    })
+    });
 });
 
 
