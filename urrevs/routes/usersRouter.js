@@ -173,7 +173,7 @@ userRouter.get("/:userId/profile", rateLimit.regular, cors.cors, authenticate.ve
 
 // get my owned phones
 userRouter.get("/phones", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
-    let itemsPerRound = 20;
+    let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
     if(roundNum == null){
