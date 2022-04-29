@@ -28,7 +28,7 @@ const companySchema = new schema({
         default: 0,
         index: true
     },
-    logo: {
+    picture: {
         type: String
     }
 });

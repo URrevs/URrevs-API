@@ -84,7 +84,7 @@ companyRouter.get("/all", rateLimit.regular, cors.cors, (req, res, next)=>{
             result.push({
                 _id: c._id,
                 name: c.name,
-                logo: c.logo,
+                logo: c.picture,
                 type: "company"
             });
         }
