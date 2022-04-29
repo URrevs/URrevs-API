@@ -66,7 +66,7 @@ searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
   
   let promises = [];
   // push promises for other products here
-  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).populate("company", {name: 1}).exec());
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
@@ -76,9 +76,7 @@ searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
       phones.push({
         _id: p._id,
         name: p.name,
-        type: "phone",
-        companyId: p.company._id,
-        companyName: p.company.name
+        type: "phone"
       });
     }
 
