@@ -23,7 +23,7 @@ companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, 
             res.statusCode = 404;
             res.setHeader("Content-Type", "application/json");
             res.json({success: false, status: "company not found"});
-            return;
+            return; 
         }
         
         let result = {};
