@@ -31,6 +31,9 @@ searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, nex
     return;
   }
 
+  // escape brackets in search word
+  searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+
   PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).then((phones)=>{
     let result = [];
     for(p of phones){
@@ -64,6 +67,9 @@ searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
     return;
   }
   
+   // escape brackets in search word
+   searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+
   let promises = [];
   // push promises for other products here
   promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
@@ -104,6 +110,9 @@ searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
     return;
   }
   
+   // escape brackets in search word
+   searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+
   let promises = [];
   promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
   promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
