@@ -18,18 +18,20 @@ const firebase = require("./configs/firebase");
 
 
 // Importing Models
-const companySchema = require("./models/company");
-const newPhoneSchema = require("./models/newPhone");
-const phoneSchema = require("./models/phone");
-const phoneSpecsSchema = require("./models/phoneSpecs");
-const updateSchema = require("./models/update");
-const userSchema = require("./models/user");
-const uproductsSchema = require("./models/uproducts");
-const ownedPhonesSchema = require("./models/ownedPhone");
-const phoneComparisonSchema = require("./models/phoneComparison");
-const questionsAboutMyPhonesVisitSchema = require("./models/questionsAboutMyPhonesVisit");
-const phoneProfileVisitsSchema = require("./models/phoneProfileVisit");
-const competitionSchema = require('./models/competition');
+// const companySchema = require("./models/company");
+// const newPhoneSchema = require("./models/newPhone");
+// const phoneSchema = require("./models/phone");
+// const phoneSpecsSchema = require("./models/phoneSpecs");
+// const updateSchema = require("./models/update");
+// const userSchema = require("./models/user");
+// const uproductsSchema = require("./models/uproducts");
+// const ownedPhonesSchema = require("./models/ownedPhone");
+// const phoneComparisonSchema = require("./models/phoneComparison");
+// const questionsAboutMyPhonesVisitSchema = require("./models/questionsAboutMyPhonesVisit");
+// const phoneProfileVisitsSchema = require("./models/phoneProfileVisit");
+// const competitionSchema = require('./models/competition');
+// const companyReviewSchema = require('./models/companyReview');
+// const phoneReviewSchema = require('./models/phoneReview');
 
 
 // Importing Routers
@@ -39,6 +41,7 @@ var targetsRouter = require('./routes/targetsRouter');
 var searchRouter = require('./routes/searchRouter');
 var companyRouter = require('./routes/companyRouter');
 var phoneRouter = require('./routes/phoneRouter');
+var reviewRouter = require('./routes/reviewRouter');
 
 
 // Importing Zone Ends Here
@@ -58,6 +61,7 @@ app.use('/targets', targetsRouter);
 app.use('/search', searchRouter);
 app.use('/companies', companyRouter);
 app.use('/phones', phoneRouter);
+app.use('/reviews', reviewRouter);
 
 
 module.exports = app;
