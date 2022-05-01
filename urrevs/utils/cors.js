@@ -6,7 +6,7 @@
 const cors = require("cors");
 
 let whiteList = (process.env.FRONT_DOMAIN || "").split(",");
-
+console.log(whiteList);
 const corsOptionsDelegate = (req,callback)=>{
   var corsOptions;
 
