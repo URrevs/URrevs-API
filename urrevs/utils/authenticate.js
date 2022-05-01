@@ -46,7 +46,10 @@ exports.authorize = (req) => {
         .then((decodedToken) => {
             // user is authenticated
             // checking if user exists
-            USER.findOne({uid: decodedToken.uid}).then((user)=>{
+            let n = decodedToken.name;
+            let p = decodedToken.picture;
+            let u = decodedToken.uid;
+            USER.findOneAndUpdate({uid: u}, {$set: {picture: p, name: n}}).then((user)=>{
                 if(user){
                     // user exists
                     // isssue a jwt token
@@ -58,9 +61,6 @@ exports.authorize = (req) => {
                     // create a new user, then issue a jwt token
                     // get the refCode of the latest user
                     getTheRefCodeOfLatestUser().then((latestUser)=>{
-                        let u = decodedToken.uid;
-                        let n = decodedToken.name;
-                        let p = decodedToken.picture;
                         USER.create({
                             uid: u,
                             name: n,
