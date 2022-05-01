@@ -23,7 +23,7 @@ const userRouter = express.Router();
 
 
 // login or sign up
-userRouter.get("/authenticate", rateLimit.regular, cors.cors, (req, res, next)=>{
+userRouter.get("/authenticate", cors.cors, rateLimit.regular, (req, res, next)=>{
     authenticate.authorize(req).then((token)=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
