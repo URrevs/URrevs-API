@@ -31,8 +31,40 @@ searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, nex
     return;
   }
 
-  // escape brackets in search word
+  // SEARCHWORD PROCESSING BEGINS HERE
+
+  searchWord = searchWord.trim();
+  
+  // replace multiple spaces with single space then convert to array
+  searchWord = searchWord.replace(/\s+/g, " "); 
+  searchWord = searchWord.split(" ");
+  
+  // add braces to each word in search word then join the words together
+  searchWord = searchWord.map((word)=>{
+    word = "[{(" + word + ")}]";
+    return word;
+  });
+  searchWord = searchWord.join(" ");
+  
+  // escaping special characters
   searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+
+  // replace any space with any number of spaces
+  searchWord = searchWord.replace(/\s+/g, "\\s*"); 
+
+  // allowing any number of round brackets
+  searchWord = searchWord.replace(/\(/g, "(*");
+  searchWord = searchWord.replace(/\)/g, ")*");
+
+  // allowing any number of square brackets
+  searchWord = searchWord.replace(/\[/g, "[*");
+  searchWord = searchWord.replace(/\]/g, "]*");
+
+  // allowing any number of curly brackets
+  searchWord = searchWord.replace(/\{/g, "{*");
+  searchWord = searchWord.replace(/\}/g, "}*");
+
+  // SEARCHWORD PROCESSING ENDS HERE
 
   PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).then((phones)=>{
     let result = [];
@@ -67,8 +99,40 @@ searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
     return;
   }
   
-   // escape brackets in search word
-   searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+    // SEARCHWORD PROCESSING BEGINS HERE
+
+    searchWord = searchWord.trim();
+  
+    // replace multiple spaces with single space then convert to array
+    searchWord = searchWord.replace(/\s+/g, " "); 
+    searchWord = searchWord.split(" ");
+    
+    // add braces to each word in search word then join the words together
+    searchWord = searchWord.map((word)=>{
+      word = "[{(" + word + ")}]";
+      return word;
+    });
+    searchWord = searchWord.join(" ");
+    
+    // escaping special characters
+    searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+  
+    // replace any space with any number of spaces
+    searchWord = searchWord.replace(/\s+/g, "\\s*"); 
+  
+    // allowing any number of round brackets
+    searchWord = searchWord.replace(/\(/g, "(*");
+    searchWord = searchWord.replace(/\)/g, ")*");
+  
+    // allowing any number of square brackets
+    searchWord = searchWord.replace(/\[/g, "[*");
+    searchWord = searchWord.replace(/\]/g, "]*");
+  
+    // allowing any number of curly brackets
+    searchWord = searchWord.replace(/\{/g, "{*");
+    searchWord = searchWord.replace(/\}/g, "}*");
+  
+    // SEARCHWORD PROCESSING ENDS HERE 
 
   let promises = [];
   // push promises for other products here
@@ -110,8 +174,40 @@ searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
     return;
   }
   
-   // escape brackets in search word
-   searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+    // SEARCHWORD PROCESSING BEGINS HERE
+
+    searchWord = searchWord.trim();
+  
+    // replace multiple spaces with single space then convert to array
+    searchWord = searchWord.replace(/\s+/g, " "); 
+    searchWord = searchWord.split(" ");
+    
+    // add braces to each word in search word then join the words together
+    searchWord = searchWord.map((word)=>{
+      word = "[{(" + word + ")}]";
+      return word;
+    });
+    searchWord = searchWord.join(" ");
+    
+    // escaping special characters
+    searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+  
+    // replace any space with any number of spaces
+    searchWord = searchWord.replace(/\s+/g, "\\s*"); 
+  
+    // allowing any number of round brackets
+    searchWord = searchWord.replace(/\(/g, "(*");
+    searchWord = searchWord.replace(/\)/g, ")*");
+  
+    // allowing any number of square brackets
+    searchWord = searchWord.replace(/\[/g, "[*");
+    searchWord = searchWord.replace(/\]/g, "]*");
+  
+    // allowing any number of curly brackets
+    searchWord = searchWord.replace(/\{/g, "{*");
+    searchWord = searchWord.replace(/\}/g, "}*");
+  
+    // SEARCHWORD PROCESSING ENDS HERE
 
   let promises = [];
   promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
