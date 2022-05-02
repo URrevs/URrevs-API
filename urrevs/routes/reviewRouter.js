@@ -312,4 +312,64 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
 
 
 
+// Get a certain phone review
+reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  PHONEREV.findById(req.params.revId)
+  .populate("user", {name: 1, picture: 1})
+  .populate("phone", {name: 1})
+  .then((rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+    
+    let resultRev = {
+      _id: rev._id,
+      type: "phone",
+      targetId: rev.phone._id,
+      targetName: rev.phone.name,
+      userId: rev.user._id,
+      userName: rev.user.name,
+      picture: rev.user.picture,
+      createdAt: rev.createdAt,
+      views: rev.views,
+      likes: rev.likes,
+      commentsCount: rev.commentsCount,
+      shares: rev.shares,
+      ownedAt: rev.ownedDate,
+      generalRating: rev.generalRating,
+      uiRating: rev.uiRating,
+      manufacturingQuality: rev.manQuality,
+      valueForMoney: rev.valFMon,
+      camera: rev.camera,
+      callQuality: rev.callQuality,
+      battery: rev.batteryRating,
+      pros: rev.pros,
+      cons: rev.cons,
+      liked: false
+    };
+
+    if(req.user){
+      // check the liked state
+    }
+
+    res.status(200).json({
+      success: true,
+      review: resultRev
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/phone/:revId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the phone review failed"
+    });
+  });
+});
+
+
 module.exports = reviewRouter;
