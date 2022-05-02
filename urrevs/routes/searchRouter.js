@@ -24,6 +24,10 @@ const globalSearchLimitCompanies = parseInt(process.env.GLOBAL_SEARCH_LIMIT_COMP
 
 //--------------------------------------------------------------------
 
+searchRouter.options("*", cors.cors, (req, res, next)=>{
+  res.sendStatus(200);
+});
+
 // Endpoints Implementation
 
 // search phones only

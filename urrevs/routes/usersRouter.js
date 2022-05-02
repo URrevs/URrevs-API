@@ -20,7 +20,9 @@ const userRouter = express.Router();
 
 // Endpoints Implementation
 
-
+userRouter.options("*", cors.cors, (req, res, next)=>{
+    res.sendStatus(200);
+});
 
 // login or sign up
 userRouter.get("/authenticate", cors.cors, rateLimit.regular, (req, res, next)=>{
