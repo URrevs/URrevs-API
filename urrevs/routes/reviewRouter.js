@@ -151,17 +151,29 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
                 let grade;
                 // let's try to communicate to the AI service
                 try{
+
                   let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
-                  const {data: resp} = await axios.post(process.env.AI_LINK + "/reviews/grade",
-                  {headers: {'x-api-key': 'secretkey4522', 'Content-Type': 'application/json'},
-                  data: {}},
-                  {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+                  var config = {
+                    method: 'post',
+                    url: process.env.AI_LINK + '/reviews/grade',
+                    headers: { 
+                      'x-api-key': process.env.AI_API_KEY, 
+                      'Content-Type': 'application/json'
+                    },
+                    data : JSON.stringify({phoneRevPros: pros, phoneRevCons: cons, companyRevPros: compPros, companyRevCons: compCons}),
+                    timeout: TIMEOUT,
+                    httpsAgent: new https.Agent({ keepAlive: true })
+                  };
+                  
+                  const {data:resp} = await axios(config);
+                  
                   grade = resp.grade;
                   console.log("--------------------Review grading AI Success--------------------");
                 }
                 catch(e){
+
                   console.log("--------------------Review grading AI Failed---------------------");
-                  console.log(e);
+                  //console.log(e);
                   // since the AI service is down, we will use the backup routine
                   grade = 100;
                 }
