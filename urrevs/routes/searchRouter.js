@@ -136,7 +136,7 @@ searchRouter.get("/products", cors.cors, rateLimit.search, (req, res, next)=>{
 
   let promises = [];
   // push promises for other products here
-  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
@@ -210,8 +210,8 @@ searchRouter.get("/all", cors.cors, rateLimit.search, (req, res, next)=>{
     // SEARCHWORD PROCESSING ENDS HERE
 
   let promises = [];
-  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
-  promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).exec());
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
+  promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
