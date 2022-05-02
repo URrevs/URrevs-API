@@ -161,7 +161,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
           // let's try to communicate to the AI service
           try{
             let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
-            var config = {
+            var axiosConfig = {
               method: 'post',
               url: process.env.AI_LINK + '/reviews/grade',
               headers: { 
@@ -173,7 +173,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
               httpsAgent: new https.Agent({ keepAlive: true })
             };
             
-            const {data:resp} = await axios(config);
+            const {data:resp} = await axios(axiosConfig);
             
             grade = resp.grade;
             console.log("--------------------Review grading AI Success--------------------");

@@ -13,9 +13,14 @@ const addToRecentSearches = require("../utils/addToRecentSearches");
 const PHONE = require("../models/phone");
 const COMPANY = require("../models/company");
 const UPRODUCT = require("../models/uproducts");
+const config = require("../config");
 
 const searchRouter = express.Router();
 
+const phonesSearchLimit = parseInt(process.env.PHONES_SEARCH_LIMIT || config.PHONES_SEARCH_LIMIT);
+const productsSearchLimitPhones = parseInt(process.env.PRODUCTS_SEARCH_LIMIT_PHONES || config.PRODUCTS_SEARCH_LIMIT_PHONES);
+const globalSearchLimitPhones = parseInt(process.env.GLOBAL_SEARCH_LIMIT_PHONES || config.GLOBAL_SEARCH_LIMIT_PHONES);
+const globalSearchLimitCompanies = parseInt(process.env.GLOBAL_SEARCH_LIMIT_COMPANIES || config.GLOBAL_SEARCH_LIMIT_COMPANIES);
 
 //--------------------------------------------------------------------
 
@@ -66,7 +71,7 @@ searchRouter.get("/products/phones", cors.cors, rateLimit.search, (req, res, nex
 
   // SEARCHWORD PROCESSING ENDS HERE
 
-  PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5).then((phones)=>{
+  PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(phonesSearchLimit).then((phones)=>{
     let result = [];
     for(p of phones){
       result.push({
@@ -136,7 +141,7 @@ searchRouter.get("/products", cors.cors, rateLimit.search, (req, res, next)=>{
 
   let promises = [];
   // push promises for other products here
-  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(productsSearchLimitPhones));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
@@ -210,8 +215,8 @@ searchRouter.get("/all", cors.cors, rateLimit.search, (req, res, next)=>{
     // SEARCHWORD PROCESSING ENDS HERE
 
   let promises = [];
-  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
-  promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(5));
+  promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitPhones));
+  promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitCompanies));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
