@@ -11,6 +11,13 @@ const rateLimit = require("../utils/rateLimit");
 
 //--------------------------------------------------------------------
 
+
+router.options("*", cors.cors, (req, res, next)=>{
+  res.sendStatus(200);
+});
+
+
+
 // Endpoints Implementation
 
 

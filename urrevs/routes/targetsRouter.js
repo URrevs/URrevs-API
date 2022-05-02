@@ -22,6 +22,9 @@ const UPDATE = require("../models/update");
 
 // Endpoints Implementation
 
+targetsRouter.options("*", cors.cors, (req, res, next)=>{
+  res.sendStatus(200);
+});
 
 // update data from source, document the update operation
 targetsRouter.get("/update", cors.cors, rateLimit.regular, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next)=>{

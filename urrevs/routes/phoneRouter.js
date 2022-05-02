@@ -24,6 +24,10 @@ const config = require("../config");
 
 //--------------------------------------------------------------------
 
+phoneRouter.options("*", cors.cors, (req, res, next)=>{
+    res.sendStatus(200);
+  });
+
 // Endpoints Implementation
 
 

@@ -17,6 +17,9 @@ const config = require("../config");
 
 // Endpoints Implementation
 
+companyRouter.options("*", cors.cors, (req, res, next)=>{
+    res.sendStatus(200);
+  });
 
 // get statistical info about a company
 companyRouter.get("/:companyId/stats", cors.cors, rateLimit.regular, (req, res, next)=>{
