@@ -44,11 +44,12 @@ const config = require("../config");
   8- calculate the average company rating
   9- increase the total reviews count in the company
   10- add the phone to the list of owned phones for the user
-  11- give points to the user
-  12- give points to the referral (if exists)
-  13- send the phone review as a response
+  11- calculate the points to give to the user using either AI service or the backup routine
+  12- give points to the user
+  13- give points to the referral (if exists)
+  14- send the phone review as a response
 */
-reviewRouter.post("/phone", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next) => {
+reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next) => {
   // extract data from request body  
   const {
         phoneId,
@@ -146,64 +147,86 @@ reviewRouter.post("/phone", rateLimit.regular, cors.cors, authenticate.verifyUse
                 ownedAt: ownedDate
               }).then(async (owned)=>{
 
-                // give points to the user
-                
+                // calculate the points to give to the user
+                let grade;
                 // let's try to communicate to the AI service
-                
                 try{
                   let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
                   const {data: resp} = await axios.post(process.env.AI_LINK + "/reviews/grade",
-                  {headers: {'X-Api-Key': process.env.AI_API_KEY},
-                  data: {phoneRevPros: pros, phoneRevCons: cons, companyRevPros: compPros, companyRevCons: compCons}},
+                  {headers: {'x-api-key': 'secretkey4522', 'Content-Type': 'application/json'},
+                  data: {}},
                   {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
-
-                  let grade = resp.grade;
-                  USER.findByIdAndUpdate(req.user._id, 
-                    {$inc: {comPoints: parseInt(grade)}})
-                    .then((user)=>{
-    
-                      // give points to the referral (if exists)
-                      if(refCode){
-                        USER.findOneAndUpdate({refCode: refCode}, 
-                          {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}})
-                          .then((user)=>{
-
-                            // send the phone review as a response
-
-                            res.status(200).json({
-                              success: true,
-                              status: "review added successfully"
-                            });
-                          })
-                          .catch((err)=>{
-                            console.log("Error from /reviews/phone: ", err);
-                            return res.status(500).json({
-                              success: false,
-                              status: "internal server error"
-                            });
-                          });
-                      }
-                      else{
-                        console.log("--------------------Review grading is done by AI--------------------");
-                        res.status(200).json({
-                          success: true,
-                          review: prev
-                        });
-                      }
-                    })
-                    .catch((err)=>{
-                      console.log("Error from /reviews/phone: ", err);
-                      return res.status(500).json({
-                        success: false,
-                        status: "internal server error"
-                      });
-                    });  
+                  grade = resp.grade;
+                  console.log("--------------------Review grading AI Success--------------------");
                 }
                 catch(e){
-                  console.log("--------------------Review grading AI Failed--------------------");
+                  console.log("--------------------Review grading AI Failed---------------------");
+                  console.log(e);
+                  // since the AI service is down, we will use the backup routine
+                  grade = 100;
                 }
+
+                // give points to the user
+                USER.findByIdAndUpdate(req.user._id, 
+                  {$inc: {comPoints: parseInt(grade)}})
+                  .then(async(user)=>{
+
+                    // give points to the referral (if exists)
+                    if(refCode) {
+                      try{
+                        await USER.findOneAndUpdate({refCode: refCode}, 
+                          {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}});
+                      }
+                      catch(e){
+                        return res.status(500).json({
+                          success: false,
+                          status: "internal server error"
+                        });
+                      }
+                    }
+
+                    // send the phone review as a response
+                    let resultRev = {
+                      _id: prev._id,
+                      type: "phone",
+                      createdAt: prev.createdAt,
+                      phoneId: phoneId,
+                      phoneName: phone.name,
+                      userId: req.user._id,
+                      userName: user.name,
+                      picture: user.picture,
+                      ownedAt: ownedDate,
+                      views: prev.views,
+                      likes: prev.likes,
+                      commentsCount: prev.commentsCount,
+                      shares: prev.shares,
+                      generalRating: generalRating,
+                      uiRating: uiRating,
+                      manQuality: manQuality,
+                      valForMony: valFMon,
+                      camera: camera,
+                      callQuality: callQuality,
+                      batteryRating: battery,
+                      pros: pros,
+                      cons: cons,
+                    }
+                    res.status(200).json({
+                      success: true,
+                      review: resultRev,
+                      earnedPoints: grade
+                    });
+                  })
+                  .catch((err)=>{
+                    console.log("Error from /reviews/phone: ", err);
+                    return res.status(500).json({
+                      success: false,
+                      status: "internal server error"
+                    });
+                  });
+
               })
               .catch((err)=>{
+                console.log("Error from /reviews/phone: ", err);
                 return res.status(500).json({
                   success: false,
                   status: "internal server error"
@@ -261,43 +284,70 @@ reviewRouter.post("/phone", rateLimit.regular, cors.cors, authenticate.verifyUse
 
 
 /*
-              // give points to the user
-              USER.findByIdAndUpdate(req.user._id, 
-                {$inc: {comPoints: parseInt(process.env.ADD_REV_POINTS || config.ADD_REV_POINTS)}})
-                .then((user)=>{
+                  USER.findByIdAndUpdate(req.user._id, 
+                    {$inc: {comPoints: parseInt(grade)}})
+                    .then((user)=>{
+    
+                      // give points to the referral (if exists)
+                      if(refCode){
+                        USER.findOneAndUpdate({refCode: refCode}, 
+                          {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}})
+                          .then((user)=>{
 
-                  // give points to the referral (if exists)
-                  if(refCode){
-                    USER.findOneAndUpdate({refCode: refCode}, 
-                      {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}})
-                      .then((user)=>{
+                            // send the phone review as a response
+                            let resultRev = {
+                              _id: prev._id,
+                              type: "phone",
+                              createdAt: prev.createdAt,
+                              phoneId: phoneId,
+                              phoneName: phone.name,
+                              userId: req.user._id,
+                              userName: req.user.name,
+                              picture: req.user.picture,
+                              ownedAt: ownedDate,
+                              views: prev.views,
+                              likes: prev.likes,
+                              commentsCount: prev.commentsCount,
+                              shares: prev.shares,
+                              generalRating: generalRating,
+                              uiRating: uiRating,
+                              valForMony: valFMon,
+                              camera: camera,
+                              callQuality: callQuality,
+                              batteryRating: battery,
+                              pros: pros,
+                              cons: cons,
+                            }
+
+                            res.status(200).json({
+                              success: true,
+                              review: resultRev,
+                              earnedPoints: grade
+                            });
+                          })
+                          .catch((err)=>{
+                            console.log("Error from /reviews/phone: ", err);
+                            return res.status(500).json({
+                              success: false,
+                              status: "internal server error"
+                            });
+                          });
+                      }
+                      else{
+                        console.log("--------------------Review grading is done by AI--------------------");
                         res.status(200).json({
                           success: true,
-                          status: "review added successfully"
+                          review: prev
                         });
-                      })
-                      .catch((err)=>{
-                        console.log("Error from /reviews/phone: ", err);
-                        return res.status(500).json({
-                          success: false,
-                          status: "internal server error"
-                        });
+                      }
+                    })
+                    .catch((err)=>{
+                      console.log("Error from /reviews/phone: ", err);
+                      return res.status(500).json({
+                        success: false,
+                        status: "internal server error"
                       });
-                  }
-                  else{
-                    res.status(200).json({
-                      success: true,
-                      status: "review added successfully"
-                    });
-                  }
-                })
-                .catch((err)=>{
-                  console.log("Error from /reviews/phone: ", err);
-                  return res.status(500).json({
-                    success: false,
-                    status: "internal server error"
-                  });
-                });;
+                    });  
 */
 
 module.exports = reviewRouter;

@@ -28,7 +28,7 @@ const config = require("../config");
 
 
 // list all phones
-phoneRouter.get("/all", rateLimit.regular, cors.cors, (req, res, next) => {
+phoneRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next) => {
     let itemsPerRound = parseInt((process.env.ALL_PHONES_PER_ROUND|| config.ALL_PHONES_PER_ROUND));
     let roundNum = req.query.round;
     if(!roundNum){
@@ -65,7 +65,7 @@ phoneRouter.get("/all", rateLimit.regular, cors.cors, (req, res, next) => {
 
 
 // list all phones from a specific company
-phoneRouter.get("/by/:compId", rateLimit.regular, cors.cors, (req, res, next)=>{
+phoneRouter.get("/by/:compId", cors.cors, rateLimit.regular, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.PHONES_BY_COMPANY_PER_ROUND|| config.PHONES_BY_COMPANY_PER_ROUND));
     let roundNum = req.query.round;
     if(!roundNum){
@@ -103,7 +103,7 @@ phoneRouter.get("/by/:compId", rateLimit.regular, cors.cors, (req, res, next)=>{
 
 
 // get the manufacturing company of a phone
-phoneRouter.get("/:phoneId/company", rateLimit.regular, cors.cors, (req, res, next)=>{
+phoneRouter.get("/:phoneId/company", cors.cors, rateLimit.regular, (req, res, next)=>{
     PHONE.findById(req.params.phoneId).populate("company", {name: 1})
     .then((phone)=>{
         
@@ -134,7 +134,7 @@ phoneRouter.get("/:phoneId/company", rateLimit.regular, cors.cors, (req, res, ne
 
 
 // get the phone's specs
-phoneRouter.get("/:phoneId/specs", rateLimit.regular, cors.cors, (req, res, next)=>{
+phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit.regular, (req, res, next)=>{
     
     PSPECS.findById(req.params.phoneId)
     .populate("_id", {name: 1, picture: 1, company: 1})
@@ -256,7 +256,7 @@ phoneRouter.get("/:phoneId/specs", rateLimit.regular, cors.cors, (req, res, next
 
 
 // get phone's stats   (increase the view count) (indicate the user has visited this phone profile)
-phoneRouter.get("/:phoneId/stats", rateLimit.regular, cors.cors, 
+phoneRouter.get("/:phoneId/stats", cors.cors, rateLimit.regular, 
 authenticate.verifyFlexible, (req, res, next)=>{
     // increase the view count
     PHONE.findByIdAndUpdate(req.params.phoneId, {$inc: {views: 1}}, {new: false})
@@ -317,7 +317,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
 
 
 // indicate that the user has compared between two phones
-phoneRouter.put("/:phone1Id/compare/:phone2Id", rateLimit.regular, cors.cors, authenticate.verifyUser, 
+phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit.regular, authenticate.verifyUser, 
 (req, res, next)=>{
     PHONE.find({_id: {$in: [req.params.phone1Id, req.params.phone2Id]}}, {_id: 1}).then((phones)=>{
         
@@ -358,7 +358,7 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", rateLimit.regular, cors.cors, au
 
 
 // get similar phones to the given phone
-phoneRouter.get("/:phoneId/similar", rateLimit.regular, cors.cors, (req, res, next)=>{
+phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit.regular, (req, res, next)=>{
     PHONE.findById(req.params.phoneId, {_id: 1}).then(async (phone)=>{
 
         // if the phone doesn't exist, abort

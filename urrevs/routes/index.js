@@ -15,7 +15,7 @@ const rateLimit = require("../utils/rateLimit");
 
 
 /* GET home page. */
-router.get('/', rateLimit.regular, cors.cors, function(req, res, next) {
+router.get('/', cors.cors, rateLimit.regular, function(req, res, next) {
   res.json({"status": "deployed successfully"});
 });
 

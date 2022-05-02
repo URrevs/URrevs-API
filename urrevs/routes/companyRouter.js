@@ -17,7 +17,7 @@ const COMPANY = require("../models/company");
 
 
 // get statistical info about a company
-companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, next)=>{
+companyRouter.get("/:companyId/stats", cors.cors, rateLimit.regular, (req, res, next)=>{
     COMPANY.findByIdAndUpdate(req.params.companyId, {$inc: {views: 1}}, {new: false})
     .then((company)=>{
         
@@ -51,7 +51,7 @@ companyRouter.get("/:companyId/stats", rateLimit.regular, cors.cors, (req, res, 
 
 
 // get all companies sorted by total number of reviews on its products
-companyRouter.get("/all", rateLimit.regular, cors.cors, (req, res, next)=>{
+companyRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.ALL_COMPANIES_PER_ROUND|| config.ALL_COMPANIES_PER_ROUND));
     let roundNum = req.query.round;
     
