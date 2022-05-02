@@ -22,7 +22,7 @@ const searchRouter = express.Router();
 // Endpoints Implementation
 
 // search phones only
-searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, next)=>{
+searchRouter.get("/products/phones", cors.cors, rateLimit.search, (req, res, next)=>{
   let searchWord = req.query.q;
   if(!searchWord){
     res.statusCode = 400;
@@ -90,7 +90,7 @@ searchRouter.get("/products/phones", rateLimit.search, cors.cors, (req, res, nex
 
 
 // search all products (No companies)
-searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
+searchRouter.get("/products", cors.cors, rateLimit.search, (req, res, next)=>{
   let searchWord = req.query.q;
   if(!searchWord){
     res.statusCode = 400;
@@ -165,7 +165,7 @@ searchRouter.get("/products", rateLimit.search, cors.cors, (req, res, next)=>{
 
 
 // search all products and companies
-searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
+searchRouter.get("/all", cors.cors, rateLimit.search, (req, res, next)=>{
   let searchWord = req.query.q;
   if(!searchWord){
     res.statusCode = 400;
@@ -250,7 +250,7 @@ searchRouter.get("/all", rateLimit.search, cors.cors, (req, res, next)=>{
 
 
 // add a new search result to recent searches
-searchRouter.put("/recent", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+searchRouter.put("/recent", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // checking if the body is valid
   if(!(req.body.type && req.body._id)){
       res.statusCode = 400;
@@ -354,7 +354,7 @@ searchRouter.put("/recent", rateLimit.regular, cors.cors, authenticate.verifyUse
 
 
 // get my recent searches
-searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+searchRouter.get("/recent", cors.cors, rateLimit.search, authenticate.verifyUser, (req, res, next)=>{
   UPRODUCT.findOne({_id: req.user._id}, {recentSearches: 1}).populate("recentSearches._id", {name: 1}).then((user)=>{
     
     // if the user has no recent searches, create the document
@@ -389,7 +389,7 @@ searchRouter.get("/recent", rateLimit.search, cors.cors, authenticate.verifyUser
 
 
 // delete a recent search result
-searchRouter.delete("/recent", rateLimit.regular, cors.cors, authenticate.verifyUser, (req, res, next)=>{
+searchRouter.delete("/recent", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   if(!(req.body._id)){
     res.statusCode = 400;
     res.setHeader("Content-Type", "application/json");

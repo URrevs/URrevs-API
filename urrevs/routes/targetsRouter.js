@@ -24,7 +24,7 @@ const UPDATE = require("../models/update");
 
 
 // update data from source, document the update operation
-targetsRouter.get("/update", rateLimit.regular, cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next)=>{
+targetsRouter.get("/update", cors.cors, rateLimit.regular, authenticate.verifyUser, authenticate.verifyAdmin, (req,res,next)=>{
   let canUpdate = false;
   UPDATE.find({}).sort({createdAt: -1}).limit(1).then((latestUpdate)=>{
     if(latestUpdate.length == 0){
@@ -67,7 +67,7 @@ targetsRouter.get("/update", rateLimit.regular, cors.cors, authenticate.verifyUs
 
 
 // get the info of the latest update operation (icluding current update)
-targetsRouter.get("/update/latest", rateLimit.regular, cors.cors, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+targetsRouter.get("/update/latest", cors.cors, rateLimit.regular, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   UPDATE.find({}).sort({createdAt: -1}).limit(1).populate("companies._id","name").populate("phones._id", "name").then((operation)=>{
     if(operation.length > 0){
       let compList = [];
