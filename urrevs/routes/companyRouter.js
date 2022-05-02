@@ -11,6 +11,8 @@ const rateLimit = require("../utils/rateLimit");
 
 const COMPANY = require("../models/company");
 
+const config = require("../config");
+
 //--------------------------------------------------------------------
 
 // Endpoints Implementation
