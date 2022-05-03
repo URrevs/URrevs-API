@@ -21,6 +21,7 @@ const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
 const OWNED_PHONE = require("../models/ownedPhone");
 const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
+const COMPANY_REVS_LIKES = require("../models/companyRevsLikes");
 
 const config = require("../config");
 
@@ -400,5 +401,66 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
   });
 });
 
+
+
+
+
+// Get a certain company review
+reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  COMPANYREV.findById(req.params.revId)
+  .populate("user", {name: 1, picture: 1})
+  .populate("company", {name: 1})
+  .then(async (rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+    
+    let resultRev = {
+      _id: rev._id,
+      type: "phone",
+      targetId: rev.company._id,
+      targetName: rev.company.name,
+      userId: rev.user._id,
+      userName: rev.user.name,
+      picture: rev.user.picture,
+      createdAt: rev.createdAt,
+      views: rev.views,
+      likes: rev.likes,
+      commentsCount: rev.commentsCount,
+      shares: rev.shares,
+      corresPhoneRev: rev.corresPrev,
+      generalRating: rev.generalRating,
+      pros: rev.pros,
+      cons: rev.cons,
+      liked: false
+    };
+
+    // request is done by a user
+    if(req.user){
+      // check the liked state
+      let like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id});
+      if(like){
+        resultRev.liked = true;
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      review: resultRev
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/phone/:revId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the company review failed"
+    });
+  });
+});
 
 module.exports = reviewRouter;

@@ -84,6 +84,6 @@ const pReviewSchema = new schema({
 
 pReviewSchema.index({createdAt: -1});
 pReviewSchema.index({phone: 1, createdAt: -1});
-pReviewSchema.index({user: 1, phone: 1, createdAt: -1});
+pReviewSchema.index({user: 1, createdAt: -1});
 
 module.exports = mongoose.model("pReview", pReviewSchema);
