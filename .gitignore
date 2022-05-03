@@ -1,3 +1,4 @@
 urrevs/node_modules/
 urrevs/.env
 urrevs/migrationCode/
+urrevs/package-lock.json
