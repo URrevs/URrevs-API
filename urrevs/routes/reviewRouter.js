@@ -341,7 +341,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
 
 // Get a certain phone review
 reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
-  PHONEREV.findById(req.params.revId)
+  PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
   .then(async (rev)=>{
@@ -409,7 +409,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
 
 // Get a certain company review
 reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
-  COMPANYREV.findById(req.params.revId)
+  COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("company", {name: 1})
   .then(async (rev)=>{
