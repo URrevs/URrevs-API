@@ -61,6 +61,6 @@ const cReviewSchema = new schema({
 
 cReviewSchema.index({createdAt: -1});
 cReviewSchema.index({company: 1, createdAt: -1});
-cReviewSchema.index({user: 1, company: 1, createdAt: -1});
+cReviewSchema.index({user: 1, createdAt: -1});
 
 module.exports = mongoose.model("cReview", cReviewSchema);
