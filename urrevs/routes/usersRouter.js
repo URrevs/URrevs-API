@@ -4,6 +4,7 @@
 */
 
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 const rateLimit = require("../utils/rateLimit");
 const cors = require("../utils/cors");
@@ -27,9 +28,10 @@ userRouter.options("*", cors.cors, (req, res, next)=>{
 // login or sign up
 userRouter.get("/authenticate", cors.cors, rateLimit.regular, (req, res, next)=>{
     authenticate.authorize(req).then((token)=>{
+        let docoded = jwt.decode(token);
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
-        res.json({success: true, status: "user logged in successfully", token: token});
+        res.json({success: true, status: "user logged in successfully", token: token, exp: docoded.exp});
     })
     .catch((err)=>{
         if(err == "invalid"){
