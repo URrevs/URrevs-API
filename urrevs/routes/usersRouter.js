@@ -217,7 +217,7 @@ userRouter.get("/phones", cors.cors, rateLimit.regular, authenticate.verifyUser,
 
 // get user's owned phones
 userRouter.get("/:userId/phones", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-    let itemsPerRound = 20;
+    let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
     if(roundNum == null || isNaN(roundNum)){
