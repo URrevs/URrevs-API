@@ -6,6 +6,7 @@
 const express = require("express");
 const axios = require("axios");
 const https = require("https");
+const fs = require("fs");
 
 const reviewRouter = express.Router();
 
@@ -21,6 +22,7 @@ const COMPANYREV = require("../models/companyReview");
 const OWNED_PHONE = require("../models/ownedPhone");
 
 const config = require("../config");
+const { parse } = require("path");
 
 //--------------------------------------------------------------------
 
@@ -186,7 +188,25 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
             console.log("--------------------Review grading AI Failed---------------------");
             //console.log(e);
             // since the AI service is down, we will use the backup routine
-            grade = 100;
+
+            // read the stop words file
+            let stopWords = fs.readFileSync("./stopwords.txt", "utf8").split("\r\n");
+            // console.log(stopWords);
+            // tokenize the pros, cons, compPros, compCons
+            let tokenizedPros = pros.split(" ");
+            let tokenizedCons = cons.split(" ");
+            let tokenizeCompPros = compPros.split(" ");
+            let tokenizeCompCons = compCons.split(" ");
+            let tokenizedReview = tokenizedPros.concat(tokenizedCons, tokenizeCompPros, tokenizeCompCons);
+            // remove the stop words from the tokenized pros, cons, compPros, compCons
+            let filtered_review = tokenizedReview.filter(word=>{
+              return !(stopWords.includes(word));
+            });
+            let count_filtered = filtered_review.length;
+            let max_count = parseInt((process.env.MAX_COUNT || config.MAX_COUNT));
+            let minCount = parseInt((process.env.MIN_COUNT || config.MIN_COUNT));
+            grade = 30 * (count_filtered - minCount) / (max_count - minCount) + 10;
+            grade = Math.round(grade);
           }
 
           // give points to the user - give points to the referral (if exists)
