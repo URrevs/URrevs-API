@@ -86,4 +86,4 @@ pReviewSchema.index({createdAt: -1});
 pReviewSchema.index({phone: 1, likes: -1, createdAt: -1});
 pReviewSchema.index({user: 1, likes: -1, createdAt: -1});
 
-module.exports = mongoose.model("pReview", pReviewSchema);
+module.exports = mongoose.model("pRev", pReviewSchema);

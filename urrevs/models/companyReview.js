@@ -63,4 +63,4 @@ cReviewSchema.index({createdAt: -1});
 cReviewSchema.index({user: 1, likes: -1, createdAt: -1});
 cReviewSchema.index({company: 1, likes: -1, createdAt: -1});
 
-module.exports = mongoose.model("cReview", cReviewSchema);
+module.exports = mongoose.model("cRev", cReviewSchema);

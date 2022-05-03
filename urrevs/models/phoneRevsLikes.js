@@ -13,7 +13,7 @@ const pRevsLikesSchema = new schema({
     },
     review: {
       type: schema.Types.ObjectId,
-      ref: 'pReview'
+      ref: 'pRev'
     }
 },
 {
@@ -23,4 +23,4 @@ const pRevsLikesSchema = new schema({
 pRevsLikesSchema.index({createdAt: 1});
 pRevsLikesSchema.index({user: 1, review: 1});
 
-module.exports = mongoose.model('PhoneRevsLikes', pRevsLikesSchema);
+module.exports = mongoose.model('pRevsLike', pRevsLikesSchema);

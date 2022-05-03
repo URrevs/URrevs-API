@@ -22,6 +22,8 @@ const COMPANYREV = require("../models/companyReview");
 const OWNED_PHONE = require("../models/ownedPhone");
 const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
 const COMPANY_REVS_LIKES = require("../models/companyRevsLikes");
+const PHONE_REVS_UNLIKES = require("../models/phoneRevsUnlikes");
+const COMPANY_REVS_UNLIKES = require("../models/companyRevsUnlikes");
 
 const config = require("../config");
 
