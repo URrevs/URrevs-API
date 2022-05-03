@@ -35,7 +35,7 @@ phoneRouter.options("*", cors.cors, (req, res, next)=>{
 phoneRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next) => {
     let itemsPerRound = parseInt((process.env.ALL_PHONES_PER_ROUND|| config.ALL_PHONES_PER_ROUND));
     let roundNum = req.query.round;
-    if(!roundNum){
+    if(!roundNum || isNaN(roundNum)){
         res.statusCode = 400;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "bad request"});
@@ -72,7 +72,7 @@ phoneRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next) => {
 phoneRouter.get("/by/:compId", cors.cors, rateLimit.regular, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.PHONES_BY_COMPANY_PER_ROUND|| config.PHONES_BY_COMPANY_PER_ROUND));
     let roundNum = req.query.round;
-    if(!roundNum){
+    if(!roundNum || isNaN(roundNum)){
         res.statusCode = 400;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "bad request"});

@@ -60,7 +60,7 @@ companyRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.ALL_COMPANIES_PER_ROUND|| config.ALL_COMPANIES_PER_ROUND));
     let roundNum = req.query.round;
     
-    if(!roundNum){
+    if(!roundNum || isNaN(roundNum)){
         res.statusCode = 400;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "bad request"});

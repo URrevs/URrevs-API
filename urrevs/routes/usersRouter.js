@@ -180,7 +180,7 @@ userRouter.get("/phones", cors.cors, rateLimit.regular, authenticate.verifyUser,
     let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
-    if(roundNum == null){
+    if(roundNum == null || isNaN(roundNum)){
         res.statusCode = 400;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "bad request"});
@@ -220,7 +220,7 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit.regular, authenticate.ver
     let itemsPerRound = 20;
     let roundNum = req.query.round;
 
-    if(roundNum == null){
+    if(roundNum == null || isNaN(roundNum)){
         res.statusCode = 400;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "bad request"});

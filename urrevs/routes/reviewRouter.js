@@ -454,12 +454,31 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.v
 
   })
   .catch((err)=>{
-    console.log("Error from GET /reviews/phone/:revId: ", err);
+    console.log("Error from GET /reviews/company/:revId: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
       err: "Finding the company review failed"
     });
+  });
+});
+
+
+
+
+// get my phone reviews
+reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  PHONEREV.find({user: req.user._id})
+  .sort({likes: -1, createdAt: -1})
+  .skip()
+  .limit()
+  .populate("user", {name: 1, picture: 1})
+  .populate("company", {name: 1})
+  .then(()=>{
+
+  })
+  .catch(()=>{
+    
   });
 });
 
