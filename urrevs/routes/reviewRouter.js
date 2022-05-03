@@ -559,7 +559,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.veri
 // get phone reviews of another user
 reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   
-  let itemsPerRound = parseInt((process.env.MY_PHONE_REVS_PER_ROUND|| config.MY_PHONE_REVS_PER_ROUND));
+  let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_REVS_PER_ROUND|| config.ANOTHER_USER_PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
       return res.status(400).json({
@@ -633,7 +633,7 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate
 
   })
   .catch((err)=>{
-    console.log("Error from GET /reviews/phone/by/me: ", err);
+    console.log("Error from GET /reviews/phone/by/:userId: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -734,7 +734,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit.regular, authenticate.ve
 // get company reviews of another user
 reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   
-  let itemsPerRound = parseInt((process.env.MY_COMPANY_REVS_PER_ROUND|| config.MY_COMPANY_REVS_PER_ROUND));
+  let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_REVS_PER_ROUND|| config.ANOTHER_USER_COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
       return res.status(400).json({
@@ -802,7 +802,7 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authentica
 
   })
   .catch((err)=>{
-    console.log("Error from GET /reviews/company/by/me: ", err);
+    console.log("Error from GET /reviews/company/by/:userId: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -812,6 +812,183 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authentica
 });
 
 
+
+
+// Get reviews on a certain phone
+reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  
+  let itemsPerRound = parseInt((process.env.PHONE_REVS_PER_ROUND|| config.PHONE_REVS_PER_ROUND));
+  let roundNum = req.query.round;
+  if(!roundNum || isNaN(roundNum)){
+      return res.status(400).json({
+        success: false,
+        status: "bad request",
+      });
+  }
+
+  PHONEREV.find({phone: req.params.phoneId})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("phone", {name: 1})
+  .then(async (revs)=>{
+    if(revs.length === 0){
+      return res.status(200).json({
+        success: true,
+        reviews: []
+      });
+    }
+
+    let resultRevs = [];
+    let idsList = [];
+    let ids = {};
+
+    // preparing reviews
+    for (let[index, rev] of revs.entries()){
+      // array of ids to access the likes collection
+      idsList.push(rev._id);
+      // object of reviews indexed by id to optimize giving the likes
+      ids[rev._id] = index;
+      // array of reviews
+      resultRevs.push({
+        _id: rev._id,
+        type: "phone",
+        targetId: rev.phone._id,
+        targetName: rev.phone.name,
+        userId: rev.user._id,
+        userName: rev.user.name,
+        picture: rev.user.picture,
+        createdAt: rev.createdAt,
+        views: rev.views,
+        likes: rev.likes,
+        commentsCount: rev.commentsCount,
+        shares: rev.shares,
+        ownedAt: rev.ownedDate,
+        generalRating: rev.generalRating,
+        uiRating: rev.uiRating,
+        manufacturingQuality: rev.manQuality,
+        valueForMoney: rev.valFMon,
+        camera: rev.camera,
+        callQuality: rev.callQuality,
+        battery: rev.batteryRating,
+        pros: rev.pros,
+        cons: rev.cons,
+        liked: false
+      });
+    }
+
+    if(req.user){
+      // checking liked state
+      let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+      for(let like of likes){
+        resultRevs[ids[like.review]].liked = true;
+      }
+    }
+
+
+    res.status(200).json({
+      success: true,
+      reviews: resultRevs
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/phone/on/:phoneId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding reviews on a certain phone failed"
+    });
+  });
+});
+
+
+
+
+
+// Get reviews on a certain phone
+reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  
+  let itemsPerRound = parseInt((process.env.COMPANY_REVS_PER_ROUND|| config.COMPANY_REVS_PER_ROUND));
+  let roundNum = req.query.round;
+  if(!roundNum || isNaN(roundNum)){
+      return res.status(400).json({
+        success: false,
+        status: "bad request",
+      });
+  }
+
+  COMPANYREV.find({company: req.params.companyId})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("company", {name: 1})
+  .then(async (revs)=>{
+    if(revs.length === 0){
+      return res.status(200).json({
+        success: true,
+        reviews: []
+      });
+    }
+
+    let resultRevs = [];
+    let idsList = [];
+    let ids = {};
+
+    // preparing reviews
+    for (let[index, rev] of revs.entries()){
+      // array of ids to access the likes collection
+      idsList.push(rev._id);
+      // object of reviews indexed by id to optimize giving the likes
+      ids[rev._id] = index;
+      // array of reviews
+      resultRevs.push({
+        _id: rev._id,
+        type: "company",
+        targetId: rev.company._id,
+        targetName: rev.company.name,
+        userId: rev.user._id,
+        userName: rev.user.name,
+        picture: rev.user.picture,
+        createdAt: rev.createdAt,
+        views: rev.views,
+        likes: rev.likes,
+        commentsCount: rev.commentsCount,
+        shares: rev.shares,
+        corresPhoneRev: rev.corresPrev,
+        generalRating: rev.generalRating,
+        pros: rev.pros,
+        cons: rev.cons,
+        liked: false
+      });
+    }
+
+    if(req.user){
+      // checking liked state
+      let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+      for(let like of likes){
+        resultRevs[ids[like.review]].liked = true;
+      }
+    }
+
+
+    res.status(200).json({
+      success: true,
+      reviews: resultRevs
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/company/on/:companyId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding reviews on a certain company failed"
+    });
+  });
+});
 
 
 
