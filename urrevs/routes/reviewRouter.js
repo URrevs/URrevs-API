@@ -20,9 +20,9 @@ const COMPANY = require("../models/company");
 const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
 const OWNED_PHONE = require("../models/ownedPhone");
+const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
 
 const config = require("../config");
-const { parse } = require("path");
 
 //--------------------------------------------------------------------
 
@@ -341,7 +341,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
   PHONEREV.findById(req.params.revId)
   .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
-  .then((rev)=>{
+  .then(async (rev)=>{
     if(!rev){
       return res.status(404).json({
         success: false,
@@ -375,8 +375,13 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
       liked: false
     };
 
+    // request is done by a user
     if(req.user){
       // check the liked state
+      let like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id});
+      if(like){
+        resultRev.liked = true;
+      }
     }
 
     res.status(200).json({
