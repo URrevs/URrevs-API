@@ -907,7 +907,7 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticat
 
 
 
-// Get reviews on a certain phone
+// Get reviews on a certain company
 reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.COMPANY_REVS_PER_ROUND|| config.COMPANY_REVS_PER_ROUND));
