@@ -385,7 +385,9 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit.regular, (req, res, ne
             
             PHONE.find({_id: {$in: similar_ids}}, {name: 1, picture: 1}).then((phones)=>{
                 let result = [];
-                for(phone of phones){
+                let resultObj = {};
+                for(let [index, phone] of phones.entries()){
+                    resultObj[phone._id] = index;
                     result.push({
                         _id: phone._id,
                         name: phone.name,
@@ -395,20 +397,16 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit.regular, (req, res, ne
                 }
 
                 // sort the result by the the order in similar_ids
-                let resultObj = {};
-                for(phone of result){
-                    resultObj[phone._id] = phone;
-                }
-                result = [];
+                let resultSorted = [];
                 for(let id of similar_ids){
-                    result.push(resultObj[id]);
+                    resultSorted.push(result[resultObj[id]]);
                 }
                 
                 console.log("--------------------Similar phones is done by AI--------------------")
 
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "application/json");
-                res.json({success: true, phones: result});
+                res.json({success: true, phones: resultSorted});
             })
             .catch((err)=>{
                 console.log("Error from ai way /phones/:phoneId/similar: ", err);
