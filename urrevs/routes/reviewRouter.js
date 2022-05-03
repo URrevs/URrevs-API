@@ -17,6 +17,7 @@ const authenticate = require("../utils/authenticate");
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
 const COMPANY = require("../models/company");
+const CONSTANT = require("../models/constants");
 const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
 const OWNED_PHONE = require("../models/ownedPhone");
@@ -57,7 +58,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   11- add the phone to the owned phones for the user
   12- calculate the points to give to the user using either AI service or the backup routine
   13- give points to the user
-  14- give points to the referral (if exists)
+  14- give points to the referral (if exists) (the referral must not be the user himself)
   15- send the phone review as a response
 */
 
@@ -212,11 +213,11 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
             grade = Math.round(grade);
           }
 
-          // give points to the user - give points to the referral (if exists)
+          // give points to the user - give points to the referral (if exists). the referral must not be the user himself
           let staeg3Proms = [];
           staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade}}));
           if(refCode){
-            staeg3Proms.push(USER.findOneAndUpdate({refCode: refCode}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+            staeg3Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
           }
 
           Promise.all(staeg3Proms).then((staeg3Results)=>{
@@ -988,6 +989,187 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authent
       success: false,
       status: "internal server error",
       err: "Finding reviews on a certain company failed"
+    });
+  });
+});
+
+
+
+
+
+// like a phone review
+/*
+  steps:
+    1- check if the review exists
+    2- check if the review is not made by the user
+    3- get the date of the last AI query
+    4- check if there is no like by this user on this review in the same time period
+    5- create the like document
+    6- give points to the review author
+*/
+reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // check if the review exists - check if the review is not made by the user
+  PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}, {new: true})
+  .then(async(rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "review not found or you own it"
+      });
+    }
+
+    // get the date of the last AI query
+    let timePeriodBeginning;
+    try{
+      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
+      timePeriodBeginning = timePeriodBeginningDate;
+    }
+    catch(e){
+      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+    }
+
+    // check if the user has already liked the review in the same time slot
+    PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}})
+    .then((like)=>{
+    
+      if(like){
+        return res.status(403).json({
+          success: false,
+          status: "already liked"
+        });
+      }
+
+      // create the like document
+      PHONE_REVS_LIKES.create({
+        user: req.user._id,
+        review: req.params.revId
+      })
+      .then((like)=>{
+  
+        // give points to the review author
+        USER.findOneAndUpdate({_id: rev.user}, 
+          {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
+        .then((user)=>{
+          return res.status(200).json({
+            success: true,
+            status: "ok"
+          });
+        })
+        .catch((err)=>{
+          console.log("Error from POST /reviews/phone/:revId/like: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Giving points to the review author failed"
+          });
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from POST /reviews/phone/:revId/like: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Creating like failed"
+        });
+      });
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/:revId/like: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Liking a phone review failed"
+    });
+  });
+});
+
+
+
+
+// like a company review
+/*
+  steps:
+    1- check if the review exists
+    2- check if the review is not made by the user
+    3- get the date of the last AI query
+    4- check if there is no like by this user on this review in the same time period
+    5- create the like document
+    6- give points to the review author
+*/
+reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // check if the review exists - check if the review is not made by the user
+  COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}, {new: true})
+  .then(async(rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "review not found or you own it"
+      });
+    }
+
+    // get the date of the last AI query
+    let timePeriodBeginning;
+    try{
+      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
+      timePeriodBeginning = timePeriodBeginningDate;
+    }
+    catch(e){
+      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+    }
+
+    // check if the user has already liked the review in the same time slot
+    COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}})
+    .then((like)=>{
+    
+      if(like){
+        return res.status(403).json({
+          success: false,
+          status: "already liked"
+        });
+      }
+
+      // create the like document
+      COMPANY_REVS_LIKES.create({
+        user: req.user._id,
+        review: req.params.revId
+      })
+      .then((like)=>{
+  
+        // give points to the review author
+        USER.findOneAndUpdate({_id: rev.user}, 
+          {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
+        .then((user)=>{
+          return res.status(200).json({
+            success: true,
+            status: "ok"
+          });
+        })
+        .catch((err)=>{
+          console.log("Error from POST /reviews/company/:revId/like: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Giving points to the review author failed"
+          });
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from POST /reviews/company/:revId/like: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Creating like failed"
+        });
+      });
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/:revId/like: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Liking a company review failed"
     });
   });
 });
