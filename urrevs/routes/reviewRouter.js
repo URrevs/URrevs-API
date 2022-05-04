@@ -1481,63 +1481,114 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
 
 
 
+// add a comment to a phone review
+reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // extract the comment content from the request body
+  let {content} = req.body;
+  // check if the content is not empty
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
 
-
-
-
-
-/*
-    // get the date of the last AI query
-    let timePeriodBeginning;
-    try{
-      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
-      timePeriodBeginning = timePeriodBeginningDate;
+  // check if the review exists
+  PHONEREV.findOne({_id: req.params.revId}).then((rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
     }
-    catch(e){
-      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+
+    // create the comment document
+    PHONE_REVS_COMMENTS.create({
+      user: req.user._id,
+      review: req.params.revId,
+      content: content
+    }).then((comment)=>{
+      return res.status(200).json({
+        success: true,
+        status: "ok",
+        comment: comment._id
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from POST /reviews/phone/:revId/comments: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "creating the comment document failed"
+      });
+    })
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/:revId/comments: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the phone review failed"
+    });
+  });
+});
+
+
+
+
+
+// add a comment to a company review
+reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // extract the comment content from the request body
+  let {content} = req.body;
+  // check if the content is not empty
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  // check if the review exists
+  COMPANYREV.findOne({_id: req.params.revId}).then((rev)=>{
+    if(!rev){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
     }
-*/
 
+    // create the comment document
+    COMPANY_REVS_COMMENTS.create({
+      user: req.user._id,
+      review: req.params.revId,
+      content: content
+    }).then((comment)=>{
+      return res.status(200).json({
+        success: true,
+        status: "ok",
+        comment: comment._id
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from POST /reviews/company/:revId/comments: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "creating the comment document failed"
+      });
+    })
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/:revId/comments: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the company review failed"
+    });
+  });
+});
 
-
-/*
-      // checking if there is already an unlike document for this user on this review in the same time slot
-      try{
-        let r = await PHONE_REVS_UNLIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}});
-        if(r){
-          rev.likes += 1;
-          await rev.save();
-          return res.status(403).json({
-            success: false,
-            status: "already unliked"
-          });
-        }
-
-        // create the unlike document
-        try{
-          await PHONE_REVS_UNLIKES.create({
-            user: req.user._id,
-            review: req.params.revId
-          });
-        }
-        catch(err){
-          console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
-          return res.status(500).json({
-            success: false,
-            status: "internal server error",
-            err: "Creating unlike failed"
-          });
-        }
-      }
-      catch(e){
-        console.log("Error from POST /reviews/phone/:revId/unlike: ", e);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "Finding unlike failed"
-        });
-      }
-*/
 
 
 
