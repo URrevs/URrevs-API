@@ -63,19 +63,23 @@ const pReviewSchema = new schema({
     // metadata
     views: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     likes: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     commentsCount: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     shares: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     }
 },
 {

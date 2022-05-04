@@ -22,35 +22,43 @@ const phoneSchema = new schema({
     },
     generalRating: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     uiRating: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     manQuality: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     valFMon: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     cam: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     callQuality: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     batteryRating: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     },
     views: {
         type: Number,
-        default: 0
+        default: 0,
+        min: 0
     }
 }, 
 {
