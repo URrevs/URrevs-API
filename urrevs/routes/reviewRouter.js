@@ -388,7 +388,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
     // request is done by a user
     if(req.user){
       // check the liked state
-      let like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id});
+      let like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
       if(like){
         resultRev.liked = true;
       }
@@ -450,7 +450,7 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.v
     // request is done by a user
     if(req.user){
       // check the liked state
-      let like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id});
+      let like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
       if(like){
         resultRev.liked = true;
       }
@@ -540,7 +540,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.veri
     }
 
     // checking liked state
-    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -630,7 +630,7 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate
     }
 
     // checking liked state
-    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -715,7 +715,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit.regular, authenticate.ve
     }
 
     // checking liked state
-    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -799,7 +799,7 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authentica
     }
 
     // checking liked state
-    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -889,7 +889,7 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticat
 
     if(req.user){
       // checking liked state
-      let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+      let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
       for(let like of likes){
         resultRevs[ids[like.review]].liked = true;
       }
@@ -976,7 +976,7 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authent
 
     if(req.user){
       // checking liked state
-      let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}});
+      let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
       for(let like of likes){
         resultRevs[ids[like.review]].liked = true;
       }
