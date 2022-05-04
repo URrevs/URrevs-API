@@ -22,6 +22,6 @@ const revsUnlikesSchema = new schema({
 
 
 revsUnlikesSchema.index({createdAt: 1});
-revsUnlikesSchema.index({user: 1, review: 1});
+revsUnlikesSchema.index({user: 1, review: 1, createdAt: -1});
 
 module.exports = mongoose.model('cRevsUnlike', revsUnlikesSchema);
