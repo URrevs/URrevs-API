@@ -1510,7 +1510,6 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authen
     }).then((comment)=>{
       return res.status(200).json({
         success: true,
-        status: "ok",
         comment: comment._id
       });
     })
@@ -1566,7 +1565,6 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, auth
     }).then((comment)=>{
       return res.status(200).json({
         success: true,
-        status: "ok",
         comment: comment._id
       });
     })
@@ -1589,6 +1587,99 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, auth
   });
 });
 
+
+
+
+// add a reply to a phone review comment
+reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // extract the comment content from the request body
+  let {content} = req.body;
+
+  // check if the content is not empty
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  // create the reply document
+  let reply = {
+    user: req.user._id,
+    content: content
+  };
+
+  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$push: {replies: reply}}, {new: true})
+  .then((comment)=>{
+    if(!comment){
+      return res.status(404).json({
+        success: false,
+        status: "comment not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true,
+        reply: comment.replies[comment.replies.length-1]._id
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/comments/:commentId/replies: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "creating the reply document failed"
+    });
+  });
+});
+
+
+
+
+// add a reply to a company review comment
+reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // extract the comment content from the request body
+  let {content} = req.body;
+
+  // check if the content is not empty
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  // create the reply document
+  let reply = {
+    user: req.user._id,
+    content: content
+  };
+
+  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$push: {replies: reply}}, {new: true})
+  .then((comment)=>{
+    if(!comment){
+      return res.status(404).json({
+        success: false,
+        status: "comment not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true,
+        reply: comment.replies[comment.replies.length-1]._id
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/replies: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "creating the reply document failed"
+    });
+  });
+});
 
 
 
