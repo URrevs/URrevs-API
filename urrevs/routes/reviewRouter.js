@@ -1761,4 +1761,181 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
 });
 
 
+
+
+
+
+
+
+
+// like a comment on a phone review
+reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // check if the comment exists
+  PHONE_REVS_COMMENTS.findById(req.params.commentId, {_id: 1}).then((comment)=>{
+    if(!comment){
+      return res.status(404).json({
+        success: false,
+        status: "comment not found"
+      });
+    }
+
+    // check if the user has already liked the comment
+    PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId})
+    .then((like)=>{
+      if(like){
+        return res.status(403).json({
+          success: false,
+          status: "already liked"
+        });
+      }
+
+      // create the like document
+      PHONE_REV_COMMENTS_LIKES.create({
+        user: req.user._id,
+        comment: req.params.commentId
+      })
+      .then((l)=>{
+        return res.status(200).json({
+          success: true
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "creating the like document failed"
+        });
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the like document failed"
+      });
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the comment failed"
+    });
+  });
+});
+
+
+
+// unlike a comment on a phone review
+reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // unlike the phone review comment
+  PHONE_REV_COMMENTS_LIKES.findOneAndDelete({user: req.user._id, comment: req.params.commentId}).then((resp)=>{
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "deleting the like document failed"
+    });
+  });
+});
+
+
+
+// like a comment on a company review
+reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // check if the comment exists
+  COMPANY_REVS_COMMENTS.findById(req.params.commentId, {_id: 1}).then((comment)=>{
+    if(!comment){
+      return res.status(404).json({
+        success: false,
+        status: "comment not found"
+      });
+    }
+
+    // check if the user has already liked the comment
+    COMPANY_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId})
+    .then((like)=>{
+      if(like){
+        return res.status(403).json({
+          success: false,
+          status: "already liked"
+        });
+      }
+
+      // create the like document
+      COMPANY_REV_COMMENTS_LIKES.create({
+        user: req.user._id,
+        comment: req.params.commentId
+      })
+      .then((l)=>{
+        return res.status(200).json({
+          success: true
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "creating the like document failed"
+        });
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the like document failed"
+      });
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the comment failed"
+    });
+  });
+});
+
+
+// unlike a comment on a company review
+reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  // unlike the company review comment
+  COMPANY_REV_COMMENTS_LIKES.findOneAndDelete({user: req.user._id, comment: req.params.commentId}).then((resp)=>{
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "deleting the like document failed"
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
 module.exports = reviewRouter;
