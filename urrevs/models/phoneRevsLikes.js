@@ -14,6 +14,10 @@ const pRevsLikesSchema = new schema({
     review: {
       type: schema.Types.ObjectId,
       ref: 'pRev'
+    },
+    unliked: {
+      type: Boolean,
+      default: false
     }
 },
 {
