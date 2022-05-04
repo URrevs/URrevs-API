@@ -998,21 +998,43 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authent
 
 
 
+
+
+// likes and unlikes
+/*
+  Initially, the user didn't like the review before.
+    1- the user likes the review ---> a new like document is created
+    2- the user unlikes the review ---> the like document is updated
+    3- the user likes the review again ---> the like document is updated
+    4- the user unlikes the review again ---> an error is returned
+  After one day
+    1- the user unlikes the review ---> the like document is updated and a new unlike document is created
+    2- the user likes the review ---> the like document is updated and the unlike document is deleted
+    3- the user unlikes the review ---> the like document is updated and the unlike document is created
+  After one day
+    1- the user likes the review ---> the like document is updated
+    2- the user unlikes the review ---> the like document is updated
+    3- the user likes the review ---> the like document is updated
+*/
+
+
+
 // like a phone review
 /*
   steps:
     1- check if the review exists
     2- check if the review is not made by the user
     3- increase the likes count by 1
-    4- get the date of the last AI query
-    5- check if there is no like by this user on this review in the same time period
-    6- create the like document
-    7- give points to the review author
+    4- get the latest like by this user on this review
+      if it doesn't exist, create it and give points to the review author
+      if it exists, check if it is unliked. 
+        if not unliked, return error
+        if unliked, modify it to be liked and give points to the review author
 */
 reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the review exists - check if the review is not made by the user - increase the likes count by 1
   PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}, {new: true})
-  .then(async(rev)=>{
+  .then((rev)=>{
     if(!rev){
       return res.status(404).json({
         success: false,
@@ -1020,37 +1042,61 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
       });
     }
 
-    // get the date of the last AI query
-    let timePeriodBeginning;
-    try{
-      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
-      timePeriodBeginning = timePeriodBeginningDate;
-    }
-    catch(e){
-      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
-    }
-
-    // check if the user has already liked the review in the same time slot
-    PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}})
-    .then((like)=>{
-    
-      if(like){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
+    // get the latest like by this user on this review
+    let proms1 = [];
+    proms1.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
+    proms1.push(CONSTANT.findOne({name: "AILastQuery"}));
+    Promise.all(proms1)
+    .then(async(results)=>{
+      let like = results[0];
+      let lastQuery = results[1];
+      if(lastQuery){
+        lastQuery = lastQuery.date;
+      }
+      else{
+        lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
       }
 
-      // create the like document
-      PHONE_REVS_LIKES.create({
-        user: req.user._id,
-        review: req.params.revId
-      })
-      .then((like)=>{
-  
-        // give points to the review author
-        USER.findOneAndUpdate({_id: rev.user}, 
-          {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
+      if(like){
+        // if not unliked, return error
+        if(!like.unliked){
+          await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
+          return res.status(403).json({
+            success: false,
+            status: "already liked"
+          });
+        }
+        else{
+          // if unliked, modify it to be liked - give points to the review author
+          let proms = [];
+          if(like.updatedAt >= lastQuery){
+            proms.push(PHONE_REVS_UNLIKES.findOneAndRemove({user: req.user._id, review: req.params.revId, createdAt: {$gte: lastQuery}}));
+          }
+          proms.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
+          proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+          Promise.all(proms).then(()=>{
+            return res.status(200).json({
+              success: true,
+              status: "ok"
+            });
+          })
+          .catch((err)=>{
+            console.log("Error from POST /reviews/phone/:revId/like: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "Giving points to the review author or saving the like document failed"
+            });
+          })
+        }  
+      }
+      else{
+        // create the like document - give points to the review author
+        let proms = [];
+        proms.push(PHONE_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        
+        Promise.all(proms)
         .then((user)=>{
           return res.status(200).json({
             success: true,
@@ -1062,18 +1108,10 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
           return res.status(500).json({
             success: false,
             status: "internal server error",
-            err: "Giving points to the review author failed"
+            err: "Giving points to the review author or creating the like document failed"
           });
         });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/phone/:revId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "Creating like failed"
-        });
-      });
+      }
     });
   })
   .catch((err)=>{
@@ -1089,21 +1127,24 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
 
 
 
+
+
 // like a company review
 /*
   steps:
     1- check if the review exists
     2- check if the review is not made by the user
     3- increase the likes count by 1
-    4- get the date of the last AI query
-    5- check if there is no like by this user on this review in the same time period
-    6- create the like document
-    7- give points to the review author
+    4- get the latest like by this user on this review
+      if it doesn't exist, create it and give points to the review author
+      if it exists, check if it is unliked. 
+        if not unliked, return error
+        if unliked, modify it to be liked and give points to the review author
 */
 reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the review exists - check if the review is not made by the user - increase the likes count by 1
   COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}, {new: true})
-  .then(async(rev)=>{
+  .then((rev)=>{
     if(!rev){
       return res.status(404).json({
         success: false,
@@ -1111,37 +1152,61 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
       });
     }
 
-    // get the date of the last AI query
-    let timePeriodBeginning;
-    try{
-      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
-      timePeriodBeginning = timePeriodBeginningDate;
-    }
-    catch(e){
-      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
-    }
-
-    // check if the user has already liked the review in the same time slot
-    COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}})
-    .then((like)=>{
-    
-      if(like){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
+    // get the latest like by this user on this review
+    let proms1 = [];
+    proms1.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
+    proms1.push(CONSTANT.findOne({name: "AILastQuery"}));
+    Promise.all(proms1)
+    .then(async(results)=>{
+      let like = results[0];
+      let lastQuery = results[1];
+      if(lastQuery){
+        lastQuery = lastQuery.date;
+      }
+      else{
+        lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
       }
 
-      // create the like document
-      COMPANY_REVS_LIKES.create({
-        user: req.user._id,
-        review: req.params.revId
-      })
-      .then((like)=>{
-  
-        // give points to the review author
-        USER.findOneAndUpdate({_id: rev.user}, 
-          {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
+      if(like){
+        // if not unliked, return error
+        if(!like.unliked){
+          await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
+          return res.status(403).json({
+            success: false,
+            status: "already liked"
+          });
+        }
+        else{
+          // if unliked, modify it to be liked - give points to the review author
+          let proms = [];
+          if(like.updatedAt >= lastQuery){
+            proms.push(COMPANY_REVS_UNLIKES.findOneAndRemove({user: req.user._id, review: req.params.revId, createdAt: {$gte: lastQuery}}));
+          }
+          proms.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
+          proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+          Promise.all(proms).then(()=>{
+            return res.status(200).json({
+              success: true,
+              status: "ok"
+            });
+          })
+          .catch((err)=>{
+            console.log("Error from POST /reviews/company/:revId/like: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "Giving points to the review author or saving the like document failed"
+            });
+          })
+        }  
+      }
+      else{
+        // create the like document - give points to the review author
+        let proms = [];
+        proms.push(COMPANY_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        
+        Promise.all(proms)
         .then((user)=>{
           return res.status(200).json({
             success: true,
@@ -1153,18 +1218,10 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
           return res.status(500).json({
             success: false,
             status: "internal server error",
-            err: "Giving points to the review author failed"
+            err: "Giving points to the review author or creating the like document failed"
           });
         });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/company/:revId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "Creating like failed"
-        });
-      });
+      }
     });
   })
   .catch((err)=>{
@@ -1187,15 +1244,18 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
     1- check if the review exists
     2- check if the review is not made by the user
     3- decrease the likes count by 1
-    4- if the number of likes is -1 or less (before the decrease), return error
+    4- if the number of likes is -1 or less (after the decrease), return error
     4- get the date of the last AI query
-    5- check if there is a like by this user on this review in the same time period (if so, delete it. if not create an unlike document)
-    6- remove points from the review author
-    7- decrease the number of likes by 1
+    5- get the latest like by this user on this review
+    6- if it doesn't exist, return error
+    7- check if it is unliked
+      if not unliked and the creation date is before the last AI query, modify it to be unliked and create an unlike document
+      if not unliked and the creation date is after the last AI query, modify the like document to be unliked
+      if unliked, return error
 */
 reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the review exists - check if the review is not made by the user - remove points from the review author
-  PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}})
+  PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}}, {new: true})
   .then(async(rev)=>{
     if(!rev){
       return res.status(404).json({
@@ -1205,9 +1265,9 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
     }
 
     // check if the number of likes is 0. if so, return error. if not, continue
-    if(rev.likes <= 0){
+    if(rev.likes <= -1){
       try{
-        await PHONEREV.findOneAndUpdate({_id: req.params.revId}, {$set: {likes: 0}});
+        await PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {likes: 0}});
         return res.status(403).json({
           success: false,
           status: "no likes"
@@ -1223,78 +1283,66 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
       }
     }
 
-    // get the date of the last AI query
-    let timePeriodBeginning;
-    try{
-      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
-      timePeriodBeginning = timePeriodBeginningDate;
-    }
-    catch(e){
-      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
-    }
-
-    // check if there is a like by this user on this review in the same time slot
-    let like;
-    try{
-      like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}}, {_id: 1});
-    }
-    catch(e){
-      console.log("Error from POST /reviews/phone/:revId/unlike: ", e);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding like failed"
-      });
-    }
-    
-    if(like){
-      // delete the like document
-      try{
-        await PHONE_REVS_LIKES.deleteOne({_id: like._id});
+    let proms1 = [];
+    proms1.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
+    proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1}));
+    Promise.all(proms1).then(async(results)=>{
+      let like = results[0];
+      let lastAiQuery = results[1];
+      if(lastAiQuery == null){
+        lastAiQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
       }
-      catch(err){
-        console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
-        return res.status(500).json({
+      else{
+        lastAiQuery = lastAiQuery.date;
+      }
+      if(like){
+        if(like.unliked){
+          await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+          return res.status(403).json({
+            success: false,
+            status: "already unliked"
+          });
+        }
+        else{
+          let proms = [];
+          // modify the like to be unliked - remove points from the review author - create an unlike document
+          if((like.createdAt < lastAiQuery && like.updatedAt < lastAiQuery)|| (like.updatedAt > lastAiQuery && like.createdAt < lastAiQuery)){
+            proms.push(PHONE_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
+          }
+          proms.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
+          proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+          Promise.all(proms).then((result)=>{
+            return res.status(200).json({
+              success: true,
+              status: "ok"
+            });
+          })
+          .catch((err)=>{
+            console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "Removing points from the review author or creating the unlike document failed"
+            });
+          });
+        }
+      }
+      else{
+        await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+        return res.status(403).json({
           success: false,
-          status: "internal server error",
-          err: "Deleting like failed"
+          status: "you didn't like this review"
         });
       }
-    }
-    else{
-      // create the unlike document
-      try{
-        await PHONE_REVS_UNLIKES.create({
-          user: req.user._id,
-          review: req.params.revId
-        });
-      }
-      catch(err){
-        console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "Creating unlike failed"
-        });
-      }
-    }
-
-    // remove points from the review author
-    USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
-    .then((user)=>{
-      return res.status(200).json({
-        success: true,
-        status: "ok"
-      });
     })
     .catch((err)=>{
       console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
       return res.status(500).json({
         success: false,
         status: "internal server error",
-        err: "Removing points from the review author failed"
+        err: "getting the last AI query or the like document failed"
       });
-    })
+    });
   })
   .catch((err)=>{
     console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
@@ -1311,22 +1359,24 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
 
 
 
-
 // unlike a company review
 /*
   steps:
     1- check if the review exists
     2- check if the review is not made by the user
     3- decrease the likes count by 1
-    4- if the number of likes is -1 or less (before the decrease), return error
+    4- if the number of likes is -1 or less (after the decrease), return error
     4- get the date of the last AI query
-    5- check if there is a like by this user on this review in the same time period (if so, delete it. if not create an unlike document)
-    6- remove points from the review author
-    7- decrease the number of likes by 1
+    5- get the latest like by this user on this review
+    6- if it doesn't exist, return error
+    7- check if it is unliked
+      if not unliked and the creation date is before the last AI query, modify it to be unliked and create an unlike document
+      if not unliked and the creation date is after the last AI query, modify the like document to be unliked
+      if unliked, return error
 */
 reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the review exists - check if the review is not made by the user - remove points from the review author
-  COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}})
+  COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}}, {new: true})
   .then(async(rev)=>{
     if(!rev){
       return res.status(404).json({
@@ -1336,9 +1386,9 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
     }
 
     // check if the number of likes is 0. if so, return error. if not, continue
-    if(rev.likes <= 0){
+    if(rev.likes <= -1){
       try{
-        await COMPANYREV.findOneAndUpdate({_id: req.params.revId}, {$set: {likes: 0}});
+        await COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {likes: 0}});
         return res.status(403).json({
           success: false,
           status: "no likes"
@@ -1354,78 +1404,66 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
       }
     }
 
-    // get the date of the last AI query
-    let timePeriodBeginning;
-    try{
-      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
-      timePeriodBeginning = timePeriodBeginningDate;
-    }
-    catch(e){
-      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
-    }
-
-    // check if there is a like by this user on this review in the same time slot
-    let like;
-    try{
-      like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}}, {_id: 1});
-    }
-    catch(e){
-      console.log("Error from POST /reviews/company/:revId/unlike: ", e);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding like failed"
-      });
-    }
-    
-    if(like){
-      // delete the like document
-      try{
-        await COMPANY_REVS_LIKES.deleteOne({_id: like._id});
+    let proms1 = [];
+    proms1.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
+    proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1}));
+    Promise.all(proms1).then(async(results)=>{
+      let like = results[0];
+      let lastAiQuery = results[1];
+      if(lastAiQuery == null){
+        lastAiQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
       }
-      catch(err){
-        console.log("Error from POST /reviews/company/:revId/unlike: ", err);
-        return res.status(500).json({
+      else{
+        lastAiQuery = lastAiQuery.date;
+      }
+      if(like){
+        if(like.unliked){
+          await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+          return res.status(403).json({
+            success: false,
+            status: "already unliked"
+          });
+        }
+        else{
+          let proms = [];
+          // modify the like to be unliked - remove points from the review author - create an unlike document
+          if((like.createdAt < lastAiQuery && like.updatedAt < lastAiQuery)|| (like.updatedAt > lastAiQuery && like.createdAt < lastAiQuery)){
+            proms.push(COMPANY_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
+          }
+          proms.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
+          proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+          Promise.all(proms).then((result)=>{
+            return res.status(200).json({
+              success: true,
+              status: "ok"
+            });
+          })
+          .catch((err)=>{
+            console.log("Error from POST /reviews/company/:revId/unlike: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "Removing points from the review author or creating the unlike document failed"
+            });
+          });
+        }
+      }
+      else{
+        await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+        return res.status(403).json({
           success: false,
-          status: "internal server error",
-          err: "Deleting like failed"
+          status: "you didn't like this review"
         });
       }
-    }
-    else{
-      // create the unlike document
-      try{
-        await COMPANY_REVS_UNLIKES.create({
-          user: req.user._id,
-          review: req.params.revId
-        });
-      }
-      catch(err){
-        console.log("Error from POST /reviews/company/:revId/unlike: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "Creating unlike failed"
-        });
-      }
-    }
-
-    // remove points from the review author
-    USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}})
-    .then((user)=>{
-      return res.status(200).json({
-        success: true,
-        status: "ok"
-      });
     })
     .catch((err)=>{
       console.log("Error from POST /reviews/company/:revId/unlike: ", err);
       return res.status(500).json({
         success: false,
         status: "internal server error",
-        err: "Removing points from the review author failed"
+        err: "getting the last AI query or the like document failed"
       });
-    })
+    });
   })
   .catch((err)=>{
     console.log("Error from POST /reviews/company/:revId/unlike: ", err);
@@ -1437,6 +1475,68 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
   })
 });
 
+
+
+
+
+
+
+
+
+
+
+/*
+    // get the date of the last AI query
+    let timePeriodBeginning;
+    try{
+      let {date: timePeriodBeginningDate} = await CONSTANT.findOne({name: "AILastQuery"}, {date: 1});
+      timePeriodBeginning = timePeriodBeginningDate;
+    }
+    catch(e){
+      timePeriodBeginning = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+    }
+*/
+
+
+
+/*
+      // checking if there is already an unlike document for this user on this review in the same time slot
+      try{
+        let r = await PHONE_REVS_UNLIKES.findOne({user: req.user._id, review: req.params.revId, createdAt: {$gte: timePeriodBeginning}});
+        if(r){
+          rev.likes += 1;
+          await rev.save();
+          return res.status(403).json({
+            success: false,
+            status: "already unliked"
+          });
+        }
+
+        // create the unlike document
+        try{
+          await PHONE_REVS_UNLIKES.create({
+            user: req.user._id,
+            review: req.params.revId
+          });
+        }
+        catch(err){
+          console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Creating unlike failed"
+          });
+        }
+      }
+      catch(e){
+        console.log("Error from POST /reviews/phone/:revId/unlike: ", e);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding unlike failed"
+        });
+      }
+*/
 
 
 
