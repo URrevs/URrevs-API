@@ -1771,11 +1771,11 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
 // like a comment on a phone review
 reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the comment exists
-  PHONE_REVS_COMMENTS.findById(req.params.commentId, {_id: 1}).then((comment)=>{
+  PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {_id: 1}).then((comment)=>{
     if(!comment){
       return res.status(404).json({
         success: false,
-        status: "comment not found"
+        status: "comment not found or you own it"
       });
     }
 
@@ -1852,11 +1852,11 @@ reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regu
 // like a comment on a company review
 reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
   // check if the comment exists
-  COMPANY_REVS_COMMENTS.findById(req.params.commentId, {_id: 1}).then((comment)=>{
+  COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {_id: 1}).then((comment)=>{
     if(!comment){
       return res.status(404).json({
         success: false,
-        status: "comment not found"
+        status: "comment not found or you own it"
       });
     }
 
