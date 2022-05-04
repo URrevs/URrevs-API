@@ -23,4 +23,4 @@ const revsUnlikesSchema = new schema({
 
 revsUnlikesSchema.index({createdAt: 1});
 
-mongoose.model('pRevsUnlike', revsUnlikesSchema);
+module.exports = mongoose.model('pRevsUnlike', revsUnlikesSchema);
