@@ -27,6 +27,10 @@ const PHONE_REVS_UNLIKES = require("../models/phoneRevsUnlikes");
 const COMPANY_REVS_UNLIKES = require("../models/companyRevsUnlikes");
 const PHONE_REVS_COMMENTS = require("../models/phoneReviewComment");
 const COMPANY_REVS_COMMENTS = require("../models/companyReviewComment");
+const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
+const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
+const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
+const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
 
 const config = require("../config");
 
@@ -1681,6 +1685,80 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit.r
   });
 });
 
+
+
+
+
+
+// get comments and replies for a phone review
+reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.PHONE_REV_COMMENTS_PER_ROUND || config.PHONE_REV_COMMENTS_PER_ROUND));
+  let roundNum = req.query.round;
+
+  if(roundNum == null || isNaN(roundNum)){
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "application/json");
+      res.json({success: false, status: "bad request"});
+      return;
+  }
+
+  PHONE_REVS_COMMENTS.find({review: req.params.revId})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("replies.user", {name: 1, picture: 1})
+  .then((comments)=>{
+    let resultComments = [];
+    
+    for(let comment of comments){
+      let resultComment = {
+        _id: comment._id,
+        userId: comment.user._id,
+        userName: comment.user.name,
+        userPicture: comment.user.picture,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        likes: comment.likes,
+        liked: false,
+        replies: []
+      };
+
+      for(let i=comment.replies.length-1; i>=0; i--){
+        let reply = comment.replies[i];
+        resultComment.replies.push({
+          _id: reply._id,
+          userId: reply.user._id,
+          userName: reply.user.name,
+          userPicture: reply.user.picture,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          likes: reply.likes,
+          liked: false
+        });
+      }
+
+      resultComments.push(resultComment);
+    }
+
+    if(req.user){
+      // check if the user has liked any of the comments or replies
+    }
+
+    return res.status(200).json({
+      success: true,
+      comments: resultComments
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/phone/:revId/comments: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the phone review failed"
+    });
+  })
+});
 
 
 module.exports = reviewRouter;

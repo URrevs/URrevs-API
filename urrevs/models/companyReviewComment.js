@@ -54,5 +54,6 @@ const commentsSchema = new schema({
 
 
 commentsSchema.index({createdAt: 1});
+commentsSchema.index({review: 1, likes: -1, createdAt: -1});
 
 module.exports = mongoose.model('cRevsComment', commentsSchema);
