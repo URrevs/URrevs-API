@@ -57,10 +57,11 @@ const cReviewSchema = new schema({
         type: Number,
         default: 0,
         min: 0
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
-},
-{
-    timestamps: true
 });
 
 cReviewSchema.index({createdAt: -1});
