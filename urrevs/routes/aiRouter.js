@@ -7,11 +7,12 @@ const express = require('express');
 const aiRouter = express.Router();
 
 const authenticate = require("../utils/authenticate");
+const rateLimit = require("../utils/rateLimit/regular");
 
 const CONSTANT = require("../models/constants");
 
 // update date of the last query
-aiRouter.put("/lastquery/set", authenticate.verifyAPIkey("X-Api-Key"), (req, res, next)=>{
+aiRouter.put("/lastquery/set", rateLimit, authenticate.verifyAPIkey("X-Api-Key"), (req, res, next)=>{
     let date = req.body.date;
     if(Date.parse(date)){
       CONSTANT.findOneAndUpdate({name: "AILastQuery"}, {$set: {date: date}}, {upsert: true})
