@@ -16,6 +16,7 @@ const authenticate = require("../utils/authenticate");
 const likeComment = require("../utils/likeCommentOrAnswer");
 const unlikeCommentOrReply = require("../utils/unlikeCommentsorReplies");
 const likeReply = require("../utils/likeReply");
+const addReply = require("../utils/addReply");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -34,6 +35,7 @@ const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
 const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
 const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
 const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
+const addComment = require("../utils/addCommentOrAnswer");
 
 const config = require("../config");
 
@@ -1648,41 +1650,26 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authen
     });
   }
 
-  // check if the review exists
-  PHONEREV.findOne({_id: req.params.revId}).then((rev)=>{
-    if(!rev){
+  addComment(PHONEREV, req.params.revId, PHONE_REVS_COMMENTS, req.user._id, "review", "content", content)
+  .then((commentId)=>{
+    if(commentId == 404){
       return res.status(404).json({
         success: false,
         status: "review not found"
       });
     }
-
-    // create the comment document
-    PHONE_REVS_COMMENTS.create({
-      user: req.user._id,
-      review: req.params.revId,
-      content: content
-    }).then((comment)=>{
-      return res.status(200).json({
-        success: true,
-        comment: comment._id
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/phone/:revId/comments: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "creating the comment document failed"
-      });
-    })
+    
+    return res.status(200).json({
+      success: true,
+      comment: commentId
+    });
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/:revId/comments: ", err);
+    console.log("Error from POST /reviews/phone/:revId/comments: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the phone review failed"
+      err: err.message
     });
   });
 });
@@ -1703,41 +1690,26 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, auth
     });
   }
 
-  // check if the review exists
-  COMPANYREV.findOne({_id: req.params.revId}).then((rev)=>{
-    if(!rev){
+  addComment(COMPANYREV, req.params.revId, COMPANY_REVS_COMMENTS, req.user._id, "review", "content", content)
+  .then((commentId)=>{
+    if(commentId == 404){
       return res.status(404).json({
         success: false,
         status: "review not found"
       });
     }
-
-    // create the comment document
-    COMPANY_REVS_COMMENTS.create({
-      user: req.user._id,
-      review: req.params.revId,
-      content: content
-    }).then((comment)=>{
-      return res.status(200).json({
-        success: true,
-        comment: comment._id
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/company/:revId/comments: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "creating the comment document failed"
-      });
-    })
+    
+    return res.status(200).json({
+      success: true,
+      comment: commentId
+    });
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/:revId/comments: ", err);
+    console.log("Error from POST /reviews/company/:revId/comments: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the company review failed"
+      err: err.message
     });
   });
 });
@@ -1758,33 +1730,26 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit.reg
     });
   }
 
-  // create the reply document
-  let reply = {
-    user: req.user._id,
-    content: content
-  };
-
-  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$push: {replies: reply}}, {new: true})
-  .then((comment)=>{
-    if(!comment){
+  addReply(PHONE_REVS_COMMENTS, req.params.commentId, "replies", req.user._id, "content", content)
+  .then((replyId)=>{
+    if(replyId == 404){
       return res.status(404).json({
         success: false,
         status: "comment not found"
       });
     }
-    else{
-      return res.status(200).json({
-        success: true,
-        reply: comment.replies[comment.replies.length-1]._id
-      });
-    }
+
+    return res.status(200).json({
+      success: true,
+      reply: replyId
+    });
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/replies: ", err);
+    console.log("Error from POST /reviews/phone/comments/:commentId/replies: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "creating the reply document failed"
+      err: err.message
     });
   });
 });
@@ -1805,37 +1770,29 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit.r
     });
   }
 
-  // create the reply document
-  let reply = {
-    user: req.user._id,
-    content: content
-  };
-
-  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$push: {replies: reply}}, {new: true})
-  .then((comment)=>{
-    if(!comment){
+  addReply(COMPANY_REVS_COMMENTS, req.params.commentId, "replies", req.user._id, "content", content)
+  .then((replyId)=>{
+    if(replyId == 404){
       return res.status(404).json({
         success: false,
         status: "comment not found"
       });
     }
-    else{
-      return res.status(200).json({
-        success: true,
-        reply: comment.replies[comment.replies.length-1]._id
-      });
-    }
+
+    return res.status(200).json({
+      success: true,
+      reply: replyId
+    });
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/replies: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/replies: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "creating the reply document failed"
+      err: err.message
     });
   });
 });
-
 
 
 
