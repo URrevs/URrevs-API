@@ -18,6 +18,7 @@ const unlikeComment = require("../utils/unlikeCommentOrAnswer");
 const unlikeReply = require("../utils/unlikeReply");
 const likeReply = require("../utils/likeReply");
 const addReply = require("../utils/addReply");
+const increaseViews = require("../utils/increaseViews");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -2304,6 +2305,63 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.c
   });
 });
 
+
+
+
+
+
+// increase views count for a phone review
+reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit.regular, (req, res, next)=>{
+  increaseViews(PHONEREV, req.params.reviewId).then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from PUT /reviews/phone/:reviewId/view: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+
+// increase views count for a company review
+reviewRouter.put("/company/:reviewId/view", cors.cors, rateLimit.regular, (req, res, next)=>{
+  increaseViews(COMPANYREV, req.params.reviewId).then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from PUT /reviews/company/:reviewId/view: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
 
 
 
