@@ -485,7 +485,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
             console.log("Adding: ", newPhones[i].url);
 
 
-            let testDoc = await phoneCollection.findOne({name: newPhones[i].name});
+            let testDoc = await phoneCollection.findOne({name: newPhones[i].name}, {name: 1});
             if(testDoc){
               console.log("Phone: ", newPhones[i].name, " already exists in the DB");
               continue;
