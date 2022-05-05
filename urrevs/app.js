@@ -3,9 +3,9 @@
   Created on: 8-Apr-2022
 */
 
-var dotenv = require('dotenv').config();
-var express = require('express');
-var logger = require('morgan');
+const dotenv = require('dotenv').config();
+const express = require('express');
+const logger = require('morgan');
 
 // Importing config files
 const config = require("./config");
@@ -17,37 +17,21 @@ const db = require("./configs/dBconfig");
 const firebase = require("./configs/firebase");
 
 
-// Importing Models
-// const companySchema = require("./models/company");
-// const newPhoneSchema = require("./models/newPhone");
-// const phoneSchema = require("./models/phone");
-// const phoneSpecsSchema = require("./models/phoneSpecs");
-// const updateSchema = require("./models/update");
-// const userSchema = require("./models/user");
-// const uproductsSchema = require("./models/uproducts");
-// const ownedPhonesSchema = require("./models/ownedPhone");
-// const phoneComparisonSchema = require("./models/phoneComparison");
-// const questionsAboutMyPhonesVisitSchema = require("./models/questionsAboutMyPhonesVisit");
-// const phoneProfileVisitsSchema = require("./models/phoneProfileVisit");
-// const competitionSchema = require('./models/competition');
-// const companyReviewSchema = require('./models/companyReview');
-// const phoneReviewSchema = require('./models/phoneReview');
-
-
 // Importing Routers
-var indexRouter = require('./routes/index');
-var userRouter = require('./routes/usersRouter');
-var targetsRouter = require('./routes/targetsRouter');
-var searchRouter = require('./routes/searchRouter');
-var companyRouter = require('./routes/companyRouter');
-var phoneRouter = require('./routes/phoneRouter');
-var reviewRouter = require('./routes/reviewRouter');
+const indexRouter = require('./routes/index');
+const userRouter = require('./routes/usersRouter');
+const targetsRouter = require('./routes/targetsRouter');
+const searchRouter = require('./routes/searchRouter');
+const companyRouter = require('./routes/companyRouter');
+const phoneRouter = require('./routes/phoneRouter');
+const reviewRouter = require('./routes/reviewRouter');
+const aIRouter = require('./routes/aiRouter');
 
 
 // Importing Zone Ends Here
 //-----------------------------------------------------------------------------------------
 
-var app = express();
+const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -62,6 +46,7 @@ app.use('/search', searchRouter);
 app.use('/companies', companyRouter);
 app.use('/phones', phoneRouter);
 app.use('/reviews', reviewRouter);
+app.use('/ai', aIRouter);
 
 
 module.exports = app;

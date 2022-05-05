@@ -218,3 +218,16 @@ exports.verifyFlexible = (req, res, next)=>{
         return next();
     }
 }
+
+
+
+exports.verifyAPIkey = (apiKeyHeader)=>{
+    return (req, res, next)=>{
+        if(req.header(apiKeyHeader) === (process.env.API_KEY_AI || config.API_KEY_AI)){
+            return next();
+        }
+        else{
+            return res.status(401).json({success: false, status: "invalid API key"});
+        }
+    }
+}

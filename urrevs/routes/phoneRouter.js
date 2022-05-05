@@ -10,7 +10,7 @@ const https = require("https");
 const phoneRouter = express.Router();
 
 const cors = require("../utils/cors");
-const rateLimit = require("../utils/rateLimit");
+const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
 
 const PHONE = require("../models/phone");
@@ -32,7 +32,7 @@ phoneRouter.options("*", cors.cors, (req, res, next)=>{
 
 
 // list all phones
-phoneRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next) => {
+phoneRouter.get("/all", cors.cors, rateLimit, (req, res, next) => {
     let itemsPerRound = parseInt((process.env.ALL_PHONES_PER_ROUND|| config.ALL_PHONES_PER_ROUND));
     let roundNum = req.query.round;
     if(!roundNum || isNaN(roundNum)){
@@ -69,7 +69,7 @@ phoneRouter.get("/all", cors.cors, rateLimit.regular, (req, res, next) => {
 
 
 // list all phones from a specific company
-phoneRouter.get("/by/:compId", cors.cors, rateLimit.regular, (req, res, next)=>{
+phoneRouter.get("/by/:compId", cors.cors, rateLimit, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.PHONES_BY_COMPANY_PER_ROUND|| config.PHONES_BY_COMPANY_PER_ROUND));
     let roundNum = req.query.round;
     if(!roundNum || isNaN(roundNum)){
@@ -107,7 +107,7 @@ phoneRouter.get("/by/:compId", cors.cors, rateLimit.regular, (req, res, next)=>{
 
 
 // get the manufacturing company of a phone
-phoneRouter.get("/:phoneId/company", cors.cors, rateLimit.regular, (req, res, next)=>{
+phoneRouter.get("/:phoneId/company", cors.cors, rateLimit, (req, res, next)=>{
     PHONE.findById(req.params.phoneId).populate("company", {name: 1})
     .then((phone)=>{
         
@@ -138,7 +138,7 @@ phoneRouter.get("/:phoneId/company", cors.cors, rateLimit.regular, (req, res, ne
 
 
 // get the phone's specs
-phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit.regular, (req, res, next)=>{
+phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
     
     PSPECS.findById(req.params.phoneId)
     .populate("_id", {name: 1, picture: 1, company: 1})
@@ -260,7 +260,7 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit.regular, (req, res, next
 
 
 // get phone's stats   (increase the view count) (indicate the user has visited this phone profile)
-phoneRouter.get("/:phoneId/stats", cors.cors, rateLimit.regular, 
+phoneRouter.get("/:phoneId/stats", cors.cors, rateLimit, 
 authenticate.verifyFlexible, (req, res, next)=>{
     // increase the view count
     PHONE.findByIdAndUpdate(req.params.phoneId, {$inc: {views: 1}}, {new: false})
@@ -321,7 +321,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
 
 
 // indicate that the user has compared between two phones
-phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit.regular, authenticate.verifyUser, 
+phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit, authenticate.verifyUser, 
 (req, res, next)=>{
     PHONE.find({_id: {$in: [req.params.phone1Id, req.params.phone2Id]}}, {_id: 1}).then((phones)=>{
         
@@ -362,7 +362,7 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit.regular, au
 
 
 // get similar phones to the given phone
-phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit.regular, (req, res, next)=>{
+phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
     PHONE.findById(req.params.phoneId, {_id: 1}).then(async (phone)=>{
 
         // if the phone doesn't exist, abort
@@ -524,63 +524,3 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit.regular, (req, res, ne
 
 
 module.exports = phoneRouter;
-
-
-/*
-                NPHONE.find({releaseDate: {$regex: year}, price: {$ne: null}}, {price: 1})
-                .then((closePhones)=>{
-                    let unSortedSimilarPhones = [];
-                    for(phone of closePhones){
-                        phone.price = Math.abs(phone.price - price);
-                        if(phone.price <= price20Percent){
-                            unSortedSimilarPhones.push({_id: phone._id, price: phone.price});
-                            if(unSortedSimilarPhones.length == 20){
-                                break;
-                            }
-                        }
-                    }
-
-                    // sort the similar phones by price difference ascendingly
-                    let sortedSimilarPhones = unSortedSimilarPhones.sort((a, b)=>{
-                        return a.price - b.price;
-                    });
-
-                    // extract the ids of the similar phones
-                    let similarIds = [];
-                    for(phone of sortedSimilarPhones){
-                        similarIds.push(phone._id);
-                    }
-
-                    // get the similar phones
-                    PHONE.find({_id: {$in: similarIds}}, {name: 1, picture: 1}).then((phones)=>{
-                        
-                        let result = [];
-                        for(phone of phones){
-                            result.push({
-                                _id: phone._id,
-                                name: phone.name,
-                                picture: phone.picture,
-                                type: "phone"
-                            });
-                        }
-
-                        console.log("--------------------Similar phones is done by my way--------------------")
-
-                        res.statusCode = 200;
-                        res.setHeader("Content-Type", "application/json");
-                        res.json({success: true, phones: result}); 
-                    })
-                    .catch((err)=>{
-                        console.log("Error from my way /phones/:phoneId/similar: ", err);
-                        res.statusCode = 500;
-                        res.setHeader("Content-Type", "application/json");
-                        res.json({success: false, status: "process failed"});
-                    });
-                })
-                .catch((err)=>{
-                    console.log("Error from my way /phones/:phoneId/similar: ", err);
-                    res.statusCode = 500;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json({success: false, status: "process failed"});
-                })
-*/

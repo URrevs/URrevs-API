@@ -7,7 +7,7 @@ var express = require('express');
 var router = express.Router();
 
 const cors = require("../utils/cors");
-const rateLimit = require("../utils/rateLimit");
+const rateLimit = require("../utils/rateLimit/regular");
 
 //--------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ router.options("*", cors.cors, (req, res, next)=>{
 
 
 /* GET home page. */
-router.get('/', cors.cors, rateLimit.regular, function(req, res, next) {
+router.get('/', cors.cors, rateLimit, function(req, res, next) {
   res.json({"status": "deployed successfully"});
 });
 

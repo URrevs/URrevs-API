@@ -6,7 +6,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 
-const rateLimit = require("../utils/rateLimit");
+const rateLimit = require("../utils/rateLimit/regular");
 const cors = require("../utils/cors");
 const authenticate = require("../utils/authenticate");
 const config = require("../config");
@@ -26,7 +26,7 @@ userRouter.options("*", cors.cors, (req, res, next)=>{
 });
 
 // login or sign up
-userRouter.get("/authenticate", cors.cors, rateLimit.regular, (req, res, next)=>{
+userRouter.get("/authenticate", cors.cors, rateLimit, (req, res, next)=>{
     authenticate.authorize(req).then((token)=>{
         let docoded = jwt.decode(token);
         res.statusCode = 200;
@@ -60,7 +60,7 @@ userRouter.get("/authenticate", cors.cors, rateLimit.regular, (req, res, next)=>
 
 
 // give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
-userRouter.put("/login/mobile", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     USER.findOne({_id: req.user._id}).then((user)=>{
         if(user){
             if(!(user.loggedInUsingMobile)){
@@ -101,7 +101,7 @@ userRouter.put("/login/mobile", cors.cors, rateLimit.regular, authenticate.verif
 
 
 // logout from all devices
-userRouter.get("/logout", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/logout", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     authenticate.revoke(req.user.uid).then(()=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -124,7 +124,7 @@ userRouter.get("/logout", cors.cors, rateLimit.regular, authenticate.verifyUser,
 
 
 // get my profile
-userRouter.get("/profile", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     USER.findById(req.user._id).then((user)=>{
         let result = {};
         result._id = user._id;
@@ -147,7 +147,7 @@ userRouter.get("/profile", cors.cors, rateLimit.regular, authenticate.verifyUser
 
 
 // get user profile
-userRouter.get("/:userId/profile", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     USER.findById(req.params.userId).then((user)=>{
         if(!user){
             res.statusCode = 404;
@@ -176,7 +176,7 @@ userRouter.get("/:userId/profile", cors.cors, rateLimit.regular, authenticate.ve
 
 
 // get my owned phones
-userRouter.get("/phones", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
@@ -216,7 +216,7 @@ userRouter.get("/phones", cors.cors, rateLimit.regular, authenticate.verifyUser,
 
 
 // get user's owned phones
-userRouter.get("/:userId/phones", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
