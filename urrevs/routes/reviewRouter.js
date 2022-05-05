@@ -13,6 +13,9 @@ const reviewRouter = express.Router();
 const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit");
 const authenticate = require("../utils/authenticate");
+const likeComment = require("../utils/likeCommentOrAnswer");
+const unlikeCommentOrReply = require("../utils/unlikeCommentsorReplies");
+const likeReply = require("../utils/likeReply");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -1860,6 +1863,8 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
     let resultComments = [];
     let commentIds = [];
     let commentsObj = {};
+    let comentRepliesIds = [];
+    let commentRepliesObj = {};
     
     for(let [index,comment] of comments.entries()){
       
@@ -1878,8 +1883,11 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
         replies: []
       };
 
+
       for(let i=comment.replies.length-1; i>=0; i--){
         let reply = comment.replies[i];
+        comentRepliesIds.push(reply._id);
+        commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
           _id: reply._id,
           userId: reply.user._id,
@@ -1891,15 +1899,20 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
           liked: false
         });
       }
-
       resultComments.push(resultComment);
     }
 
     if(req.user){
       // check if the user has liked any of the comments or replies
       let commentsLikes;
+      let repliesLikes;
+      let proms = [];
+      proms.push(PHONE_REV_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+      proms.push(PHONE_REV_COMMENTS_LIKES.find({user: req.user._id, comment: {$in: commentIds}}));
       try{
-        commentsLikes = await PHONE_REV_COMMENTS_LIKES.find({user: req.user._id, comment: {$in: commentIds}});
+        let results = await Promise.all(proms);
+        commentsLikes = results[1];
+        repliesLikes = results[0];
       }
       catch(err){
         console.log("Error from GET /reviews/phone/:revId/comments: ", err);
@@ -1939,59 +1952,32 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
 
 // like a comment on a phone review
 reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // check if the comment exists
-  PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {_id: 1}).then((comment)=>{
-    if(!comment){
+  likeComment(PHONE_REVS_COMMENTS, req.user._id, req.params.commentId, PHONE_REV_COMMENTS_LIKES, "comment")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
       return res.status(404).json({
         success: false,
         status: "comment not found or you own it"
       });
     }
-
-    // check if the user has already liked the comment
-    PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId})
-    .then((like)=>{
-      if(like){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
-      }
-
-      // create the like document
-      PHONE_REV_COMMENTS_LIKES.create({
-        user: req.user._id,
-        comment: req.params.commentId
-      })
-      .then((l)=>{
-        return res.status(200).json({
-          success: true
-        });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "creating the like document failed"
-        });
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
-      return res.status(500).json({
+    else if(result == 403){
+      return res.status(403).json({
         success: false,
-        status: "internal server error",
-        err: "Finding the like document failed"
+        status: "already liked"
       });
-    });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err);
+    console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the comment failed"
+      err: err.message
     });
   });
 });
@@ -2000,98 +1986,90 @@ reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regula
 
 // unlike a comment on a phone review
 reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // unlike the phone review comment
-  PHONE_REV_COMMENTS_LIKES.findOneAndDelete({user: req.user._id, comment: req.params.commentId}).then((resp)=>{
-    return res.status(200).json({
-      success: true
-    });
+  unlikeCommentOrReply(PHONE_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err);
+    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "deleting the like document failed"
+      err: err.message
     });
   });
 });
+
+
 
 
 
 // like a comment on a company review
 reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // check if the comment exists
-  COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {_id: 1}).then((comment)=>{
-    if(!comment){
+  likeComment(COMPANY_REVS_COMMENTS, req.user._id, req.params.commentId, COMPANY_REV_COMMENTS_LIKES, "comment")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
       return res.status(404).json({
         success: false,
         status: "comment not found or you own it"
       });
     }
-
-    // check if the user has already liked the comment
-    COMPANY_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId})
-    .then((like)=>{
-      if(like){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
-      }
-
-      // create the like document
-      COMPANY_REV_COMMENTS_LIKES.create({
-        user: req.user._id,
-        comment: req.params.commentId
-      })
-      .then((l)=>{
-        return res.status(200).json({
-          success: true
-        });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "creating the like document failed"
-        });
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
-      return res.status(500).json({
+    else if(result == 403){
+      return res.status(403).json({
         success: false,
-        status: "internal server error",
-        err: "Finding the like document failed"
+        status: "already liked"
       });
-    });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/like: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/like: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the comment failed"
+      err: err.message
     });
   });
 });
 
 
+
 // unlike a comment on a company review
 reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // unlike the company review comment
-  COMPANY_REV_COMMENTS_LIKES.findOneAndDelete({user: req.user._id, comment: req.params.commentId}).then((resp)=>{
-    return res.status(200).json({
-      success: true
-    });
+  unlikeCommentOrReply(COMPANY_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "deleting the like document failed"
+      err: err.message
     });
   });
 });
@@ -2102,58 +2080,32 @@ reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.re
 
 // like a phone review reply
 reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // check if the reply exists
-  PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId, "replies.user": {$ne: req.user._id}}, 
-  {"replies._id": 1}).then((reply)=>{
-    if(!reply){
+  likeReply(PHONE_REVS_COMMENTS, req.params.commentId, "replies", req.params.replyId, req.user._id, PHONE_REV_REPLIES_LIKES, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
       return res.status(404).json({
         success: false,
         status: "reply not found or you own it"
       });
     }
-
-    // check if the user has already liked the reply
-    PHONE_REV_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId}).then((reply)=>{
-      if(reply){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
-      }
-
-      // create the like document
-      PHONE_REV_REPLIES_LIKES.create({
-        user: req.user._id,
-        reply: req.params.replyId
-      }).then((r)=>{
-        return res.status(200).json({
-          success: true
-        });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "creating the like document failed"
-        });
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/like: ", err);
-      return res.status(500).json({
+    else if(result == 403){
+      return res.status(403).json({
         success: false,
-        status: "internal server error",
-        err: "Finding the like document failed"
+        status: "already liked"
       });
-    });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/like: ", err);
+    console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the comment failed"
+      err: err.message
     });
   });
 });
@@ -2162,18 +2114,26 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors,
 
 // unlike a phone review reply
 reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // unlike the phone review reply
-  PHONE_REV_REPLIES_LIKES.findOneAndDelete({user: req.user._id, reply: req.params.replyId}).then((resp)=>{
-    return res.status(200).json({
-      success: true
-    });
+  unlikeCommentOrReply(PHONE_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/unlike: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "deleting the like document failed"
+      err: err.message
     });
   });
 });
@@ -2185,58 +2145,32 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cor
 
 // like a company review reply
 reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // check if the reply exists
-  COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId, "replies.user": {$ne: req.user._id}}, 
-  {"replies._id": 1}).then((reply)=>{
-    if(!reply){
+  likeReply(COMPANY_REVS_COMMENTS, req.params.commentId, "replies", req.params.replyId, req.user._id, COMPANY_REV_REPLIES_LIKES, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
       return res.status(404).json({
         success: false,
         status: "reply not found or you own it"
       });
     }
-
-    // check if the user has already liked the reply
-    COMPANY_REV_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId}).then((reply)=>{
-      if(reply){
-        return res.status(403).json({
-          success: false,
-          status: "already liked"
-        });
-      }
-
-      // create the like document
-      COMPANY_REV_REPLIES_LIKES.create({
-        user: req.user._id,
-        reply: req.params.replyId
-      }).then((r)=>{
-        return res.status(200).json({
-          success: true
-        });
-      })
-      .catch((err)=>{
-        console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/like: ", err);
-        return res.status(500).json({
-          success: false,
-          status: "internal server error",
-          err: "creating the like document failed"
-        });
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/like: ", err);
-      return res.status(500).json({
+    else if(result == 403){
+      return res.status(403).json({
         success: false,
-        status: "internal server error",
-        err: "Finding the like document failed"
+        status: "already liked"
       });
-    });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/like: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the comment failed"
+      err: err.message
     });
   });
 });
@@ -2245,18 +2179,26 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
 
 // unlike a company review reply
 reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  // unlike the company review reply
-  COMPANY_REV_REPLIES_LIKES.findOneAndDelete({user: req.user._id, reply: req.params.replyId}).then((resp)=>{
-    return res.status(200).json({
-      success: true
-    });
+  unlikeCommentOrReply(COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/unlike: ", err);
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "deleting the like document failed"
+      err: err.message
     });
   });
 });
