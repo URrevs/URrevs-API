@@ -14,7 +14,8 @@ const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit");
 const authenticate = require("../utils/authenticate");
 const likeComment = require("../utils/likeCommentOrAnswer");
-const unlikeCommentOrReply = require("../utils/unlikeCommentsorReplies");
+const unlikeComment = require("../utils/unlikeCommentOrAnswer");
+const unlikeReply = require("../utils/unlikeReply");
 const likeReply = require("../utils/likeReply");
 const addReply = require("../utils/addReply");
 
@@ -1844,7 +1845,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
       for(let i=comment.replies.length-1; i>=0; i--){
         let reply = comment.replies[i];
         comentRepliesIds.push(reply._id);
-        commentRepliesObj[reply._id] = {comment: index, reply: i};
+        commentRepliesObj[reply._id] = {comment: index, reply: comment.replies.length-1-i};
         resultComment.replies.push({
           _id: reply._id,
           userId: reply.user._id,
@@ -1881,6 +1882,10 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
       }
       for(let commentLike of commentsLikes){
         resultComments[commentsObj[commentLike.comment]].liked = true;
+      }
+      for(let replyLike of repliesLikes){
+        let location = commentRepliesObj[replyLike.reply];
+        resultComments[location.comment].replies[location.reply].liked = true;
       }
     }
 
@@ -1943,7 +1948,7 @@ reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regula
 
 // unlike a comment on a phone review
 reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  unlikeCommentOrReply(PHONE_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
+  unlikeComment(PHONE_REVS_COMMENTS, PHONE_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({
@@ -2007,7 +2012,7 @@ reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regu
 
 // unlike a comment on a company review
 reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  unlikeCommentOrReply(COMPANY_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
+  unlikeComment(COMPANY_REVS_COMMENTS, COMPANY_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({
@@ -2071,7 +2076,7 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors,
 
 // unlike a phone review reply
 reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  unlikeCommentOrReply(PHONE_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  unlikeReply(PHONE_REVS_COMMENTS, req.params.commentId, "replies", PHONE_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({
@@ -2086,7 +2091,7 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cor
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -2136,7 +2141,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
 
 // unlike a company review reply
 reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  unlikeCommentOrReply(COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  unlikeReply(COMPANY_REVS_COMMENTS, "replies", COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({

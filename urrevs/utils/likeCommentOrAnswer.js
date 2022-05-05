@@ -5,17 +5,19 @@
 
 module.exports = (resourceCollection, user, resourceId, likeCollection, resourceType)=>{
     return new Promise((resolve, reject)=>{
-        // check if the comment exists and not made by the user
-        resourceCollection.findOne({_id: resourceId, user: {$ne: user}}, {_id: 1}).then((resource)=>{
-            if(!resource){
-                return resolve(404);
+
+        // check if the user has already liked the resource
+        likeCollection.findOne({user: user, [resourceType]: resourceId}, {_id: 1})
+        .then((like)=>{
+            if(like){
+                return resolve(403);
             }
 
-            // check if the user has already liked the resource
-            likeCollection.findOne({user: user, [resourceType]: resourceId}, {_id: 1})
-            .then((like)=>{
-                if(like){
-                    return resolve(403);
+            // check resource existence + increment the likes by 1
+            resourceCollection.findOneAndUpdate({_id: resourceId, user: {$ne: user}}, {$inc: {likes: 1}})
+            .then((resoruce)=>{
+                if(!resoruce){
+                    return resolve(404);
                 }
 
                 // create the like
@@ -28,11 +30,11 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
                 });
             })
             .catch((error)=>{
-                reject({e: error, message: "finding the like document failed"});
+                return reject({e: error, message: "finding and the resource failed"});
             });
         })
         .catch((error)=>{
-            reject({e: error, message: "finding the resource failed"});
+            return reject({e: error, message: "finding the like document failed"});
         });
     });
 }
