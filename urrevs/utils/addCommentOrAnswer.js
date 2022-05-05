@@ -3,11 +3,11 @@
   Created on: 5-May-2022
 */
 
-module.exports = (parentResourceCollection, parentResourceId, resourceCollection, user, parentResourceType, resourceContentType, resourceContent)=>{
+module.exports = (parentResourceCollection, parentResourceId, resourceCollection, user, parentResourceType, resourceContentType, resourceContent, resourceTypeS)=>{
     return new Promise((resolve, reject)=>{
         
         // check if the parent resource exists
-        parentResourceCollection.findById(parentResourceId, {_id: 1})
+        parentResourceCollection.findByIdAndUpdate(parentResourceId, {$inc: {[`${resourceTypeS}Count`]: 1}})
         .then((parentResource)=>{
             if(!parentResource){
                 return resolve(404);
