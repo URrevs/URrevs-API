@@ -31,6 +31,9 @@ const companySchema = new schema({
     picture: {
         type: String
     }
+},
+{
+    timestamps: true
 });
 
 module.exports = mongoose.model("Company", companySchema);
