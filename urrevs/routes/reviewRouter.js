@@ -11,7 +11,7 @@ const fs = require("fs");
 const reviewRouter = express.Router();
 
 const cors = require("../utils/cors");
-const rateLimit = require("../utils/rateLimit");
+const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
 const likeComment = require("../utils/likeCommentOrAnswer");
 const unlikeComment = require("../utils/unlikeCommentOrAnswer");
@@ -84,7 +84,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   15- send the phone review as a response
 */
 
-reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract data from request body  
   const {
     phoneId,
@@ -363,7 +363,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit.regular, authenticate.verifyUse
 
 
 // Get a certain phone review
-reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
@@ -442,7 +442,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
 
 
 // Get a certain company review
-reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("company", {name: 1})
@@ -514,7 +514,7 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.v
 
 
 // get my phone reviews
-reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.MY_PHONE_REVS_PER_ROUND|| config.MY_PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -615,7 +615,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.veri
 
 
 // get phone reviews of another user
-reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_REVS_PER_ROUND|| config.ANOTHER_USER_PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -717,7 +717,7 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate
 
 
 // get my company reviews
-reviewRouter.get("/company/by/me", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.MY_COMPANY_REVS_PER_ROUND|| config.MY_COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -812,7 +812,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit.regular, authenticate.ve
 
 
 // get company reviews of another user
-reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_REVS_PER_ROUND|| config.ANOTHER_USER_COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -906,7 +906,7 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authentica
 
 
 // Get reviews on a certain phone
-reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.PHONE_REVS_PER_ROUND|| config.PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -1010,7 +1010,7 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticat
 
 
 // Get reviews on a certain company
-reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.COMPANY_REVS_PER_ROUND|| config.COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -1146,7 +1146,7 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authent
       4.3- create a new like document
       4.4- give points to the review author
 */
-reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   // checking if the user already liked the review
   PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}).then((like)=>{
@@ -1164,7 +1164,8 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
-        let lastQuery = results[1].date;
+        let lastQueryDoc = results[1];
+        let lastQuery;
 
         if(!rev){
           return res.status(404).json({
@@ -1173,8 +1174,11 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
           });
         }
 
-        if(!lastQuery){
-          lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+        if(!lastQueryDoc){
+          lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+        }
+        else{
+          lastQuery = lastQueryDoc.date;
         }
 
         let proms2 = [];
@@ -1280,7 +1284,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
       6.7- modify the like document to have the unliked = true
       6.8- remove points from the user
 */
-reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
   proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
@@ -1318,7 +1322,8 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
       
       Promise.all(proms1).then(async(results)=>{
         let rev = results[0];
-        let lastQuery = results[1].date;
+        let lastQueryDoc = results[1];
+        let lastQuery;
 
         if(!rev){
           return res.status(404).json({
@@ -1345,8 +1350,11 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
           }
         }
 
-        if(!lastQuery){
-          lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+        if(!lastQueryDoc){
+          lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+        }
+        else{
+          lastQuery = lastQueryDoc.date;
         }
 
         let proms = [];
@@ -1421,7 +1429,7 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
       4.3- create a new like document
       4.4- give points to the review author
 */
-reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   // checking if the user already liked the review
   COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}).then((like)=>{
@@ -1439,7 +1447,8 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
-        let lastQuery = results[1].date;
+        let lastQueryDoc = results[1];
+        let lastQuery;
 
         if(!rev){
           return res.status(404).json({
@@ -1448,8 +1457,11 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
           });
         }
 
-        if(!lastQuery){
-          lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+        if(!lastQueryDoc){
+          lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+        }
+        else{
+          lastQuery = lastQueryDoc.date;
         }
 
         let proms2 = [];
@@ -1555,7 +1567,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
       6.7- modify the like document to have the unliked = true
       6.8- remove points from the user
 */
-reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
   proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
@@ -1593,7 +1605,8 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
       
       Promise.all(proms1).then(async(results)=>{
         let rev = results[0];
-        let lastQuery = results[1].date;
+        let lastQueryDoc = results[1];
+        let lastQuery;
 
         if(!rev){
           return res.status(404).json({
@@ -1620,8 +1633,11 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
           }
         }
 
-        if(!lastQuery){
-          lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+        if(!lastQueryDoc){
+          lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+        }
+        else{
+          lastQuery = lastQueryDoc.date;
         }
 
         let proms = [];
@@ -1677,7 +1693,7 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
 
 
 // add a comment to a phone review
-reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
   // check if the content is not empty
@@ -1717,7 +1733,7 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authen
 
 
 // add a comment to a company review
-reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
   // check if the content is not empty
@@ -1756,7 +1772,7 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, auth
 
 
 // add a reply to a phone review comment
-reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1796,7 +1812,7 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit.reg
 
 
 // add a reply to a company review comment
-reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1837,7 +1853,7 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit.r
 
 
 // get comments and replies for a phone review
-reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.PHONE_REV_COMMENTS_PER_ROUND || config.PHONE_REV_COMMENTS_PER_ROUND));
   let roundNum = req.query.round;
 
@@ -1949,7 +1965,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
 
 
 // get comments and replies for a company review
-reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.COMPANY_REV_COMMENTS_PER_ROUND || config.COMPANY_REV_COMMENTS_PER_ROUND));
   let roundNum = req.query.round;
 
@@ -2062,7 +2078,7 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit.regular, authe
 
 
 // like a comment on a phone review
-reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   likeComment(PHONE_REVS_COMMENTS, req.user._id, req.params.commentId, PHONE_REV_COMMENTS_LIKES, "comment")
   .then((result)=>{
     if(result == 200){
@@ -2096,7 +2112,7 @@ reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit.regula
 
 
 // unlike a comment on a phone review
-reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   unlikeComment(PHONE_REVS_COMMENTS, PHONE_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
   .then((result)=>{
     if(result == 200){
@@ -2126,7 +2142,7 @@ reviewRouter.post("/phone/comments/:commentId/unlike", cors.cors, rateLimit.regu
 
 
 // like a comment on a company review
-reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   likeComment(COMPANY_REVS_COMMENTS, req.user._id, req.params.commentId, COMPANY_REV_COMMENTS_LIKES, "comment")
   .then((result)=>{
     if(result == 200){
@@ -2160,7 +2176,7 @@ reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit.regu
 
 
 // unlike a comment on a company review
-reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   unlikeComment(COMPANY_REVS_COMMENTS, COMPANY_REV_COMMENTS_LIKES, req.user._id, req.params.commentId, "comment")
   .then((result)=>{
     if(result == 200){
@@ -2190,7 +2206,7 @@ reviewRouter.post("/company/comments/:commentId/unlike", cors.cors, rateLimit.re
 
 
 // like a phone review reply
-reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   likeReply(PHONE_REVS_COMMENTS, req.params.commentId, "replies", req.params.replyId, req.user._id, PHONE_REV_REPLIES_LIKES, "reply")
   .then((result)=>{
     if(result == 200){
@@ -2224,7 +2240,7 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors,
 
 
 // unlike a phone review reply
-reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   unlikeReply(PHONE_REVS_COMMENTS, req.params.commentId, "replies", PHONE_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
   .then((result)=>{
     if(result == 200){
@@ -2255,7 +2271,7 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/unlike", cors.cor
 
 
 // like a company review reply
-reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   likeReply(COMPANY_REVS_COMMENTS, req.params.commentId, "replies", req.params.replyId, req.user._id, COMPANY_REV_REPLIES_LIKES, "reply")
   .then((result)=>{
     if(result == 200){
@@ -2289,7 +2305,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
 
 
 // unlike a company review reply
-reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   unlikeReply(COMPANY_REVS_COMMENTS, req.params.commentId, "replies", COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
   .then((result)=>{
     if(result == 200){
@@ -2320,7 +2336,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.c
 
 
 // increase views count for a phone review
-reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit.regular, (req, res, next)=>{
+reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit, (req, res, next)=>{
   increaseViews(PHONEREV, req.params.reviewId).then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2348,7 +2364,7 @@ reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit.regular, (req, re
 
 
 // increase views count for a company review
-reviewRouter.put("/company/:reviewId/view", cors.cors, rateLimit.regular, (req, res, next)=>{
+reviewRouter.put("/company/:reviewId/view", cors.cors, rateLimit, (req, res, next)=>{
   increaseViews(COMPANYREV, req.params.reviewId).then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2377,7 +2393,7 @@ reviewRouter.put("/company/:reviewId/view", cors.cors, rateLimit.regular, (req, 
 
 
 // increase shares count for a phone review
-reviewRouter.put("/phone/:reviewId/share", cors.cors, rateLimit.regular, (req, res, next)=>{
+reviewRouter.put("/phone/:reviewId/share", cors.cors, rateLimit, (req, res, next)=>{
   increaseShares(PHONEREV, req.params.reviewId).then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2405,7 +2421,7 @@ reviewRouter.put("/phone/:reviewId/share", cors.cors, rateLimit.regular, (req, r
 
 
 // increase shares count for a company review
-reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit.regular, (req, res, next)=>{
+reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit, (req, res, next)=>{
   increaseShares(COMPANYREV, req.params.reviewId).then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2434,7 +2450,7 @@ reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit.regular, (req,
 
 
 // I don't like this for a phone review
-reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2467,7 +2483,7 @@ reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit.regular, authentica
 
 
 // a user presses "see more" for a phone review
-reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, PHONE_REV_SEE_MORE, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2500,7 +2516,7 @@ reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit.regular, authent
 
 
 // a user presses "fullscreen" for a phone review
-reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, PHONE_REV_FULL_SCREEN, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2537,7 +2553,7 @@ reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit.regular, auth
 
 
 // I don't like this for a company review
-reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2570,7 +2586,7 @@ reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit.regular, authenti
 
 
 // a user presses "see more" for a company review
-reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, COMPANY_REVS_SEE_MORE, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
@@ -2603,7 +2619,7 @@ reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit.regular, authe
 
 
 // a user presses "fullscreen" for a company review
-reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   lameTrack(CONSTANT, COMPANY_REVS_FULL_SCREEN, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
