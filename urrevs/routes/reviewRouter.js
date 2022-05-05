@@ -20,6 +20,8 @@ const likeReply = require("../utils/likeReply");
 const addReply = require("../utils/addReply");
 const increaseViews = require("../utils/increaseViews");
 const increaseShares = require("../utils/increaseShares");
+const addComment = require("../utils/addCommentOrAnswer");
+const lameTrack = require("../utils/lameTrack");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -38,7 +40,13 @@ const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
 const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
 const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
 const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
-const addComment = require("../utils/addCommentOrAnswer");
+const PHONE_REV_HATED = require("../models/phoneRevsHated");
+const PHONE_REV_SEE_MORE = require("../models/phoneRevsSeeMore");
+const PHONE_REV_FULL_SCREEN = require("../models/phoneRevsFullScreen");
+const COMPANY_REVS_HATED = require("../models/companyRevsHated");
+const COMPANY_REVS_SEE_MORE = require("../models/companyRevsSeeMore");
+const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
+
 
 const config = require("../config");
 
@@ -2420,6 +2428,215 @@ reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit.regular, (req,
     });
   });
 });
+
+
+
+
+
+// I don't like this for a phone review
+reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// a user presses "see more" for a phone review
+reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, PHONE_REV_SEE_MORE, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// a user presses "fullscreen" for a phone review
+reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, PHONE_REV_FULL_SCREEN, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+
+
+
+
+// I don't like this for a company review
+reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// a user presses "see more" for a company review
+reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, COMPANY_REVS_SEE_MORE, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// a user presses "fullscreen" for a company review
+reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CONSTANT, COMPANY_REVS_FULL_SCREEN, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "review not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+
+
 
 
 
