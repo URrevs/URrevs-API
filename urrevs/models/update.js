@@ -36,6 +36,10 @@ const updateSchema = new schema({
     },
     automatic: {
         type: Boolean
+    },
+    durationMin: {
+        type: Number,
+        default: 0
     }
 });
 
