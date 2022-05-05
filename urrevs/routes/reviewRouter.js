@@ -388,7 +388,18 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit.regular, authenticate.ver
     // request is done by a user
     if(req.user){
       // check the liked state
-      let like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+      let like;
+      try{
+        like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/phone/:revId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
       if(like){
         resultRev.liked = true;
       }
@@ -450,7 +461,18 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit.regular, authenticate.v
     // request is done by a user
     if(req.user){
       // check the liked state
-      let like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+      let like;
+      try{
+        like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/phone/:revId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
       if(like){
         resultRev.liked = true;
       }
@@ -540,7 +562,18 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit.regular, authenticate.veri
     }
 
     // checking liked state
-    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    let likes;
+    try{
+      likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    }
+    catch(err){
+      console.log("Error from /reviews/phone/by/me: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the liked state failed"
+      });
+    }
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -630,7 +663,18 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit.regular, authenticate
     }
 
     // checking liked state
-    let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    let likes;
+    try{
+      likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    }
+    catch(err){
+      console.log("Error from /reviews/phone/by/me: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the liked state failed"
+      });
+    }
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -714,8 +758,19 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit.regular, authenticate.ve
       });
     }
 
-    // checking liked state
-    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    // checking liked 
+    let likes;
+    try{
+      likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    }
+    catch(err){
+      console.log("Error from /reviews/company/by/me: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the liked state failed"
+      });
+    }
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -799,7 +854,18 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit.regular, authentica
     }
 
     // checking liked state
-    let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    let likes;
+    try{
+      likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    }
+    catch(err){
+      console.log("Error from /reviews/company/by/:userId: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the liked state failed"
+      });
+    }
     for(let like of likes){
       resultRevs[ids[like.review]].liked = true;
     }
@@ -889,7 +955,18 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit.regular, authenticat
 
     if(req.user){
       // checking liked state
-      let likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      let likes;
+      try{
+        likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/phone/on/:phoneId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
       for(let like of likes){
         resultRevs[ids[like.review]].liked = true;
       }
@@ -976,7 +1053,18 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit.regular, authent
 
     if(req.user){
       // checking liked state
-      let likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      let likes;
+      try{
+        likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/company/on/:companyId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
       for(let like of likes){
         resultRevs[ids[like.review]].liked = true;
       }
@@ -1065,11 +1153,21 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit.regular, authentica
       if(like){
         // if not unliked, return error
         if(!like.unliked){
-          await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
-          return res.status(403).json({
-            success: false,
-            status: "already liked"
-          });
+          try{
+            await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
+            return res.status(403).json({
+              success: false,
+              status: "already liked"
+            });
+          }
+          catch(err){
+            console.log("Error from /reviews/phone/:revId/like: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "revering the likes on the review failed"
+            });
+          }
         }
         else{
           // if unliked, modify it to be liked - give points to the review author
@@ -1175,11 +1273,21 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit.regular, authenti
       if(like){
         // if not unliked, return error
         if(!like.unliked){
-          await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
-          return res.status(403).json({
-            success: false,
-            status: "already liked"
-          });
+          try{
+            await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: -1}});
+            return res.status(403).json({
+              success: false,
+              status: "already liked"
+            });
+          }
+          catch(err){
+            console.log("Error from /reviews/company/:revId/like: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "revering the likes on the review failed"
+            });
+          }
         }
         else{
           // if unliked, modify it to be liked - give points to the review author
@@ -1302,11 +1410,21 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
       }
       if(like){
         if(like.unliked){
-          await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
-          return res.status(403).json({
-            success: false,
-            status: "already unliked"
-          });
+          try{
+            await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+            return res.status(403).json({
+              success: false,
+              status: "already unliked"
+            });
+          }
+          catch(err){
+            console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "increasing the likes by 1 failed"
+            });
+          }
         }
         else{
           let proms = [];
@@ -1333,11 +1451,21 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit.regular, authenti
         }
       }
       else{
-        await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
-        return res.status(403).json({
-          success: false,
-          status: "you didn't like this review"
-        });
+        try{
+          await PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+          return res.status(403).json({
+            success: false,
+            status: "you didn't like this review"
+          });
+        }
+        catch(err){
+          console.log("Error from POST /reviews/phone/:revId/unlike: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "increasing the likes by 1 failed"
+          });
+        }
       }
     })
     .catch((err)=>{
@@ -1423,11 +1551,21 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
       }
       if(like){
         if(like.unliked){
-          await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
-          return res.status(403).json({
-            success: false,
-            status: "already unliked"
-          });
+          try{
+            await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+            return res.status(403).json({
+              success: false,
+              status: "already unliked"
+            });
+          }
+          catch(err){
+            console.log("Error from POST /reviews/company/:revId/unlike: ", err);
+            return res.status(500).json({
+              success: false,
+              status: "internal server error",
+              err: "reverting the likes to 1 failed"
+            });
+          }
         }
         else{
           let proms = [];
@@ -1454,11 +1592,21 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit.regular, authen
         }
       }
       else{
-        await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
-        return res.status(403).json({
-          success: false,
-          status: "you didn't like this review"
-        });
+        try{
+          await COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {likes: 1}});
+          return res.status(403).json({
+            success: false,
+            status: "you didn't like this review"
+          });
+        }
+        catch(err){
+          console.log("Error from POST /reviews/company/:revId/unlike: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "reverting the likes to 1 failed"
+          });
+        }
       }
     })
     .catch((err)=>{
@@ -1708,10 +1856,16 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
   .limit(itemsPerRound)
   .populate("user", {name: 1, picture: 1})
   .populate("replies.user", {name: 1, picture: 1})
-  .then((comments)=>{
+  .then(async(comments)=>{
     let resultComments = [];
+    let commentIds = [];
+    let commentsObj = {};
     
-    for(let comment of comments){
+    for(let [index,comment] of comments.entries()){
+      
+      commentIds.push(comment._id);
+      commentsObj[comment._id] = index;
+
       let resultComment = {
         _id: comment._id,
         userId: comment.user._id,
@@ -1743,6 +1897,21 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
 
     if(req.user){
       // check if the user has liked any of the comments or replies
+      let commentsLikes;
+      try{
+        commentsLikes = await PHONE_REV_COMMENTS_LIKES.find({user: req.user._id, comment: {$in: commentIds}});
+      }
+      catch(err){
+        console.log("Error from GET /reviews/phone/:revId/comments: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the user likes on comments failed"
+        });
+      }
+      for(let commentLike of commentsLikes){
+        resultComments[commentsObj[commentLike.comment]].liked = true;
+      }
     }
 
     return res.status(200).json({
