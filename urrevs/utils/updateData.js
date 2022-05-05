@@ -124,6 +124,8 @@ const getBrandsInfo = ()=>{
 */
 exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCollection, nPhoneCollection, updateCollection, scheduled=false) =>{
     return new Promise(async(resolve, reject)=>{
+      let startTime = new Date();
+      console.log("Started the update operation at: ", startTime);
       let conversionFromUSDtoEur = null;
       let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
       let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
@@ -1189,7 +1191,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
           console.log("brand: ", brands[x].name, " is completed successfully");
         }
 
-
+        
         // updating the update log with the update operation result
 
         let companiesList = [];
@@ -1198,12 +1200,17 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
             _id: b.id
           });
         }
-
+        let endTime = new Date();
+        let difference = (endTime - startTime)/1000/60;
+        console.log("Finished the update operation at: ", endTime);
+        console.log("Duration in minutes: ", difference);
+        
         await updateCollection.updateOne({_id: updateLog._id}, {$set: {
           phones: newStoredPhones,
           companies: companiesList,
           isUpdating: false,
-          failed: false
+          failed: false,
+          durationMin: difference
         }});
         
         // final output
@@ -1218,10 +1225,17 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               _id: b.id
             });
           }
+
+          let endTime = new Date();
+          let difference = (endTime - startTime)/1000/60;
+          console.log("Finished the update operation at: ", endTime);
+          console.log("Duration in minutes: ", difference);
+
           await updateCollection.updateOne({_id: updateLog._id}, {$set: {
             phones: newStoredPhones,
             companies: companiesList,
-            isUpdating: false
+            isUpdating: false,
+            durationMin: difference
           }});
           reject({err: error}); /*{err: error, brands: newBrands, numPhones: newStoredPhones.length}*/
         }
