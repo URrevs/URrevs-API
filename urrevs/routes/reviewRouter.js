@@ -1907,9 +1907,11 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
           err: "finding the user likes on comments failed"
         });
       }
+      // liked state for comments
       for(let commentLike of commentsLikes){
         resultComments[commentsObj[commentLike.comment]].liked = true;
       }
+      // liked state for replies
       for(let replyLike of repliesLikes){
         let location = commentRepliesObj[replyLike.reply];
         resultComments[location.comment].replies[location.reply].liked = true;
@@ -1926,12 +1928,122 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit.regular, authent
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "Finding the phone review failed"
+      err: "Finding the phone review comments failed"
     });
   })
 });
 
 
+
+
+
+
+// get comments and replies for a company review
+reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit.regular, authenticate.verifyFlexible, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.COMPANY_REV_COMMENTS_PER_ROUND || config.COMPANY_REV_COMMENTS_PER_ROUND));
+  let roundNum = req.query.round;
+
+  if(roundNum == null || isNaN(roundNum)){
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "application/json");
+      res.json({success: false, status: "bad request"});
+      return;
+  }
+
+  COMPANY_REVS_COMMENTS.find({review: req.params.revId})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("replies.user", {name: 1, picture: 1})
+  .then(async(comments)=>{
+    let resultComments = [];
+    let commentIds = [];
+    let commentsObj = {};
+    let comentRepliesIds = [];
+    let commentRepliesObj = {};
+    
+    for(let [index,comment] of comments.entries()){
+      
+      commentIds.push(comment._id);
+      commentsObj[comment._id] = index;
+
+      let resultComment = {
+        _id: comment._id,
+        userId: comment.user._id,
+        userName: comment.user.name,
+        userPicture: comment.user.picture,
+        content: comment.content,
+        createdAt: comment.createdAt,
+        likes: comment.likes,
+        liked: false,
+        replies: []
+      };
+
+
+      for(let i=comment.replies.length-1; i>=0; i--){
+        let reply = comment.replies[i];
+        comentRepliesIds.push(reply._id);
+        commentRepliesObj[reply._id] = {comment: index, reply: comment.replies.length-1-i};
+        resultComment.replies.push({
+          _id: reply._id,
+          userId: reply.user._id,
+          userName: reply.user.name,
+          userPicture: reply.user.picture,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          likes: reply.likes,
+          liked: false
+        });
+      }
+      resultComments.push(resultComment);
+    }
+
+    if(req.user){
+      // check if the user has liked any of the comments or replies
+      let commentsLikes;
+      let repliesLikes;
+      let proms = [];
+      proms.push(COMPANY_REV_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+      proms.push(COMPANY_REV_COMMENTS_LIKES.find({user: req.user._id, comment: {$in: commentIds}}));
+      try{
+        let results = await Promise.all(proms);
+        commentsLikes = results[1];
+        repliesLikes = results[0];
+      }
+      catch(err){
+        console.log("Error from GET /reviews/company/:revId/comments: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the user likes on comments failed"
+        });
+      }
+      // liked state for comments
+      for(let commentLike of commentsLikes){
+        resultComments[commentsObj[commentLike.comment]].liked = true;
+      }
+      // liked state for replies
+      for(let replyLike of repliesLikes){
+        let location = commentRepliesObj[replyLike.reply];
+        resultComments[location.comment].replies[location.reply].liked = true;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      comments: resultComments
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from GET /reviews/company/:revId/comments: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding the company review comments failed"
+    });
+  })
+});
 
 
 
@@ -2168,7 +2280,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
 
 // unlike a company review reply
 reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.cors, rateLimit.regular, authenticate.verifyUser, (req, res, next)=>{
-  unlikeReply(COMPANY_REVS_COMMENTS, "replies", COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  unlikeReply(COMPANY_REVS_COMMENTS, req.params.commentId, "replies", COMPANY_REV_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({
