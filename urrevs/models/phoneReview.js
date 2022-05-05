@@ -80,10 +80,11 @@ const pReviewSchema = new schema({
         type: Number,
         default: 0,
         min: 0
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now()
     }
-},
-{
-    timestamps: true
 });
 
 pReviewSchema.index({createdAt: -1});
