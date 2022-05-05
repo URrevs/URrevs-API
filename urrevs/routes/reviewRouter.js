@@ -64,7 +64,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   steps:
                 PRE-CREATION
   1- extract data from request body
-  2- checking if the required fields are provided
+  2- checking if the required fields are provided and in correct data type
   3- checking if the phone exists
   4- checking if the company exists
   5- checking if the user has already reviewed the phone
@@ -76,12 +76,20 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 
                 POST-CREATION
   9- calculate the average company rating
-  10- increase the total reviews count in the company
-  11- add the phone to the owned phones for the user
-  12- calculate the points to give to the user using either AI service or the backup routine
-  13- give points to the user
-  14- give points to the referral (if exists) (the referral must not be the user himself)
-  15- send the phone review as a response
+  10- calculate the average generalRating for the phone
+  11- calculate the average uiRating for the phone
+  12- calculate the average manQuality for the phone
+  13- calculate the average valFMon for the phone
+  14- calculate the average cam for the phone
+  15- calculate the average callQuality for the phone
+  16- calculate the average batteryRating for the phone
+  17- increase the total reviews count in the company
+  18- increase the total reviews count in the phone
+  19- add the phone to the owned phones for the user
+  20- calculate the points to give to the user using either AI service or the backup routine
+  21- give points to the user
+  22- give points to the referral (if exists) (the referral must not be the user himself)
+  23- send the phone review as a response
 */
 
 reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
@@ -113,6 +121,36 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         success: false,
         status: "bad request"
       });
+  }
+
+  if(!(Date.parse(ownedDate))){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(generalRating) !== "number" || typeof(uiRating) !== "number" || 
+  typeof(manQuality) !== "number" || typeof(valFMon) !== "number" || typeof(camera) !== "number" || 
+  typeof(callQuality) !== "number" || typeof(battery) !== "number" || typeof(companyRating) !== "number"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(pros) !== "string" || typeof(cons) !== "string" || typeof(compPros) !== "string" || typeof(compCons) !== "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(refCode && typeof(refCode) !== "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
   }
 
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone
@@ -180,10 +218,51 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         let oldAvgRating = company.avgRating;
         let oldTotalRevs = company.totalRevsCount;
         let newAvgRating = ((oldAvgRating * oldTotalRevs) + companyRating) / (oldTotalRevs + 1);
+
+        /* 
+            calculate the average generalRating for the phone
+            calculate the average uiRating for the phone
+            calculate the average manQuality for the phone
+            calculate the average valFMon for the phone
+            calculate the average cam for the phone
+            calculate the average callQuality for the phone
+            calculate the average batteryRating for the phone
+        */
+
+        let oldTotalRevsPhone = phone.totalRevsCount;
+
+        // calculate the average generalRating for the phone
+        let oldGeneralRating = phone.generalRating;
+        let newGeneralRating = ((oldGeneralRating * oldTotalRevsPhone) + generalRating) / (oldTotalRevsPhone + 1);
         
-        // increase the total reviews count in the company - add the phone to the owned phones for the user
+        // calculate the average uiRating for the phone
+        let oldUiRating = phone.uiRating;
+        let newUiRating = ((oldUiRating * oldTotalRevsPhone) + uiRating) / (oldTotalRevsPhone + 1);
+
+        // calculate the average manQuality for the phone
+        let oldManQuality = phone.manQuality;
+        let newManQuality = ((oldManQuality * oldTotalRevsPhone) + manQuality) / (oldTotalRevsPhone + 1);
+
+        // calculate the average valFMon for the phone
+        let oldValFMon = phone.valFMon;
+        let newValFMon = ((oldValFMon * oldTotalRevsPhone) + valFMon) / (oldTotalRevsPhone + 1);
+
+        // calculate the average cam for the phone
+        let oldCam = phone.cam;
+        let newCam = ((oldCam * oldTotalRevsPhone) + camera) / (oldTotalRevsPhone + 1);
+        
+        // calculate the average callQuality for the phone
+        let oldCallQuality = phone.callQuality;
+        let newCallQuality = ((oldCallQuality * oldTotalRevsPhone) + callQuality) / (oldTotalRevsPhone + 1);
+
+        // calculate the average batteryRating for the phone
+        let oldBatteryRating = phone.batteryRating;
+        let newBatteryRating = ((oldBatteryRating * oldTotalRevsPhone) + battery) / (oldTotalRevsPhone + 1);
+
+        // increase the total reviews count in the company - increase the total reviews count in the phone - add the phone to the owned phones for the user
         let staeg2Proms = [];
         staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
+        staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
         staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate}));
         
         Promise.all(staeg2Proms).then(async(staeg2Results)=>{

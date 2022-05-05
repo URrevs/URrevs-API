@@ -59,6 +59,10 @@ const phoneSchema = new schema({
         type: Number,
         default: 0,
         min: 0
+    },
+    totalRevsCount: {
+        type: Number,
+        default: 0
     }
 }, 
 {
