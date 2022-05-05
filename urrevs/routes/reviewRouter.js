@@ -1680,7 +1680,7 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit.regular, authen
     });
   }
 
-  addComment(PHONEREV, req.params.revId, PHONE_REVS_COMMENTS, req.user._id, "review", "content", content)
+  addComment(PHONEREV, req.params.revId, PHONE_REVS_COMMENTS, req.user._id, "review", "content", content, "comments")
   .then((commentId)=>{
     if(commentId == 404){
       return res.status(404).json({
@@ -1720,7 +1720,7 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit.regular, auth
     });
   }
 
-  addComment(COMPANYREV, req.params.revId, COMPANY_REVS_COMMENTS, req.user._id, "review", "content", content)
+  addComment(COMPANYREV, req.params.revId, COMPANY_REVS_COMMENTS, req.user._id, "review", "content", content, "comments")
   .then((commentId)=>{
     if(commentId == 404){
       return res.status(404).json({
