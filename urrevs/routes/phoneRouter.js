@@ -45,13 +45,14 @@ phoneRouter.get("/all", cors.cors, rateLimit, (req, res, next) => {
     PHONE.find({})
     .sort({createdAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
-    .limit(itemsPerRound).then((phones) => {
+    .limit(itemsPerRound).populate("company", {picture: 1, _id: 0}).then((phones) => {
         let result = [];
         for(let phone of phones){
             result.push({
                 _id: phone._id,
                 name: phone.name,
-                type: "phone"
+                type: "phone",
+                companyLogo: phone.company.picture
             });
         }
         res.statusCode = 200;
@@ -82,14 +83,15 @@ phoneRouter.get("/by/:compId", cors.cors, rateLimit, (req, res, next)=>{
     PHONE.find({company: req.params.compId})
     .sort({createdAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
-    .limit(itemsPerRound)
+    .limit(itemsPerRound).populate("company", {picture: 1, _id: 0})
     .then((phones) => {
         let result = [];
         for(let phone of phones){
             result.push({
                 _id: phone._id,
                 name: phone.name,
-                type: "phone"
+                type: "phone",
+                companyLogo: phone.company.picture
             });
         }
         res.statusCode = 200;
