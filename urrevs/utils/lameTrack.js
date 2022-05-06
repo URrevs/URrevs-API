@@ -14,14 +14,18 @@ module.exports = (constantCollection, trackerCollection, resourceCollection, res
         proms.push(constantCollection.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
         Promise.all(proms).then((results)=>{
             let resource = results[0];
-            let lastQuery = results[1].date;
+            let lastQueryDoc = results[1];
+            let lastQuery;
 
             if(!resource){
                 return resolve(404);
             }
 
-            if(!lastQuery){
-                lastQuery = process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT;
+            if(!lastQueryDoc){
+                lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+            }
+            else{
+                lastQuery = lastQueryDoc.date;
             }
 
             trackerCollection.findOne({user: user, [resourceType]: resource._id, createdAt: {$gte: lastQuery}}, 
