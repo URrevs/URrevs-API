@@ -27,11 +27,13 @@ userRouter.options("*", cors.cors, (req, res, next)=>{
 
 // login or sign up
 userRouter.get("/authenticate", cors.cors, rateLimit, (req, res, next)=>{
-    authenticate.authorize(req).then((token)=>{
+    authenticate.authorize(req).then((result)=>{
+        let token = result.t;
+        let admin = result.a;
         let docoded = jwt.decode(token);
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
-        res.json({success: true, status: "user logged in successfully", token: token, exp: docoded.exp});
+        res.json({success: true, status: "user logged in successfully", token: token, exp: docoded.exp, admin: admin});
     })
     .catch((err)=>{
         if(err == "invalid"){

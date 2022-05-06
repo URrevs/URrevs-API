@@ -54,7 +54,7 @@ exports.authorize = (req) => {
                     // user exists
                     // isssue a jwt token
                     let token = jwt.sign({_id: user._id}, secretKey, {expiresIn: expiresIn});
-                    return resolve(token);
+                    return resolve({t: token, a: user.admin});
                 }
                 else{
                     // user does not exist
