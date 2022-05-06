@@ -101,6 +101,7 @@ targetsRouter.get("/update/latest", cors.cors, rateLimit, authenticate.verifyUse
       let updating = op.isUpdating;
       let failure = op.failed;
       let auto = op.automatic;
+      let dur = op.durationMin;
       
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
@@ -113,7 +114,8 @@ targetsRouter.get("/update/latest", cors.cors, rateLimit, authenticate.verifyUse
           date: d,
           automatic: auto,
           isUpdating: updating,
-          failed: failure
+          failed: failure,
+          durationMin: dur
         });
     }
     else{
