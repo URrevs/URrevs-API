@@ -36,7 +36,7 @@ jobs:
     - name: Deploy to Heroku
       uses: akhileshns/heroku-deploy@v3.12.12
       with:
-        heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
+        heroku_api_key: "58fa067b-c30c-4ed9-a382-06d609d93b02"
         heroku_email: ${{ secrets.MAIL }}
         heroku_app_name: urrevs-api-dev-mobile
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
@@ -50,7 +50,7 @@ jobs:
     - name: Deploy to Heroku
       uses: akhileshns/heroku-deploy@v3.12.12
       with:
-        heroku_api_key: ${{ secrets.HEROKU_AUTH_TOKEN }}
+        heroku_api_key: "58fa067b-c30c-4ed9-a382-06d609d93b02"
         heroku_email: ${{ secrets.MAIL }}
         heroku_app_name: urrevs-api-dev-web
         appdir: "urrevs" # (Optional) used when the api is in a sub-directory. you can add slashes (/) in case of sub-sub directories
