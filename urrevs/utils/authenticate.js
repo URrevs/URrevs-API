@@ -14,7 +14,7 @@ const UPRODUCTS = require("../models/uproducts");
 
 const getTheRefCodeOfLatestUser = () => {
     return new Promise((resolve, reject)=>{
-        USER.find({}, {_id: 0, refCode: 1}).sort({_id: -1}).then((user)=>{
+        USER.find({}, {_id: 0, refCode: 1}).sort({_id: -1}).limit(1).then((user)=>{
             return resolve(user);
         })
         .catch((err)=>{
@@ -69,7 +69,7 @@ exports.authorize = (req) => {
                         }).then((newUser)=>{
                             UPRODUCTS.create({_id: newUser._id}).then(()=>{
                                 let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
-                                return resolve(token);
+                                return resolve({t: token, a: newUser.admin});
                             })
                             .catch((err)=>{
                                 USER.findByIdAndDelete(newUser._id).then(()=>{
