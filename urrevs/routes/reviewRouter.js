@@ -153,16 +153,16 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-  // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone
+  // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
   stage1Proms.push(COMPANY.findById(companyId));
   stage1Proms.push(PHONEREV.findOne({user: req.user._id, phone: phoneId}));
   if(refCode){
-    stage1Proms.push(USER.findOne({refCode: refCode}));
+    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
   }
   
-
+  
   Promise.all(stage1Proms).then((stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
@@ -196,12 +196,6 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         return res.status(400).json({
           success: false,
           status: "invalid referral code"
-        });
-      }
-      else if(referral._id.equals(req.user._id)){
-        return res.status(403).json({
-          success: false,
-          status: "you cannot refer yourself"
         });
       }
     }
@@ -334,12 +328,10 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
             grade = Math.round(grade);
           }
 
-          // give points to the user - give points to the referral (if exists). the referral must not be the user himself
+          // give points to the user
           let staeg3Proms = [];
           staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade}}));
-          if(refCode){
-            staeg3Proms.push(USER.findOneAndUpdate({refCode: refCode}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
-          }
+          
 
           Promise.all(staeg3Proms).then((staeg3Results)=>{
             
