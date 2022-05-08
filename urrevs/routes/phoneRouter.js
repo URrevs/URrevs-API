@@ -235,6 +235,7 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 result.sensors = specs.sensors;
                 result.battery = specs.battery;
                 result.charging = specs.charging;
+                result.weight = specs.weight;
 
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "application/json");
