@@ -158,6 +158,10 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   stage1Proms.push(PHONE.findById(phoneId));
   stage1Proms.push(COMPANY.findById(companyId));
   stage1Proms.push(PHONEREV.findOne({user: req.user._id, phone: phoneId}));
+  if(refCode){
+    stage1Proms.push(USER.findOne({refCode: refCode}));
+  }
+  
 
   Promise.all(stage1Proms).then((stage1Results)=>{
     let phone = stage1Results[0];
@@ -184,6 +188,22 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         success: false,
         status: "phone and company do not match"
       });
+    }
+
+    if(refCode){
+      let referral = stage1Results[3];
+      if(!referral){
+        return res.status(400).json({
+          success: false,
+          status: "invalid referral code"
+        });
+      }
+      else if(referral._id.equals(req.user._id)){
+        return res.status(403).json({
+          success: false,
+          status: "you cannot refer yourself"
+        });
+      }
     }
 
     // create the phone review
@@ -318,7 +338,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
           let staeg3Proms = [];
           staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade}}));
           if(refCode){
-            staeg3Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+            staeg3Proms.push(USER.findOneAndUpdate({refCode: refCode}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
           }
 
           Promise.all(staeg3Proms).then((staeg3Results)=>{
