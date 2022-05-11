@@ -94,7 +94,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 
 reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract data from request body  
-  const {
+  let {
     phoneId,
     companyId,
     ownedDate,
@@ -156,11 +156,15 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-  if(refCode && !(typeof(refCode) == "string" && (refCode.startsWith("UR")))){
+  if(refCode && !(typeof(refCode) == "string" && (refCode.toLowerCase().startsWith("ur")))){
     return res.status(400).json({
       success: false,
       status: "bad request"
     });
+  }
+
+  if(refCode){
+    refCode = refCode.toUpperCase();
   }
 
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
