@@ -139,6 +139,16 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
+  if(!((generalRating >= 1 && generalRating <= 5) && (uiRating >= 1 && uiRating <= 5) && 
+  (manQuality >= 1 && manQuality <= 5) && (valFMon >= 1 && valFMon <= 5) && 
+  (camera >= 1 && camera <= 5) && (callQuality >= 1 && callQuality <= 5) && 
+  (battery >= 1 && battery <= 5) && (companyRating >= 1 && companyRating <= 5))){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
   if(typeof(pros) !== "string" || typeof(cons) !== "string" || typeof(compPros) !== "string" || typeof(compCons) !== "string"){
     return res.status(400).json({
       success: false,
