@@ -156,7 +156,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-  if(refCode && typeof(refCode) !== "string" && (refCode.startsWith("UR"))){
+  if(refCode && !(typeof(refCode) == "string" && (refCode.startsWith("UR")))){
     return res.status(400).json({
       success: false,
       status: "bad request"
