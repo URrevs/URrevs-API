@@ -163,7 +163,9 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-  refCode = refCode.toUpperCase();
+  if(refCode){
+    refCode = refCode.toUpperCase();
+  }
 
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
