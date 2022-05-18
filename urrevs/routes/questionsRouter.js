@@ -231,15 +231,15 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
   steps:
     1- extract the request body
     2- check if the content is string and not empty nor only spaces
-    3- check if the question exists
-    4- check if thr user owns the phone which the question is about
+    3- check if thr user owns the phone which the question is about
+    4- check if the question exists and increase its ansCount
     5- create the answer
 */
 questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
-  let content = req.body.content;
+  let {content, phoneId} = req.body.content;
 
-  if(!content){
+  if(!content || !phoneId){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -260,21 +260,22 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
     });
   }
 
-  PQUES.findById(req.params.quesId, {phone: 1}).then((question)=>{
-    if(!question){
-      return res.status(404).json({
+  OWNED_PHONE.findOne({user: req.user._id, phone: phoneId}, {ownedAt: 1, _id: 0})
+  .then((own)=>{
+    if(!own){
+      return res.status(403).json({
         success: false,
-        status: "question not found"
-      })
+        status: "not owned"
+      });
     }
 
-    OWNED_PHONE.findOne({user: req.user._id, phone: question.phone}, {ownedAt: 1, _id: 0})
-    .then((own)=>{
-      if(!own){
-        return res.status(403).json({
+    PQUES.findByIdAndUpdate(req.params.quesId, {$inc: {ansCount: 1}})
+    .then((question)=>{
+      if(!question){
+        return res.status(404).json({
           success: false,
-          status: "not owned"
-        });
+          status: "question not found"
+        })
       }
 
       PANS.create({
@@ -290,26 +291,32 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
           ownedAt: own.ownedAt
         })
       })
-      
+      .catch((err)=>{
+        console.log("Error from POST /questions/phone/answers: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "creating the answer failed"
+        });
+      });
     })
     .catch((err)=>{
       console.log("Error from POST /questions/phone/answers: ", err);
       return res.status(500).json({
         success: false,
         status: "internal server error",
-        err: "finding the ownership failed"
-      })
-    })
-
+        err: "finding the question failed"
+      });
+    });
   })
   .catch((err)=>{
     console.log("Error from POST /questions/phone/answers: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: "finding the question failed"
+      err: "finding the ownership failed"
     })
-  })
+  });
 });
 
 
