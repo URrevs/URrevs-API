@@ -151,9 +151,9 @@ exports.verifyUser = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            USER.findById(decoded._id, {admin: 1, uid: 1}).then((user)=>{
+            USER.findById(decoded._id, {admin: 1, uid: 1, name: 1, picture: 1}).then((user)=>{
                 if(user){
-                    req.user = {_id: user._id, admin: user.admin, uid: user.uid};
+                    req.user = {_id: user._id, admin: user.admin, uid: user.uid, name: user.name, picture: user.picture};
                     return next();
                 }
                 else{
