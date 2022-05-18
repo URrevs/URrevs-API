@@ -9,6 +9,11 @@ const questionRouter = express.Router();
 const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
+const addReply = require("../utils/addReply");
+const likeAnswer = require("../utils/likeCommentOrAnswer");
+const unlikeAnswer = require("../utils/unlikeCommentOrAnswer");
+const likeReply = require("../utils/likeReply");
+const unlikeReply = require("../utils/unlikeReply");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -22,6 +27,11 @@ const PHONE_QUES_UNLIKES = require("../models/phoneQuesUnlike");
 const COMPANY_QUES_LIKES = require("../models/companyQuesLike");
 const COMPANY_QUES_UNLIKES = require("../models/companyQuesUnlike");
 const CONSTANT = require("../models/constants");
+const OWNED_PHONE = require("../models/ownedPhone");
+PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
+CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
+PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
+CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
 
 const config = require("../config");
 
@@ -211,6 +221,341 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
     })
   })
 });
+
+
+
+
+
+// add a phone question answer
+/* 
+  steps:
+    1- extract the request body
+    2- check if the content is string and not empty nor only spaces
+    3- check if the question exists
+    4- check if thr user owns the phone which the question is about
+    5- create the answer
+*/
+questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  let content = req.body.content;
+
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(content.trim() == ""){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  PQUES.findById(req.params.quesId, {phone: 1}).then((question)=>{
+    if(!question){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      })
+    }
+
+    OWNED_PHONE.findOne({user: req.user._id, phone: question.phone}, {ownedAt: 1, _id: 0})
+    .then((own)=>{
+      if(!own){
+        return res.status(403).json({
+          success: false,
+          status: "not owned"
+        });
+      }
+
+      PANS.create({
+        user: req.user._id,
+        question: question._id,
+        content: content,
+        ownedAt: own.ownedAt
+      })
+      .then((answer)=>{
+        return res.status(200).json({
+          success: true,
+          answer: answer._id,
+          ownedAt: own.ownedAt
+        })
+      })
+      
+    })
+    .catch((err)=>{
+      console.log("Error from POST /questions/phone/answers: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "finding the ownership failed"
+      })
+    })
+
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/phone/answers: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the question failed"
+    })
+  })
+});
+
+
+
+
+
+// add reply to phone question answer
+/*
+  steps:
+    1- extract the request body
+    2- check if the content is string and not empty nor only spaces
+    3- call add reply
+*/
+questionRouter.post("/phone/answers/:ansId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  let content = req.body.content;
+
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(content.trim() == ""){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  addReply(PANS, req.params.ansId, "replies", req.user._id, "content", content)
+  .then((replyId)=>{
+    if(replyId == 404){
+      return res.status(404).json({
+        success: false,
+        status: "answer not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply: replyId
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/phone/answers/:ansId/replies: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// like a phone question answer
+questionRouter.post("/phone/answers/:ansId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  likeAnswer(PANS, req.user._id, req.params.ansId, PQUES_ANSWERS_LIKES, "answer")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "answer not found or you own it"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false,
+        status: "already liked"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/phone/answers/:ansId/like: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+})
+
+
+
+// unlike a phone answer
+questionRouter.post("/phone/answers/:ansId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  unlikeAnswer(PANS, PQUES_ANSWERS_LIKES, req.user._id, req.params.ansId, "answer")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+// like a phone question answer reply
+questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  likeReply(PANS, req.params.ansId, "replies", req.params.replyId, req.user._id, PHONE_QUES_REPLIES_LIKES, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "reply not found or you own it"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false,
+        status: "already liked"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/phone/answers/:ansId/replies/:replyId/like: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+})
+
+
+
+// unlike a phone question answer reply
+questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  unlikeReply(PANS, req.params.ansId, "replies", PQUES_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// get a certain phone question
+questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+  
+  PQUES.findById(req.params.quesId)
+  .then(async(question)=>{
+
+    if(!question){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+
+    let acceptedAns_ = null
+    if(question.acceptedAns){
+      acceptedAns_ = await PANS.findById(question.acceptedAns).populate("user").populate("replies.user")
+    }
+
+    let result = {};
+
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /questions/phone/:quesId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the question failed"
+    })
+  })
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

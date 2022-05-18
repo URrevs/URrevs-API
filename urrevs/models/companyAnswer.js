@@ -46,9 +46,12 @@ const AnswerSchema = new schema({
         type: Boolean,
         default: false
     },
-    upvotes: {
+    likes: {
         type: Number,
         default: 0
+    },
+    ownedAt: {
+        type: Date
     },
     replies: [repliesSchema]
 },
@@ -58,4 +61,4 @@ const AnswerSchema = new schema({
 
 AnswerSchema.index({createdAt: -1});
 
-module.exports = mongoose.model("cAns", AnswerSchema);
+module.exports = mongoose.model("cQuesAnswer", AnswerSchema);

@@ -23,7 +23,7 @@ const QuestionSchema = new schema({
     },
     acceptedAns: {
         type: schema.Types.ObjectId,
-        ref: "cAns",
+        ref: "cQuesAnswer",
     },
     upvotes: {
         type: Number,

@@ -23,7 +23,7 @@ const phoneQuestionSchema = new schema({
     },
     acceptedAns: {
         type: schema.Types.ObjectId,
-        ref: "pAns",
+        ref: "pQuesAnswer",
     },
     upvotes: {
         type: Number,
