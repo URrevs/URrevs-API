@@ -1809,6 +1809,20 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
   // extract the comment content from the request body
   let {content} = req.body;
 
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
   // content must not be empty or only spaces
   if(content.trim() == ""){
     return res.status(400).json({
@@ -1850,6 +1864,20 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate
   // extract the comment content from the request body
   let {content} = req.body;
 
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
   // content must not be empty or only spaces
   if(content.trim() == ""){
     return res.status(400).json({
@@ -1890,6 +1918,20 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
   // extract the comment content from the request body
   let {content} = req.body;
 
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
   // content must not be empty or only spaces
   if(content.trim() == ""){
     return res.status(400).json({
@@ -1929,6 +1971,20 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
 reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
+
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
 
   // content must not be empty or only spaces
   if(content.trim() == ""){
