@@ -19,7 +19,16 @@ const CANS = require("../models/companyAnswer");
 
 
 
+// preflight
+questionRouter.options("*", cors.cors, (req, res, next)=>{
+    res.sendStatus(200);
+});
 
+
+// add a phone question
+questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+});
 
 
 

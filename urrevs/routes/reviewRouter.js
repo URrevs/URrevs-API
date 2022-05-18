@@ -115,8 +115,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
   // checking if the required fields are provided  
   if(!phoneId || !ownedDate || !generalRating || !uiRating || !manQuality || !valFMon 
-    || !camera || !callQuality || !battery || !pros || !cons || !companyRating || !compPros 
-    || !compCons || !companyId){
+    || !camera || !callQuality || !battery || pros.trim() == "" || cons.trim() == "" || !companyRating || 
+    compPros.trim() == "" || compCons.trim() == "" || !companyId){
       return res.status(400).json({
         success: false,
         status: "bad request"
@@ -1801,8 +1801,9 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
 reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
-  // check if the content is not empty
-  if(!content){
+
+  // content must not be empty or only spaces
+  if(content.trim() == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1841,8 +1842,9 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
 reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   // extract the comment content from the request body
   let {content} = req.body;
-  // check if the content is not empty
-  if(!content){
+
+  // content must not be empty or only spaces
+  if(content.trim() == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1881,8 +1883,8 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
   // extract the comment content from the request body
   let {content} = req.body;
 
-  // check if the content is not empty
-  if(!content){
+  // content must not be empty or only spaces
+  if(content.trim() == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1921,8 +1923,8 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, 
   // extract the comment content from the request body
   let {content} = req.body;
 
-  // check if the content is not empty
-  if(!content){
+  // content must not be empty or only spaces
+  if(content.trim() == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
