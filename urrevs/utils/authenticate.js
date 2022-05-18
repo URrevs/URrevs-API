@@ -49,12 +49,19 @@ exports.authorize = (req) => {
             let n = decodedToken.name;
             let p = decodedToken.picture;
             let u = decodedToken.uid;
-            USER.findOneAndUpdate({uid: u}, {$set: {picture: p, name: n}}).then((user)=>{
+            USER.findOneAndUpdate({uid: u}, {$set: {picture: p, name: n}}, {new: true}).then((user)=>{
                 if(user){
                     // user exists
                     // isssue a jwt token
                     let token = jwt.sign({_id: user._id}, secretKey, {expiresIn: expiresIn});
-                    return resolve({t: token, a: user.admin});
+                    let prof = {
+                        _id: user._id,
+                        name: user.name,
+                        picture: user.picture,
+                        points: user.absPoints + user.comPoints,
+                        refCode: user.refCode
+                    }
+                    return resolve({t: token, a: user.admin, p: prof});
                 }
                 else{
                     // user does not exist
@@ -69,7 +76,14 @@ exports.authorize = (req) => {
                         }).then((newUser)=>{
                             UPRODUCTS.create({_id: newUser._id}).then(()=>{
                                 let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
-                                return resolve({t: token, a: newUser.admin});
+                                let prof = {
+                                    _id: newUser._id,
+                                    name: newUser.name,
+                                    picture: newUser.picture,
+                                    points: newUser.absPoints + newUser.comPoints,
+                                    refCode: newUser.refCode
+                                }
+                                return resolve({t: token, a: newUser.admin, p: prof});
                             })
                             .catch((err)=>{
                                 USER.findByIdAndDelete(newUser._id).then(()=>{
