@@ -115,8 +115,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
   // checking if the required fields are provided  
   if(!phoneId || !ownedDate || !generalRating || !uiRating || !manQuality || !valFMon 
-    || !camera || !callQuality || !battery || pros.trim() == "" || cons.trim() == "" || !companyRating || 
-    compPros.trim() == "" || compCons.trim() == "" || !companyId){
+    || !camera || !callQuality || !battery || !pros || !cons || !companyRating || !compPros 
+    || !compCons || !companyId){
       return res.status(400).json({
         success: false,
         status: "bad request"
@@ -156,7 +156,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-  if(refCode && !(typeof(refCode) == "string" && (refCode.toLowerCase().startsWith("ur")))){
+  if(refCode && !(typeof(refCode) == "string" && (refCode.match(/ur[0-9]+/i)))){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -165,6 +165,13 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
   if(refCode){
     refCode = refCode.toUpperCase();
+  }
+
+  if(pros.trim() == "" || cons.trim() == "" || compPros.trim() == "" || compCons.trim() == ""){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
   }
 
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
