@@ -1093,9 +1093,9 @@ questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verify
     if(req.user){
       // check liked state
       let proms = [];
-      proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: question._id}));
-      proms.push(PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
-      proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+      proms.push(COMPANY_QUES_LIKES.findOne({user: req.user._id, question: question._id}));
+      proms.push(CQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
+      proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
       Promise.all(proms)
       .then((likes)=>{
         let quesLike = likes[0];
