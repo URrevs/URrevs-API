@@ -237,7 +237,7 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
 */
 questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
-  let {content, phoneId} = req.body.content;
+  let {content, phoneId} = req.body;
 
   if(!content || !phoneId){
     return res.status(400).json({
@@ -446,7 +446,7 @@ questionRouter.post("/phone/answers/:ansId/unlike", cors.cors, rateLimit, authen
 
 // like a phone question answer reply
 questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  likeReply(PANS, req.params.ansId, "replies", req.params.replyId, req.user._id, PHONE_QUES_REPLIES_LIKES, "reply")
+  likeReply(PANS, req.params.ansId, "replies", req.params.replyId, req.user._id, PQUES_REPLIES_LIKES, "reply")
   .then((result)=>{
     if(result == 200){
       return res.status(200).json({
