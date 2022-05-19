@@ -1315,6 +1315,179 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
 
 
 
+// get my company questions
+questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.MY_COMPANY_QUES_PER_ROUND|| config.MY_COMPANY_QUES_PER_ROUND));
+  let roundNum = req.query.round;
+  if(!roundNum || isNaN(roundNum)){
+      return res.status(400).json({
+        success: false,
+        status: "bad request",
+      });
+  }
+
+  CQUES.find({user: req.user._id})
+  .sort({upvotes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("company", {name: 1})
+  .then(async (quess)=>{
+    if(quess.length === 0){
+      return res.status(200).json({
+        success: true,
+        questions: []
+      });
+    }
+
+    let quesIds = [];
+    let quesObj = {};
+    let acceptedAnsIds = [];
+    let acceptedAnsObj = {};
+    let repliesIds = [];
+    let repliesObj = {};
+    let resultQuess = [];
+    
+    for(let [index, ques] of quess.entries()){
+      quesIds.push(ques._id);
+      quesObj[ques._id] = index;
+
+      let resultAns = null;
+      if(ques.acceptedAns){
+        acceptedAnsIds.push(ques.acceptedAns);
+        acceptedAnsObj[ques.acceptedAns] = index;
+        try{
+          let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let repliesList = [];
+
+          if(ans.replies.length > 0){
+            for(let i=0; i<ans.replies.length; i++){
+              let reply = ans.replies[i];
+
+              repliesIds.push(reply._id);
+              repliesObj[reply._id] = {answer: index, reply: i};
+              
+              repliesList.push({
+                _id: reply._id,
+                userId: reply.user._id,
+                userName: reply.user.name,
+                picture: reply.user.picture,
+                content: reply.content,
+                likes: reply.likes,
+                liked: false,
+                createdAt: reply.createdAt
+              });
+            }
+          }
+
+          resultAns = {
+            _id: ans._id,
+            userId: ans.user._id,
+            userName: ans.user.name,
+            picture: ans.user.picture,
+            content: ans.content,
+            upvotes: ans.likes,
+            createdAt: ans.createdAt,
+            ownedAt: ans.ownedAt,
+            upvoted: false,
+            replies: repliesList
+          }
+
+        }
+        catch(err){
+          console.log("Error from GET /questions/company/by/me: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "finding the acceptedAnswer failed"
+          });
+        }
+      }
+
+      resultQuess.push({
+        _id: ques._id,
+        type: "company",
+        userId: ques.user._id,
+        userName: ques.user.name,
+        picture: ques.user.picture,
+        createdAt: ques.createdAt,
+        targetId: ques.phone._id,
+        targetName: ques.phone.name,
+        content: ques.content,
+        upvotes: ques.upvotes,
+        ansCount: ques.ansCount,
+        shares: ques.shareCount,
+        upvoted: false,
+        acceptedAns: resultAns
+      });
+    }
+
+
+    // check liked state
+    let proms = [];
+    //proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
+    proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+
+    Promise.all(proms)
+    .then((likes)=>{
+      //let quesLike = likes[0];
+      let ansLike = likes[0];
+      let replyLikes = likes[1];
+
+      // for(let like of quesLike){
+      //   let id = like.question;
+      //   resultQuess[quesObj[id]].upvoted = true;
+      // }
+
+      for(let like of ansLike){
+        let id = like.answer;
+        resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+      }
+
+      for(let like of replyLikes){
+        let id = like.reply;
+        resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
+      }
+
+      return res.status(200).json({
+        success: true,
+        questions: resultQuess
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from GET /questions/company/by/me: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "finding the likes failed"
+      });
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /questions/company/by/me: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "Finding my company questions failed"
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
