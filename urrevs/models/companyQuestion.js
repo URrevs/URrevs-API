@@ -44,7 +44,7 @@ const QuestionSchema = new schema({
 
 
 QuestionSchema.index({createdAt: -1});
-QuestionSchema.index({phone: 1, upvotes: -1, createdAt: -1});
+QuestionSchema.index({company: 1, upvotes: -1, createdAt: -1});
 QuestionSchema.index({user: 1, upvotes: -1, createdAt: -1});
 
 module.exports = mongoose.model("cQues", QuestionSchema);
