@@ -3,6 +3,9 @@
   Created on: 5-May-2022
 */
 
+const config = require("../config");
+const USER = require("../models/user");
+
 module.exports = (resourceCollection, user, resourceId, likeCollection, resourceType)=>{
     return new Promise((resolve, reject)=>{
 
@@ -20,8 +23,15 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
                     return resolve(404);
                 }
 
+                let proms = [];
                 // create the like
-                likeCollection.create({user: user, [resourceType]: resourceId})
+                proms.push(likeCollection.create({user: user, [resourceType]: resourceId}))
+                if(resourceType == "answer"){
+                    // if the resource is answer, give user points
+                    proms.push(USER.findByIdAndUpdate(user, {$inc: {comPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.process.env.ANSWER_LIKE_POINTS)}}))
+                }
+                
+                Promise.all(proms)
                 .then((l)=>{
                     return resolve(200);
                 })
