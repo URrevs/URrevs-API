@@ -16,14 +16,27 @@ module.exports = (resourceCollection, likeCollection, user, resourceId, resource
             else{
                 let proms = [];
                 proms.push(resourceCollection.findOneAndUpdate({_id: resourceId}, {$inc: {likes: -1}}))
-                if(resourceType == "answer"){
-                    // if the resource is answer, deduct user points
-                    proms.push(USER.findByIdAndUpdate(user, {$inc: {comPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.process.env.ANSWER_LIKE_POINTS)}}));
-                }
 
                 Promise.all(proms)
-                .then(()=>{
-                    return resolve(200);
+                .then(async (result)=>{
+                    let resource = result[0];
+                    if(!resource){
+                        return resolve(404);
+                    }
+
+                    if(resourceType == "answer"){
+                        // if the resource is answer, deduct user points
+                        try{
+                            await USER.findByIdAndUpdate(resource.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.process.env.ANSWER_LIKE_POINTS)}});
+                            return resolve(200);
+                        }
+                        catch(err){
+                            return reject({e: err, message: "updating user points failed"});
+                        }
+                    }
+                    else{
+                        return resolve(200);
+                    }
                 })
                 .catch((error)=>{
                     return reject({e: error, message: "reverting number of likes failed"});
