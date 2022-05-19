@@ -641,7 +641,6 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
   .then(async (revs)=>{
     if(revs.length === 0){
@@ -667,9 +666,9 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
         type: "phone",
         targetId: rev.phone._id,
         targetName: rev.phone.name,
-        userId: rev.user._id,
-        userName: rev.user.name,
-        picture: rev.user.picture,
+        userId: req.user._id,
+        userName: req.user.name,
+        picture: req.user.picture,
         createdAt: rev.createdAt,
         views: rev.views,
         likes: rev.likes,
@@ -690,21 +689,21 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
     }
 
     // checking liked state
-    let likes;
-    try{
-      likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
-    }
-    catch(err){
-      console.log("Error from /reviews/phone/by/me: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the liked state failed"
-      });
-    }
-    for(let like of likes){
-      resultRevs[ids[like.review]].liked = true;
-    }
+    // let likes;
+    // try{
+    //   likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    // }
+    // catch(err){
+    //   console.log("Error from /reviews/phone/by/me: ", err);
+    //   return res.status(500).json({
+    //     success: false,
+    //     status: "internal server error",
+    //     err: "Finding the liked state failed"
+    //   });
+    // }
+    // for(let like of likes){
+    //   resultRevs[ids[like.review]].liked = true;
+    // }
 
     res.status(200).json({
       success: true,
@@ -844,7 +843,6 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
   .populate("company", {name: 1})
   .then(async (revs)=>{
     if(revs.length === 0){
@@ -870,9 +868,9 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
         type: "company",
         targetId: rev.company._id,
         targetName: rev.company.name,
-        userId: rev.user._id,
-        userName: rev.user.name,
-        picture: rev.user.picture,
+        userId: req.user._id,
+        userName: req.user.name,
+        picture: req.user.picture,
         createdAt: rev.createdAt,
         views: rev.views,
         likes: rev.likes,
@@ -886,22 +884,22 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
       });
     }
 
-    // checking liked 
-    let likes;
-    try{
-      likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
-    }
-    catch(err){
-      console.log("Error from /reviews/company/by/me: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the liked state failed"
-      });
-    }
-    for(let like of likes){
-      resultRevs[ids[like.review]].liked = true;
-    }
+    // // checking liked 
+    // let likes;
+    // try{
+    //   likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+    // }
+    // catch(err){
+    //   console.log("Error from /reviews/company/by/me: ", err);
+    //   return res.status(500).json({
+    //     success: false,
+    //     status: "internal server error",
+    //     err: "Finding the liked state failed"
+    //   });
+    // }
+    // for(let like of likes){
+    //   resultRevs[ids[like.review]].liked = true;
+    // }
 
     res.status(200).json({
       success: true,
