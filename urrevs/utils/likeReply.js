@@ -17,15 +17,24 @@ module.exports = (parentResourceCollection, parentResourceId, resourceTypeInPare
             }
 
             // check resource existence + increment the likes by 1
-            parentResourceCollection.findOneAndUpdate({_id: parentResourceId, [idInParent]: resourceId, [userInParent]: {$ne: user}}, 
-            {$inc: {[resourceTypeInParent+".$.likes"]: 1}})
-            .then((resoruce)=>{
-                if(!resoruce){
+            parentResourceCollection.findOne({_id: parentResourceId, [idInParent]: resourceId})
+            .then((resource)=>{
+                if(!resource){
                     return resolve(404);
                 }
 
+                let reply = resource.replies.id(resourceId);
+
+                if(reply.user == user){
+                    return resolve(404);
+                }
+
+                let proms = [];
+                proms.push(parentResourceCollection.findOneAndUpdate({_id: parentResourceId, [idInParent]: resourceId}, {$inc: {[resourceTypeInParent+".$.likes"]: 1}}));
                 // create the like
-                likeCollection.create({user: user, [resourceType]: resourceId})
+                proms.push(likeCollection.create({user: user, [resourceType]: resourceId}));
+
+                Promise.all(proms)
                 .then((l)=>{
                     return resolve(200);
                 })

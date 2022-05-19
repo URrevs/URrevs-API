@@ -28,10 +28,10 @@ const COMPANY_QUES_LIKES = require("../models/companyQuesLike");
 const COMPANY_QUES_UNLIKES = require("../models/companyQuesUnlike");
 const CONSTANT = require("../models/constants");
 const OWNED_PHONE = require("../models/ownedPhone");
-PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
-CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
-PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
-CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
+const PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
+const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
+const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
+const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
 
 const config = require("../config");
 
@@ -572,7 +572,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
 // get a certain phone question
 questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  PQUES.findById(req.params.quesId).populate("phone")
+  PQUES.findById(req.params.quesId).populate("phone", {name: 1})
   .then(async(question)=>{
 
     if(!question){
@@ -583,13 +583,19 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
     }
 
     let acceptedAns_ = null
+    let repliesObj = {};
+    let repliesIds = [];
     if(question.acceptedAns){
       try{
-        let acceptedAnsDoc_ = await PANS.findById(question.acceptedAns).populate("user").populate("replies.user");
+        let acceptedAnsDoc_ = await PANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
         if(acceptedAnsDoc_){
           let answer_replies = [];
           
           for(let [index, reply] of acceptedAnsDoc_.replies.entries()){
+            repliesObj[reply._id] = index;
+
+            repliesIds.push(reply._id);
+
             answer_replies.push({
               _id: reply._id,
               userId: reply.user._id,
@@ -643,10 +649,53 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
       acceptedAns: acceptedAns_
     };
 
-    return res.status(200).json({
-      success: true,
-      question: result
-    });
+
+    if(req.user){
+      // check liked state
+      let proms = [];
+      proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: question._id}));
+      proms.push(PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
+      proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+      Promise.all(proms)
+      .then((likes)=>{
+        let quesLike = likes[0];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
+
+        if(quesLike){
+          result.upvoted = true;
+        }
+
+        if(ansLike){
+          result.acceptedAns.upvoted = true;
+        }
+
+        for(let like of replyLikes){
+          let id = like.reply;
+          result.acceptedAns.replies[repliesObj[id]].liked = true;
+        }
+
+        return res.status(200).json({
+          success: true,
+          question: result
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from GET /questions/phone/:quesId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the likes failed"
+        });
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true,
+        question: result
+      });
+    }
+
 
   })
   .catch((err)=>{
