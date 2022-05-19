@@ -1009,7 +1009,144 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
 
 
 
+// get a certain company question
+questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+  
+  CQUES.findById(req.params.quesId).populate("company", {name: 1})
+  .then(async(question)=>{
 
+    if(!question){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+
+    let acceptedAns_ = null
+    let repliesObj = {};
+    let repliesIds = [];
+    if(question.acceptedAns){
+      try{
+        let acceptedAnsDoc_ = await CANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+        if(acceptedAnsDoc_){
+          let answer_replies = [];
+          
+          for(let [index, reply] of acceptedAnsDoc_.replies.entries()){
+            repliesObj[reply._id] = index;
+
+            repliesIds.push(reply._id);
+
+            answer_replies.push({
+              _id: reply._id,
+              userId: reply.user._id,
+              userName: reply.user.name,
+              picture: reply.user.picture,
+              content: reply.content,
+              likes: reply.likes,
+              liked: false,
+              createdAt: reply.createdAt
+            });
+          }
+
+          acceptedAns_ = {
+            _id: acceptedAnsDoc_.id,
+            userId: acceptedAnsDoc_.user._id,
+            userName: acceptedAnsDoc_.user.name,
+            picture: acceptedAnsDoc_.user.picture,
+            content: acceptedAnsDoc_.content,
+            upvotes: acceptedAnsDoc_.likes,
+            createdAt: acceptedAnsDoc_.createdAt,
+            ownedAt: acceptedAnsDoc_.ownedAt,
+            upvoted: false,
+            replies: answer_replies
+          }
+        }
+      }
+      catch(err){
+        console.log("Error from GET /questions/company/:quesId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the acceptedAnswer failed"
+        });
+      }
+    }
+
+    let result = {
+      _id: question._id,
+      type: "company",
+      userId: question.user._id,
+      userName: question.user.name,
+      picture: question.user.picture,
+      createdAt: question.createdAt,
+      targetId: question.phone._id,
+      targetName: question.phone.name,
+      content: question.content,
+      upvotes: question.upvotes,
+      ansCount: question.ansCount,
+      shares: question.shareCount,
+      upvoted: false,
+      acceptedAns: acceptedAns_
+    };
+
+
+    if(req.user){
+      // check liked state
+      let proms = [];
+      proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: question._id}));
+      proms.push(PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
+      proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+      Promise.all(proms)
+      .then((likes)=>{
+        let quesLike = likes[0];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
+
+        if(quesLike){
+          result.upvoted = true;
+        }
+
+        if(ansLike){
+          result.acceptedAns.upvoted = true;
+        }
+
+        for(let like of replyLikes){
+          let id = like.reply;
+          result.acceptedAns.replies[repliesObj[id]].liked = true;
+        }
+
+        return res.status(200).json({
+          success: true,
+          question: result
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from GET /questions/company/:quesId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the likes failed"
+        });
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true,
+        question: result
+      });
+    }
+
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /questions/company/:quesId: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the question failed"
+    });
+  })
+});
 
 
 
