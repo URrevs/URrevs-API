@@ -508,6 +508,303 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
 
 
 
+
+// add a company question answer
+/* 
+  steps:
+    1- extract the request body
+    2- check if the content is string and not empty nor only spaces
+    3- check if thr user owns the company which the question is about
+    4- check if the question exists and increase its ansCount
+    5- create the answer
+*/
+questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  let {content, companyId} = req.body;
+
+  if(!content || !companyId){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(content.trim() == ""){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  OWNED_PHONE.findOne({user: req.user._id, company: companyId}, {ownedAt: 1, _id: 0})
+  .then((own)=>{
+    if(!own){
+      return res.status(403).json({
+        success: false,
+        status: "not owned"
+      });
+    }
+
+    CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId}, {$inc: {ansCount: 1}})
+    .then((question)=>{
+      if(!question){
+        return res.status(404).json({
+          success: false,
+          status: "question not found"
+        })
+      }
+
+      CANS.create({
+        user: req.user._id,
+        question: question._id,
+        content: content,
+        ownedAt: own.ownedAt
+      })
+      .then((answer)=>{
+        return res.status(200).json({
+          success: true,
+          answer: answer._id,
+          ownedAt: own.ownedAt
+        })
+      })
+      .catch((err)=>{
+        console.log("Error from POST /questions/company/answers: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "creating the answer failed"
+        });
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from POST /questions/company/answers: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "finding the question failed"
+      });
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/answers: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the ownership failed"
+    })
+  });
+});
+
+
+
+
+
+// add reply to company question answer
+/*
+  steps:
+    1- extract the request body
+    2- check if the content is string and not empty nor only spaces
+    3- call add reply
+*/
+questionRouter.post("/company/answers/:ansId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  let content = req.body.content;
+
+  if(!content){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(typeof(content) != "string"){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  if(content.trim() == ""){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
+  addReply(CANS, req.params.ansId, "replies", req.user._id, "content", content)
+  .then((replyId)=>{
+    if(replyId == 404){
+      return res.status(404).json({
+        success: false,
+        status: "answer not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply: replyId
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/answers/:ansId/replies: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+
+// like a company question answer
+questionRouter.post("/company/answers/:ansId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  likeAnswer(CANS, req.user._id, req.params.ansId, CQUES_ANSWERS_LIKES, "answer")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "answer not found or you own it"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false,
+        status: "already liked"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/answers/:ansId/like: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+})
+
+
+
+// unlike a company answer
+questionRouter.post("/company/answers/:ansId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  unlikeAnswer(CANS, CQUES_ANSWERS_LIKES, req.user._id, req.params.ansId, "answer")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+// like a company question answer reply
+questionRouter.post("/company/answers/:ansId/replies/:replyId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  likeReply(CANS, req.params.ansId, "replies", req.params.replyId, req.user._id, CQUES_REPLIES_LIKES, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true,
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "reply not found or you own it"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false,
+        status: "already liked"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/answers/:ansId/replies/:replyId/like: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+})
+
+
+
+// unlike a company question answer reply
+questionRouter.post("/company/answers/:ansId/replies/:replyId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  unlikeReply(CANS, req.params.ansId, "replies", CQUES_REPLIES_LIKES, req.user._id, req.params.replyId, "reply")
+  .then((result)=>{
+    if(result == 200){
+      return res.status(200).json({
+        success: true
+      });
+    }
+    else if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // mark an answer as accepted for phone question
 /*
   steps:
