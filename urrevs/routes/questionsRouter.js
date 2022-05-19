@@ -1258,9 +1258,46 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      questions: resultQuess
+
+    // check liked state
+    let proms = [];
+    //proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
+    proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+
+    Promise.all(proms)
+    .then((likes)=>{
+      //let quesLike = likes[0];
+      let ansLike = likes[0];
+      let replyLikes = likes[1];
+
+      // for(let like of quesLike){
+      //   let id = like.question;
+      //   resultQuess[quesObj[id]].upvoted = true;
+      // }
+
+      for(let like of ansLike){
+        let id = like.answer;
+        resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+      }
+
+      for(let like of replyLikes){
+        let id = like.reply;
+        resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
+      }
+
+      return res.status(200).json({
+        success: true,
+        questions: resultQuess
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from GET /questions/phone/by/me: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "finding the likes failed"
+      });
     });
 
   })
