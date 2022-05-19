@@ -17,6 +17,11 @@ const ownedPhonesSchema = new schema({
         ref: "Phone",
         required: true
     },
+    company: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Company",
+        required: true
+    },
     ownedAt: {
         type: Date,
         required: true
@@ -25,5 +30,6 @@ const ownedPhonesSchema = new schema({
 
 ownedPhonesSchema.index({user: 1, ownedAt: -1});
 ownedPhonesSchema.index({user: 1, phone: 1});
+ownedPhonesSchema.index({user: 1, company: 1});
 
 module.exports = mongoose.model("OwnedPhone", ownedPhonesSchema);
