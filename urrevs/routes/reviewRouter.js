@@ -298,7 +298,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         let staeg2Proms = [];
         staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
         staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
-        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate}));
+        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId}));
         
         Promise.all(staeg2Proms).then(async(staeg2Results)=>{
           
