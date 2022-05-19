@@ -269,7 +269,7 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
       });
     }
 
-    PQUES.findByIdAndUpdate(req.params.quesId, {$inc: {ansCount: 1}})
+    PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId}, {$inc: {ansCount: 1}})
     .then((question)=>{
       if(!question){
         return res.status(404).json({
@@ -508,7 +508,57 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
 
 
 
+// mark an answer as accepted for phone question
+/*
+  steps:
+    1- extract the request body (questionId, answerId)
+    2-  check if both exist, 
+        the request owner is the author of question, 
+        the answer belongs to this question
+    3- check if the question doesn't already have the answer as accepted 
+    4- if the question doesn't have an accepted answer, 
+          add the answerId as an accepted answer
+          if there is a document indicating that the question has got its accepted answer removed, 
+              delete it
+              create a document that implies that this question got its accepted answer changed
+          if there is not a document indicating that the question has got its accepted answer removed,
+              create a document indicating that this question got an accepted answer
+          give points to the answer author
+    5- if the question has already another accepted answer,
+          replace the old accepted answer with the new accepted answer
+          if there isn't a document indicating that this question got an accepted answer in this time slot,
+              check if there is a document indicating that the question has its accepted answer changed
+                if not,  create a document indicating that the question has its accepted answer changed
+          deduct points from the author of the old answer and give points to the author of the new answer
+*/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// unmark an answer from being accepted for a phone question
+/*
+  steps:
+    1- extract the request body (questionId, answerId)
+    2-  check if both exist, 
+        the request owner is the author of question, 
+        the answer belongs to this question
+    3- check if the question has already this answer as an accepted answer
+    4- remove this answer from being accepted for this question
+    5- deduct points from the author of the answer
+    6- if there is a document indicating that the question got an accepted answer, remove it then return
+    7- if there is a document indicating that the question has its accepted answer changed, remove it then return
+    8- otherwise, create a document indicating that the question has its accepted answer removed then return
+*/
 
 
 
