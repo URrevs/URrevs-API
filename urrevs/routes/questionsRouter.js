@@ -572,7 +572,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
 // get a certain phone question
 questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  PQUES.findById(req.params.quesId)
+  PQUES.findById(req.params.quesId).populate("phone")
   .then(async(question)=>{
 
     if(!question){
@@ -584,11 +584,69 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
 
     let acceptedAns_ = null
     if(question.acceptedAns){
-      acceptedAns_ = await PANS.findById(question.acceptedAns).populate("user").populate("replies.user")
+      try{
+        let acceptedAnsDoc_ = await PANS.findById(question.acceptedAns).populate("user").populate("replies.user");
+        if(acceptedAnsDoc_){
+          let answer_replies = [];
+          
+          for(let [index, reply] of acceptedAnsDoc_.replies.entries()){
+            answer_replies.push({
+              _id: reply._id,
+              userId: reply.user._id,
+              userName: reply.user.name,
+              picture: reply.user.picture,
+              content: reply.content,
+              likes: reply.likes,
+              liked: false,
+              createdAt: reply.createdAt
+            });
+          }
+
+          acceptedAns_ = {
+            _id: acceptedAnsDoc_.id,
+            userId: acceptedAnsDoc_.user._id,
+            userName: acceptedAnsDoc_.user.name,
+            picture: acceptedAnsDoc_.user.picture,
+            content: acceptedAnsDoc_.content,
+            upvotes: acceptedAnsDoc_.likes,
+            createdAt: acceptedAnsDoc_.createdAt,
+            ownedAt: acceptedAnsDoc_.ownedAt,
+            upvoted: false,
+            replies: answer_replies
+          }
+        }
+      }
+      catch(err){
+        console.log("Error from GET /questions/phone/:quesId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the acceptedAnswer failed"
+        });
+      }
     }
 
-    let result = {};
+    let result = {
+      _id: question._id,
+      type: "phone",
+      userId: question.user._id,
+      userName: question.user.name,
+      picture: question.user.picture,
+      createdAt: question.createdAt,
+      phoneId: question.phone._id,
+      phoneName: question.phone.name,
+      content: question.content,
+      upvotes: question.upvotes,
+      ansCount: question.ansCount,
+      shares: question.shareCount,
+      upvoted: false,
+      acceptedAns: acceptedAns_
+    };
 
+    return res.status(200).json({
+      success: true,
+      question: result
+    });
 
   })
   .catch((err)=>{
@@ -597,7 +655,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
       success: false,
       status: "internal server error",
       err: "finding the question failed"
-    })
+    });
   })
 });
 
