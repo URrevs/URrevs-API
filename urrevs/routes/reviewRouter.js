@@ -2063,10 +2063,10 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
       };
 
 
-      for(let i=comment.replies.length-1; i>=0; i--){
+      for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
         comentRepliesIds.push(reply._id);
-        commentRepliesObj[reply._id] = {comment: index, reply: comment.replies.length-1-i};
+        commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
           _id: reply._id,
           userId: reply.user._id,
@@ -2175,10 +2175,10 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
       };
 
 
-      for(let i=comment.replies.length-1; i>=0; i--){
+      for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
         comentRepliesIds.push(reply._id);
-        commentRepliesObj[reply._id] = {comment: index, reply: comment.replies.length-1-i};
+        commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
           _id: reply._id,
           userId: reply.user._id,
