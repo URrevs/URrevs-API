@@ -33,7 +33,7 @@ const QuestionSchema = new schema({
         type: Number,
         default: 0
     },
-    shareCount: {
+    shares: {
         type: Number,
         default: 0
     }
