@@ -15,6 +15,7 @@ const unlikeAnswer = require("../utils/unlikeCommentOrAnswer");
 const likeReply = require("../utils/likeReply");
 const unlikeReply = require("../utils/unlikeReply");
 const lameTrack = require("../utils/lameTrack");
+const increaseShares = require("../utils/increaseShares");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -109,7 +110,7 @@ questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (re
         content: q.content,
         upvotes: q.upvotes,
         ansCount: q.ansCount,
-        shares: q.shareCount
+        shares: q.shares
       }
 
       return res.status(200).json({
@@ -201,7 +202,7 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
         content: q.content,
         upvotes: q.upvotes,
         ansCount: q.ansCount,
-        shares: q.shareCount
+        shares: q.shares
       }
 
       return res.status(200).json({
@@ -947,7 +948,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
       content: question.content,
       upvotes: question.upvotes,
       ansCount: question.ansCount,
-      shares: question.shareCount,
+      shares: question.shares,
       upvoted: false,
       acceptedAns: acceptedAns_
     };
@@ -1090,7 +1091,7 @@ questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verify
       content: question.content,
       upvotes: question.upvotes,
       ansCount: question.ansCount,
-      shares: question.shareCount,
+      shares: question.shares,
       upvoted: false,
       acceptedAns: acceptedAns_
     };
@@ -1257,7 +1258,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -1420,7 +1421,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -1584,7 +1585,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -1747,7 +1748,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -1909,7 +1910,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -2082,7 +2083,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
         content: ques.content,
         upvotes: ques.upvotes,
         ansCount: ques.ansCount,
-        shares: ques.shareCount,
+        shares: ques.shares,
         upvoted: false,
         acceptedAns: resultAns
       });
@@ -2278,7 +2279,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
           content: ques.content,
           upvotes: ques.upvotes,
           ansCount: ques.ansCount,
-          shares: ques.shareCount,
+          shares: ques.shares,
           upvoted: false,
           acceptedAns: resultAns
         });
@@ -2480,6 +2481,66 @@ questionRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenti
     });
   })
 });
+
+
+
+
+// increase the shares for phone question
+questionRouter.put("/phone/:reviewId/share", cors.cors, rateLimit, (req, res, next)=>{
+  increaseShares(PQUES, req.params.reviewId).then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from PUT /questions/phone/:reviewId/share: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+// increase the shares for company question
+questionRouter.put("/company/:reviewId/share", cors.cors, rateLimit, (req, res, next)=>{
+  increaseShares(CQUES, req.params.reviewId).then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from PUT /questions/company/:reviewId/share: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+
+
 
 
 
