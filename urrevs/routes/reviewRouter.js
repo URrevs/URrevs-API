@@ -2619,7 +2619,7 @@ reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit, (req, res, ne
 
 // I don't like this for a phone review
 reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2652,7 +2652,7 @@ reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verif
 
 // a user presses "see more" for a phone review
 reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, PHONE_REV_SEE_MORE, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(PHONE_REV_SEE_MORE, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2685,7 +2685,7 @@ reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit, authenticate.ve
 
 // a user presses "fullscreen" for a phone review
 reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, PHONE_REV_FULL_SCREEN, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(PHONE_REV_FULL_SCREEN, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2722,7 +2722,7 @@ reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate
 
 // I don't like this for a company review
 reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2755,7 +2755,7 @@ reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.ver
 
 // a user presses "see more" for a company review
 reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, COMPANY_REVS_SEE_MORE, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(COMPANY_REVS_SEE_MORE, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2788,7 +2788,7 @@ reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit, authenticate.
 
 // a user presses "fullscreen" for a company review
 reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CONSTANT, COMPANY_REVS_FULL_SCREEN, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(COMPANY_REVS_FULL_SCREEN, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
