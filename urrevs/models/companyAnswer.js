@@ -46,9 +46,6 @@ const AnswerSchema = new schema({
         type: Number,
         default: 0
     },
-    ownedAt: {
-        type: Date
-    },
     replies: [repliesSchema]
 },
 {

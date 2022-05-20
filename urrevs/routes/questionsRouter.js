@@ -550,7 +550,7 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
     });
   }
 
-  OWNED_PHONE.findOne({user: req.user._id, company: companyId}, {ownedAt: 1, _id: 0})
+  OWNED_PHONE.findOne({user: req.user._id, company: companyId}, {_id: 1})
   .then((own)=>{
     if(!own){
       return res.status(403).json({
@@ -571,14 +571,12 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
       CANS.create({
         user: req.user._id,
         question: question._id,
-        content: content,
-        ownedAt: own.ownedAt
+        content: content
       })
       .then((answer)=>{
         return res.status(200).json({
           success: true,
-          answer: answer._id,
-          ownedAt: own.ownedAt
+          answer: answer._id
         })
       })
       .catch((err)=>{
