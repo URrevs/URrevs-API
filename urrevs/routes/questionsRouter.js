@@ -1240,6 +1240,144 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 
 
 
+// mark an answer as accepted for company question
+questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+
+  let proms = [];
+  proms.push(CQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
+  proms.push(CANS.findById(req.params.ansId));
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
+
+  Promise.all(proms)
+  .then((result)=>{
+    let question = result[0];
+    let answer = result[1];
+    let lastQueryDoc = result[2];
+
+    let lastQuery;
+    if(lastQueryDoc){
+      lastQuery = lastQueryDoc.date;
+    }
+    else{
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+
+    if(!question || !answer){
+      return res.status(404).json({
+        success: false,
+        status: "question or answer not found"
+      });
+    }
+
+    if(!(answer.question.equals(question._id))){
+      return res.status(400).json({
+        success: false,
+        status: "not matched"
+      });
+    }
+
+
+    if(answer.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "not allowed"
+      });
+    }
+
+    if(!question.acceptedAns){
+      // there is no accepted answer yet
+      question.acceptedAns = answer._id;
+      let proms1 = [];
+      proms1.push(question.save());
+      proms1.push(CQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+
+      Promise.all(proms1)
+      .then(async (results1)=>{
+        let deleteResp = results1[1];
+
+        if(deleteResp){
+          await CQUES_ACCEPTED_CHANGED.create({user: req.user._id, question: question._id});
+        }
+        else{
+          await CQUES_ACCEPTED.create({user: req.user._id, question: question._id});
+        }
+
+        return res.status(200).json({
+          success: true
+        });
+
+      })
+      .catch((err)=>{
+        console.log("Error from POST /questions/company/:quesId/answers/:ansId/accept: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "saving the accepted answer failed or deleting the accepted removed document"
+        });
+      })
+    }
+    else{
+      // there is already an accepted answer
+      if(!(question.user.equals(req.user._id))){
+        return res.status(403).json({
+          success: false,
+          status: "not yours"
+        });
+      }
+  
+      if(question.acceptedAns.equals(answer._id)){
+        return res.status(400).json({
+          success: false,
+          status: "already accepted"
+        });
+      }
+
+      let oldAns = question.acceptedAns;
+      question.acceptedAns = answer._id;
+      let proms2 = [];
+      proms2.push(question.save());
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+
+      Promise.all(proms2)
+      .then(async (results2)=>{
+        let acceptedDoc = results2[3];
+
+        if(!acceptedDoc){
+          await CQUES_ACCEPTED_CHANGED.findOneAndUpdate({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}, {}, {upsert: true});
+        }
+
+        return res.status(200).json({
+          success: true
+        });
+        
+      })
+      .catch((err)=>{
+        console.log("Error from POST /questions/company/:quesId/answers/:ansId/accept: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "saving the accepted answer failed or updating the user points"
+        });
+      });
+    }
+
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:quesId/answers/:ansId/accept: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the company question and answer failed"
+    });
+  });
+});
+
+
+
+
 
 
 
