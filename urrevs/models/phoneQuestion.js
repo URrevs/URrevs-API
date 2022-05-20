@@ -46,6 +46,6 @@ const phoneQuestionSchema = new schema({
 phoneQuestionSchema.index({createdAt: -1});
 phoneQuestionSchema.index({phone: 1, upvotes: -1, createdAt: -1});
 phoneQuestionSchema.index({user: 1, upvotes: -1, createdAt: -1});
-phoneQuestionSchema.index({user: 1, phone: 1, ansCount: 1, upvotes: -1, createdAt: -1});
+phoneQuestionSchema.index({user: 1, phone: 1, acceptedAns: 1, upvotes: -1, createdAt: -1});
 
 module.exports = mongoose.model("pQues", phoneQuestionSchema);
