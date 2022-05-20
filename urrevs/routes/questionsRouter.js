@@ -32,6 +32,7 @@ const PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
 const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
 const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
 const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
+const QUESTIONS_OWNED_VISITS = require("../models/questionsAboutMyPohnesVisit");
 
 const config = require("../config");
 
@@ -1976,7 +1977,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
 
 
 // get questions about a certain company
-questionRouter.get("/company/on/companyId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.COMPANY_QUES_PER_ROUND|| config.COMPANY_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
@@ -2162,7 +2163,13 @@ questionRouter.get("/phone/owned", cors.cors, rateLimit, authenticate.verifyUser
       });
   }
 
-  OWNED_PHONE.find({user: req.user._id}).then((owns)=>{
+  let proms = [];
+  proms.push(OWNED_PHONE.find({user: req.user._id}));
+  proms.push(QUESTIONS_OWNED_VISITS.create({user: req.user._id}));
+
+  Promise.all(proms).then((results)=>{
+    let owns = results[0];
+
     if(owns.length == 0){
       return res.status(200).json({
         success: true,
