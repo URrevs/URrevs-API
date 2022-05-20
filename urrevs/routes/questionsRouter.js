@@ -2183,7 +2183,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
     }
 
     // get questions about those phones
-    PQUES.find({user: {$ne: req.user._id}, phone: {$in: phoneIds}, ansCount: 0})
+    PQUES.find({user: {$ne: req.user._id}, phone: {$in: phoneIds}, acceptedAns: null})
     .sort({upvotes: -1, createdAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
