@@ -7,44 +7,17 @@
 
 const config = require("../config");
 
-module.exports = (constantCollection, trackerCollection, resourceCollection, resourceId, user, resourceType)=>{
+module.exports = (trackerCollection, resourceCollection, resourceId, user, resourceType)=>{
     return new Promise((resolve, reject)=>{
-        let proms = [];
-        proms.push(resourceCollection.findById(resourceId, {_id: 1}));
-        proms.push(constantCollection.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
-        Promise.all(proms).then((results)=>{
-            let resource = results[0];
-            let lastQueryDoc = results[1];
-            let lastQuery;
-
+        resourceCollection.findById(resourceId, {_id: 1})
+        .then((resource)=>{
             if(!resource){
                 return resolve(404);
             }
 
-            if(!lastQueryDoc){
-                lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
-            }
-            else{
-                lastQuery = lastQueryDoc.date;
-            }
-
-            trackerCollection.findOne({user: user, [resourceType]: resource._id, createdAt: {$gte: lastQuery}}, 
-                {_id: 1})
-            .then((tracker)=>{
-                if(tracker){
-                    return resolve(403);
-                }
-
-                // create new tracker
-                trackerCollection.create({
-                    user: user,
-                    [resourceType]: resource._id
-                }).then((t)=>{
-                    return resolve(200);
-                })
-                .catch((error)=>{
-                    return reject({e: error, message: "Error in creating tracker"});
-                });
+            trackerCollection.findOneAndUpdate({user: user, [resourceType]: resource._id}, {$inc: {times: 1}}, {upsert: true})
+            .then(()=>{
+                return resolve(200);
             })
             .catch((error)=>{
                 return reject({e: error, message: "Error in finding the tracker"});

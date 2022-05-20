@@ -2346,6 +2346,24 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
 
 
 
+
+// lame tracking
+
+// "I don't like this" for phone question
+questionRouter.post("/phone/:quesId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+});
+
+
+
+
+
+
+
+
+
+
+
 // likes and unlikes
 /*
   Initially, the user didn't like the question before.

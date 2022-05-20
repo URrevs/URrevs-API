@@ -14,6 +14,10 @@ const trackSchema = new schema({
     review: {
         type: schema.Types.ObjectId,
         ref: "cRev"
+    },
+    times: {
+        type: Number,
+        default: 1
     }
 },
 {
@@ -22,6 +26,6 @@ const trackSchema = new schema({
 
 
 trackSchema.index({createdAt: 1});
-trackSchema.index({user:1, review: 1, createdAt: -1});
+trackSchema.index({user:1, review: 1});
 
 module.exports = mongoose.model("cRevsSeeMore", trackSchema);
