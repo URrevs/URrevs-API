@@ -24,7 +24,7 @@ const quesLikesSchema = new schema({
   timestamps: true
 });
 
-quesLikesSchema.index({createdAt: 1});
+quesLikesSchema.index({updatedAt: 1});
 quesLikesSchema.index({user: 1, question: 1});
 
 module.exports = mongoose.model('cQuesLike', quesLikesSchema);

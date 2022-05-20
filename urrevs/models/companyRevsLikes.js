@@ -24,7 +24,7 @@ const pRevsLikesSchema = new schema({
   timestamps: true
 });
 
-pRevsLikesSchema.index({createdAt: 1});
+pRevsLikesSchema.index({updatedAt: 1});
 pRevsLikesSchema.index({user: 1, review: 1});
 
 module.exports = mongoose.model('cRevsLike', pRevsLikesSchema);

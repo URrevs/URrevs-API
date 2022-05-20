@@ -32,7 +32,7 @@ const PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
 const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
 const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
 const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
-const QUESTIONS_OWNED_VISITS = require("../models/questionsAboutMyPohnesVisit");
+const QUESTIONS_OWNED_VISITS = require("../models/questionsAboutMyPhonesVisit");
 
 const config = require("../config");
 
@@ -2153,7 +2153,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
   1- get user's owned phones
   2- search for questions about those phones
 */
-questionRouter.get("/phone/owned", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.MY_OWNED_PHONES_QUES_PER_ROUND|| config.MY_OWNED_PHONES_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
@@ -2165,7 +2165,7 @@ questionRouter.get("/phone/owned", cors.cors, rateLimit, authenticate.verifyUser
 
   let proms = [];
   proms.push(OWNED_PHONE.find({user: req.user._id}));
-  proms.push(QUESTIONS_OWNED_VISITS.create({user: req.user._id}));
+  proms.push(QUESTIONS_OWNED_VISITS.findOneAndUpdate({_id: req.user._id}, {$inc: {numberOfVisits: 1}}, {upsert: true}));
 
   Promise.all(proms).then((results)=>{
     let owns = results[0];
@@ -2183,7 +2183,7 @@ questionRouter.get("/phone/owned", cors.cors, rateLimit, authenticate.verifyUser
     }
 
     // get questions about those phones
-    PQUES.find({phone: {$in: phoneIds}})
+    PQUES.find({user: {$ne: req.user._id}, phone: {$in: phoneIds}, ansCount: 0})
     .sort({upvotes: -1, createdAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
