@@ -42,10 +42,6 @@ const phoneAnswerSchema = new schema({
         type: String,
         required: true
     },
-    accepted: {
-        type: Boolean,
-        default: false
-    },
     likes: {
         type: Number,
         default: 0
@@ -60,5 +56,6 @@ const phoneAnswerSchema = new schema({
 });
 
 phoneAnswerSchema.index({createdAt: -1});
+phoneAnswerSchema.index({question: 1, likes: -1, createdAt: -1});
 
 module.exports = mongoose.model("pQuesAnswer", phoneAnswerSchema);

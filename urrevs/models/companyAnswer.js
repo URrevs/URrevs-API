@@ -42,10 +42,6 @@ const AnswerSchema = new schema({
         type: String,
         required: true
     },
-    accepted: {
-        type: Boolean,
-        default: false
-    },
     likes: {
         type: Number,
         default: 0

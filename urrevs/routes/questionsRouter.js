@@ -440,7 +440,7 @@ questionRouter.post("/phone/answers/:ansId/unlike", cors.cors, rateLimit, authen
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/answers/:answerId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -502,7 +502,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /questions/phone/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/phone/answers/:answerId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -723,7 +723,7 @@ questionRouter.post("/company/answers/:ansId/unlike", cors.cors, rateLimit, auth
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/answers/:answerId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -785,7 +785,7 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/unlike", cors.cors
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/answers/:answerId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -794,6 +794,271 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/unlike", cors.cors
   });
 });
 
+
+
+
+// get unaccepted answers for a a phone question
+questionRouter.get("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.PHONE_QUES_ANSWERS_PER_ROUND || config.PHONE_QUES_ANSWERS_PER_ROUND));
+  let roundNum = req.query.round;
+
+  if(roundNum == null || isNaN(roundNum)){
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "application/json");
+      res.json({success: false, status: "bad request"});
+      return;
+  }
+
+  // get the question
+  PQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
+
+    if(!question){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+
+    PANS.find({question: req.params.quesId, _id: {$ne: question.acceptedAns}})
+    .sort({likes: -1, createdAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("user", {name: 1, picture: 1})
+    .populate("replies.user", {name: 1, picture: 1})
+    .then(async(answers)=>{
+      let resultAnswers = [];
+      let answerIds = [];
+      let answersObj = {};
+      let comentRepliesIds = [];
+      let answerRepliesObj = {};
+      
+      for(let [index,answer] of answers.entries()){
+        
+        answerIds.push(answer._id);
+        answersObj[answer._id] = index;
+  
+        let resultAnswer = {
+          _id: answer._id,
+          userId: answer.user._id,
+          userName: answer.user.name,
+          picture: answer.user.picture,
+          content: answer.content,
+          createdAt: answer.createdAt,
+          upvotes: answer.likes,
+          ownedAt: answer.ownedAt,
+          upvoted: false,
+          replies: []
+        };
+  
+  
+        for(let i=0; i<answer.replies.length; i++){
+          let reply = answer.replies[i];
+          comentRepliesIds.push(reply._id);
+          answerRepliesObj[reply._id] = {answer: index, reply: i};
+          resultAnswer.replies.push({
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            picture: reply.user.picture,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+          });
+        }
+        resultAnswers.push(resultAnswer);
+      }
+  
+      if(req.user){
+        // check if the user has liked any of the answers or replies
+        let answersLikes;
+        let repliesLikes;
+        let proms = [];
+        proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+        proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
+        try{
+          let results = await Promise.all(proms);
+          answersLikes = results[1];
+          repliesLikes = results[0];
+        }
+        catch(err){
+          console.log("Error from GET /questions/phone/:quesId/answers: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "finding the user likes on answers failed"
+          });
+        }
+        // liked state for answers
+        for(let answerLike of answersLikes){
+          resultAnswers[answersObj[answerLike.answer]].upvoted = true;
+        }
+        // liked state for replies
+        for(let replyLike of repliesLikes){
+          let location = answerRepliesObj[replyLike.reply];
+          resultAnswers[location.answer].replies[location.reply].liked = true;
+        }
+      }
+  
+      return res.status(200).json({
+        success: true,
+        answers: resultAnswers
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from GET /questions/phone/:quesId/answers: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the phone review answers failed"
+      });
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /questions/phone/:quesId/answers: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
+
+
+
+
+
+
+
+
+// get unaccepted answers for a a company question
+questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.COMPANY_QUES_ANSWERS_PER_ROUND || config.COMPANY_QUES_ANSWERS_PER_ROUND));
+  let roundNum = req.query.round;
+
+  if(roundNum == null || isNaN(roundNum)){
+      res.statusCode = 400;
+      res.setHeader("Content-Type", "application/json");
+      res.json({success: false, status: "bad request"});
+      return;
+  }
+
+  // get the question
+  PQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
+
+    if(!question){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+
+    CANS.find({question: req.params.quesId, _id: {$ne: question.acceptedAns}})
+    .sort({likes: -1, createdAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("user", {name: 1, picture: 1})
+    .populate("replies.user", {name: 1, picture: 1})
+    .then(async(answers)=>{
+      let resultAnswers = [];
+      let answerIds = [];
+      let answersObj = {};
+      let comentRepliesIds = [];
+      let answerRepliesObj = {};
+      
+      for(let [index,answer] of answers.entries()){
+        
+        answerIds.push(answer._id);
+        answersObj[answer._id] = index;
+  
+        let resultAnswer = {
+          _id: answer._id,
+          userId: answer.user._id,
+          userName: answer.user.name,
+          picture: answer.user.picture,
+          content: answer.content,
+          createdAt: answer.createdAt,
+          upvotes: answer.likes,
+          ownedAt: answer.ownedAt,
+          upvoted: false,
+          replies: []
+        };
+  
+  
+        for(let i=0; i<answer.replies.length; i++){
+          let reply = answer.replies[i];
+          comentRepliesIds.push(reply._id);
+          answerRepliesObj[reply._id] = {answer: index, reply: i};
+          resultAnswer.replies.push({
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            picture: reply.user.picture,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+          });
+        }
+        resultAnswers.push(resultAnswer);
+      }
+  
+      if(req.user){
+        // check if the user has liked any of the answers or replies
+        let answersLikes;
+        let repliesLikes;
+        let proms = [];
+        proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+        proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
+        try{
+          let results = await Promise.all(proms);
+          answersLikes = results[1];
+          repliesLikes = results[0];
+        }
+        catch(err){
+          console.log("Error from GET /questions/company/:quesId/answers: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "finding the user likes on answers failed"
+          });
+        }
+        // liked state for answers
+        for(let answerLike of answersLikes){
+          resultAnswers[answersObj[answerLike.answer]].upvoted = true;
+        }
+        // liked state for replies
+        for(let replyLike of repliesLikes){
+          let location = answerRepliesObj[replyLike.reply];
+          resultAnswers[location.answer].replies[location.reply].liked = true;
+        }
+      }
+  
+      return res.status(200).json({
+        success: true,
+        answers: resultAnswers
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from GET /questions/company/:quesId/answers: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "internal server error",
+        err: "Finding the phone review answers failed"
+      });
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from GET /questions/company/:quesId/answers: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  });
+});
 
 
 
