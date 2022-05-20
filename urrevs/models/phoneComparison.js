@@ -18,12 +18,16 @@ const pComparisonSchema = new schema({
     dstPhone: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
+    },
+    times: {
+        type: Number,
+        default: 1
     }
 }, 
 {
     timestamps: true
 });
 
-pComparisonSchema.index({createdAt: 1});
+pComparisonSchema.index({updatedAt: 1});
 
 module.exports = mongoose.model("PhoneComparison", pComparisonSchema);
