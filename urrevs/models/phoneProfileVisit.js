@@ -14,12 +14,17 @@ const pProfileVisitsSchema = new schema({
     phone: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Phone"
+    },
+    times: {
+        type: Number,
+        default: 1
     }
 }, 
 {
     timestamps: true
 });
 
-pProfileVisitsSchema.index({createdAt: 1});
+pProfileVisitsSchema.index({updatedAt: 1});
+pProfileVisitsSchema.index({user: 1, phone: 1});
 
 module.exports = mongoose.model("PhoneProfileVisit", pProfileVisitsSchema);

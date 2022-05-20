@@ -25,7 +25,7 @@ const trackSchema = new schema({
 });
 
 
-trackSchema.index({createdAt: 1});
+trackSchema.index({updatedAt: 1});
 trackSchema.index({user:1, question: 1});
 
 module.exports = mongoose.model("pQuesHate", trackSchema);
