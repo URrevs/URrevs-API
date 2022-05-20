@@ -339,11 +339,11 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit, authentica
             return;
         }
         else{
-            PHONECOMPARISON.create({
+            PHONECOMPARISON.findOneAndUpdate({
                 user: req.user._id,
                 srcPhone: req.params.phone1Id,
                 dstPhone: req.params.phone2Id 
-            })
+            }, {$inc: {times: 1}}, {upsert: true})
             .then((compare)=>{
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "application/json");
