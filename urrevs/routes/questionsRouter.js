@@ -1134,7 +1134,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
     }
 
     if(!(answer.question.equals(question._id))){
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         status: "not matched"
       });
@@ -1174,7 +1174,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
 
       })
@@ -1213,7 +1214,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
         
       })
@@ -1270,7 +1272,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
     }
 
     if(!(answer.question.equals(question._id))){
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         status: "not matched"
       });
@@ -1310,7 +1312,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
 
       })
@@ -1349,7 +1352,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
         
       })
@@ -1429,7 +1433,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
     }
 
     if(!(answer.question.equals(question._id))){
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         status: "not matched"
       });
@@ -1484,7 +1488,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
 
       })
@@ -1558,7 +1563,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
     }
 
     if(!(answer.question.equals(question._id))){
-      return res.status(400).json({
+      return res.status(404).json({
         success: false,
         status: "not matched"
       });
@@ -1613,7 +1618,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
         }
 
         return res.status(200).json({
-          success: true
+          success: true,
+          id: answer._id
         });
 
       })
