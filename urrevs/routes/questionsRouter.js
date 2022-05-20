@@ -1882,7 +1882,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
 
         }
         catch(err){
-          console.log("Error from GET /questions/phone/by/:userId: ", err);
+          console.log("Error from GET /questions/phone/on/:phoneId: ", err);
           return res.status(500).json({
             success: false,
             status: "internal server error",
@@ -1917,40 +1917,40 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
       proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
       proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
-      Promise.all(proms)
-      .then((likes)=>{
+      try{
+        let likes = await Promise.all(proms);
         let quesLike = likes[0];
         let ansLike = likes[1];
         let replyLikes = likes[2];
-
+  
         for(let like of quesLike){
           let id = like.question;
           resultQuess[quesObj[id]].upvoted = true;
         }
-
+  
         for(let like of ansLike){
           let id = like.answer;
           resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
         }
-
+  
         for(let like of replyLikes){
           let id = like.reply;
           resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
         }
-
+  
         return res.status(200).json({
           success: true,
           questions: resultQuess
         });
-      })
-      .catch((err)=>{
-        console.log("Error from GET /questions/phone/by/:userId: ", err);
+      }
+      catch(err){
+        console.log("Error from GET /questions/phone/on/:phoneId: ", err);
         return res.status(500).json({
           success: false,
           status: "internal server error",
           err: "finding the likes failed"
         });
-      });
+      }
     }
     else{
       return res.status(200).json({
@@ -2055,7 +2055,7 @@ questionRouter.get("/company/on/companyId", cors.cors, rateLimit, authenticate.v
 
         }
         catch(err){
-          console.log("Error from GET /questions/company/by/:userId: ", err);
+          console.log("Error from GET /questions/company/on/:companyId: ", err);
           return res.status(500).json({
             success: false,
             status: "internal server error",
@@ -2090,40 +2090,40 @@ questionRouter.get("/company/on/companyId", cors.cors, rateLimit, authenticate.v
       proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
       proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
-      Promise.all(proms)
-      .then((likes)=>{
+      try{
+        let likes = await Promise.all(proms);
         let quesLike = likes[0];
         let ansLike = likes[1];
         let replyLikes = likes[2];
-
+  
         for(let like of quesLike){
           let id = like.question;
           resultQuess[quesObj[id]].upvoted = true;
         }
-
+  
         for(let like of ansLike){
           let id = like.answer;
           resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
         }
-
+  
         for(let like of replyLikes){
           let id = like.reply;
           resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
         }
-
+  
         return res.status(200).json({
           success: true,
           questions: resultQuess
         });
-      })
-      .catch((err)=>{
-        console.log("Error from GET /questions/company/by/:userId: ", err);
+      }
+      catch(err){
+        console.log("Error from GET /questions/company/on/:companyId: ", err);
         return res.status(500).json({
           success: false,
           status: "internal server error",
           err: "finding the likes failed"
         });
-      });
+      }
     }
     else{
       return res.status(200).json({
@@ -2143,6 +2143,14 @@ questionRouter.get("/company/on/companyId", cors.cors, rateLimit, authenticate.v
   });
 });
 
+
+
+
+
+// get questions about my owned phones
+questionRouter.get("/phone/owned", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+
+});
 
 
 
