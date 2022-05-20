@@ -284,10 +284,10 @@ authenticate.verifyFlexible, (req, res, next)=>{
         if(req.user){
             // an authenticated user has triggered the tracker
             // track the activity
-            PHONEPROFILEVISIT.create({
+            PHONEPROFILEVISIT.findOneAndUpdate({
                 user: req.user._id,
                 phone: req.params.phoneId
-            }).then((visit)=>{})
+            }, {$inc: {times: 1}}, {upsert: true}).then((visit)=>{})
             .catch((err)=>{
                 console.log("Error from /phones/:phoneId/stats: ", err);
                 res.statusCode = 500;
