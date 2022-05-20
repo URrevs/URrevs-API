@@ -869,7 +869,7 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/unlike", cors.cors
 // get a certain phone question
 questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  PQUES.findById(req.params.quesId).populate("phone", {name: 1})
+  PQUES.findById(req.params.quesId).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1})
   .then(async(question)=>{
 
     if(!question){
@@ -1012,7 +1012,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
 // get a certain company question
 questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  CQUES.findById(req.params.quesId).populate("company", {name: 1})
+  CQUES.findById(req.params.quesId).populate("company", {name: 1}).populate("user", {name: 1, picture: 1})
   .then(async(question)=>{
 
     if(!question){
