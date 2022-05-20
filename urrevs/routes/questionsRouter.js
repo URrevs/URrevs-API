@@ -14,6 +14,7 @@ const likeAnswer = require("../utils/likeCommentOrAnswer");
 const unlikeAnswer = require("../utils/unlikeCommentOrAnswer");
 const likeReply = require("../utils/likeReply");
 const unlikeReply = require("../utils/unlikeReply");
+const lameTrack = require("../utils/lameTrack");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -33,6 +34,10 @@ const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
 const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
 const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
 const QUESTIONS_OWNED_VISITS = require("../models/questionsAboutMyPhonesVisit");
+const PQUES_HATE = require("../models/phoneQuesHated");
+const PQUES_FULL_SCREEN = require("../models/phoneQuesFullScreen");
+const CQUES_HATE = require("../models/companyQuesHated");
+const CQUES_FULL_SCREEN = require("../models/companyQuesFullScreen");
 
 const config = require("../config");
 
@@ -434,7 +439,7 @@ questionRouter.post("/phone/answers/:ansId/unlike", cors.cors, rateLimit, authen
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -496,7 +501,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/phone/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/phone/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -717,7 +722,7 @@ questionRouter.post("/company/answers/:ansId/unlike", cors.cors, rateLimit, auth
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -779,7 +784,7 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/unlike", cors.cors
     }
   })
   .catch((err)=>{
-    console.log("Error from POST /reviews/company/comments/:commentId/unlike: ", err.e);
+    console.log("Error from POST /questions/company/comments/:commentId/unlike: ", err.e);
     return res.status(500).json({
       success: false,
       status: "internal server error",
@@ -2350,15 +2355,131 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
 // lame tracking
 
 // "I don't like this" for phone question
-questionRouter.post("/phone/:quesId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  
+questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(PQUES_HATE, PQUES, req.params.revId, req.user._id, "question").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
 });
 
 
 
 
+// "I don't like this" for company question
+questionRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CQUES_HATE, CQUES, req.params.revId, req.user._id, "question").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:revId/hate: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
 
 
+
+// a user presses fullscreen for phone question
+questionRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(PQUES_FULL_SCREEN, PQUES, req.params.revId, req.user._id, "question").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:revId/fullscreen: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
+
+
+
+// a user presses fullscreen for company question
+questionRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  lameTrack(CQUES_FULL_SCREEN, CQUES, req.params.revId, req.user._id, "question").then((result)=>{
+    if(result == 404){
+      return res.status(404).json({
+        success: false,
+        status: "question not found"
+      });
+    }
+    else if(result == 403){
+      return res.status(403).json({
+        success: false
+      });
+    }
+    else{
+      return res.status(200).json({
+        success: true
+      });
+    }
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:revId/fullscreen: ", err.e);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: err.message
+    });
+  })
+});
 
 
 
