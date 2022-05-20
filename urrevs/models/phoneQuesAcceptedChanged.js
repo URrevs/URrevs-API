@@ -21,6 +21,6 @@ const quesSchema = new schema({
 });
 
 quesSchema.index({createdAt: 1});
-quesSchema.index({user: 1, question: 1});
+quesSchema.index({user: 1, question: 1, createdAt: -1});
 
 module.exports = mongoose.model('pQuesAcceptedChanged', quesSchema);
