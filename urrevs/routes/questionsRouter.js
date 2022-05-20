@@ -103,7 +103,7 @@ questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (re
         content: q.content,
         upvotes: q.upvotes,
         ansCount: q.ansCount,
-        shareCount: q.shareCount
+        shares: q.shareCount
       }
 
       return res.status(200).json({
@@ -195,7 +195,7 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
         content: q.content,
         upvotes: q.upvotes,
         ansCount: q.ansCount,
-        shareCount: q.shareCount
+        shares: q.shareCount
       }
 
       return res.status(200).json({
