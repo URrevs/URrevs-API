@@ -1088,6 +1088,7 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
     2-  check if both exist, 
         the request owner is the author of question, 
         the answer belongs to this question
+        the answer is not made by the question author
     3- check if the question doesn't already have the answer as accepted 
     4- if the question doesn't have an accepted answer, 
           add the answerId as an accepted answer
@@ -1108,7 +1109,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 
   let proms = [];
   proms.push(PQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(PANS.findById(req.params.ansId));
+  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1139,6 +1140,12 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       });
     }
 
+    if(!(question.user.equals(req.user._id))){
+      return res.status(403).json({
+        success: false,
+        status: "not yours"
+      });
+    }
 
     if(answer.user.equals(req.user._id)){
       return res.status(403).json({
@@ -1182,13 +1189,6 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
     }
     else{
       // there is already an accepted answer
-      if(!(question.user.equals(req.user._id))){
-        return res.status(403).json({
-          success: false,
-          status: "not yours"
-        });
-      }
-  
       if(question.acceptedAns.equals(answer._id)){
         return res.status(400).json({
           success: false,
@@ -1245,7 +1245,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
 
   let proms = [];
   proms.push(CQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(CANS.findById(req.params.ansId));
+  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1276,6 +1276,12 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       });
     }
 
+    if(!(question.user.equals(req.user._id))){
+      return res.status(403).json({
+        success: false,
+        status: "not yours"
+      });
+    }
 
     if(answer.user.equals(req.user._id)){
       return res.status(403).json({
@@ -1319,13 +1325,6 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
     }
     else{
       // there is already an accepted answer
-      if(!(question.user.equals(req.user._id))){
-        return res.status(403).json({
-          success: false,
-          status: "not yours"
-        });
-      }
-  
       if(question.acceptedAns.equals(answer._id)){
         return res.status(400).json({
           success: false,
@@ -1399,9 +1398,248 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
     4- remove this answer from being accepted for this question
     5- deduct points from the author of the answer
     6- if there is a document indicating that the question got an accepted answer, remove it then return
-    7- if there is a document indicating that the question has its accepted answer changed, remove it then return
-    8- otherwise, create a document indicating that the question has its accepted answer removed then return
+    7- else remove the document indicating that the question has its accepted answer changed (if exists), then create a document indicating that the question has its accepted answer removed then return
 */
+questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+
+  let proms = [];
+  proms.push(PQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
+  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
+
+  Promise.all(proms)
+  .then((results)=>{
+    let question = results[0];
+    let answer = results[1];
+    let lastQueryDoc = results[2];
+
+    let lastQuery;
+    if(lastQueryDoc){
+      lastQuery = lastQueryDoc.date;
+    }
+    else{
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+
+    if(!question || !answer){
+      return res.status(404).json({
+        success: false,
+        status: "question or answer not found"
+      });
+    }
+
+    if(!(answer.question.equals(question._id))){
+      return res.status(400).json({
+        success: false,
+        status: "not matched"
+      });
+    }
+
+    if(!(question.user.equals(req.user._id))){
+      return res.status(403).json({
+        success: false,
+        status: "not yours"
+      });
+    }
+
+    if(answer.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "not allowed"
+      });
+    }
+
+    if(!question.acceptedAns){
+      // there is no accepted answer yet
+      return res.status(400).json({
+        success: false,
+        status: "not yet"
+      });
+    }
+    else{
+      // there is already an accepted answer
+      if(!(question.acceptedAns.equals(answer._id))){
+        return res.status(400).json({
+          success: false,
+          status: "not accepted"
+        });
+      }
+
+      question.acceptedAns = null;
+      let proms2 = [];
+      proms2.push(question.save());
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(PQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+
+      Promise.all(proms2)
+      .then(async (results2)=>{
+        let deleteResp = results2[2];
+
+        if(!deleteResp){
+          let proms3 = [];
+          proms3.push(PQUES_ACCEPTED_CHANGED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+          proms.push(PQUES_ACCEPTED_REMOVED.create({user: req.user._id, question: question._id}))
+          
+          await Promise.all(proms3);
+        }
+
+        return res.status(200).json({
+          success: true
+        });
+
+      })
+      .catch((err)=>{
+        console.log("Error from POST /questions/phone/:quesId/answers/:ansId/unmark: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "saving the accepted answer failed or deleting the accepted removed document"
+        });
+      });
+    }
+
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/phone/:quesId/answers/:ansId/unmark: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the phone question and answer failed"
+    });
+  });
+
+});
+
+
+
+
+
+
+
+// unmark an answer from being accepted for a company question
+/*
+  steps:
+    1- extract the request body (questionId, answerId)
+    2-  check if both exist, 
+        the request owner is the author of question, 
+        the answer belongs to this question
+    3- check if the question has already this answer as an accepted answer
+    4- remove this answer from being accepted for this question
+    5- deduct points from the author of the answer
+    6- if there is a document indicating that the question got an accepted answer, remove it then return
+    7- else remove the document indicating that the question has its accepted answer changed (if exists), then create a document indicating that the question has its accepted answer removed then return
+*/
+questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+
+  let proms = [];
+  proms.push(CQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
+  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
+
+  Promise.all(proms)
+  .then((results)=>{
+    let question = results[0];
+    let answer = results[1];
+    let lastQueryDoc = results[2];
+
+    let lastQuery;
+    if(lastQueryDoc){
+      lastQuery = lastQueryDoc.date;
+    }
+    else{
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+
+    if(!question || !answer){
+      return res.status(404).json({
+        success: false,
+        status: "question or answer not found"
+      });
+    }
+
+    if(!(answer.question.equals(question._id))){
+      return res.status(400).json({
+        success: false,
+        status: "not matched"
+      });
+    }
+
+    if(!(question.user.equals(req.user._id))){
+      return res.status(403).json({
+        success: false,
+        status: "not yours"
+      });
+    }
+
+    if(answer.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "not allowed"
+      });
+    }
+
+    if(!question.acceptedAns){
+      // there is no accepted answer yet
+      return res.status(400).json({
+        success: false,
+        status: "not yet"
+      });
+    }
+    else{
+      // there is already an accepted answer
+      if(!(question.acceptedAns.equals(answer._id))){
+        return res.status(400).json({
+          success: false,
+          status: "not accepted"
+        });
+      }
+
+      question.acceptedAns = null;
+      let proms2 = [];
+      proms2.push(question.save());
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(CQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+
+      Promise.all(proms2)
+      .then(async (results2)=>{
+        let deleteResp = results2[2];
+
+        if(!deleteResp){
+          let proms3 = [];
+          proms3.push(CQUES_ACCEPTED_CHANGED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+          proms.push(CQUES_ACCEPTED_REMOVED.create({user: req.user._id, question: question._id}))
+          
+          await Promise.all(proms3);
+        }
+
+        return res.status(200).json({
+          success: true
+        });
+
+      })
+      .catch((err)=>{
+        console.log("Error from POST /questions/company/:quesId/answers/:ansId/unmark: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "saving the accepted answer failed or deleting the accepted removed document"
+        });
+      });
+    }
+
+  })
+  .catch((err)=>{
+    console.log("Error from POST /questions/company/:quesId/answers/:ansId/unmark: ", err);
+    return res.status(500).json({
+      success: false,
+      status: "internal server error",
+      err: "finding the company question and answer failed"
+    });
+  });
+
+});
+
+
 
 
 
