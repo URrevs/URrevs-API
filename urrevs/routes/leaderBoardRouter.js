@@ -124,7 +124,7 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
 
 
 // get the info of the latest competition
-leaderBoardRouter.get("/latest", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+leaderBoardRouter.get("/latest", cors.cors, rateLimit, (req, res, next)=>{
     COMPETITION.findOne({}).sort({createdAt: -1}).then((comp)=>{
         if(!comp){
             return res.status(404).json({
@@ -163,8 +163,8 @@ leaderBoardRouter.get("/latest", cors.cors, rateLimit, authenticate.verifyUser, 
 
 
 
-// get the top 20 users
-leaderBoardRouter.get("/top", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+// get the top users
+leaderBoardRouter.get("/top", cors.cors, rateLimit, (req, res, next)=>{
     let topUsers = parseInt(process.env.TOP_USERS || config.TOP_USERS);
 
     // get the latest competition
