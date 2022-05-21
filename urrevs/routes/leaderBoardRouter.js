@@ -12,6 +12,7 @@ const rateLimit = require("../utils/rateLimit/regular");
 const COMPETITION = require("../models/competition");
 const USER = require("../models/user");
 const authenticate = require("../utils/authenticate");
+const config = require("../config");
 
 
 // preflight
@@ -156,7 +157,64 @@ leaderBoardRouter.get("/latest", cors.cors, rateLimit, (req, res, next)=>{
 
 // get the top 20 users
 leaderBoardRouter.get("/top", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    let topUsers = parseInt(process.env.TOP_USERS || config.TOP_USERS);
 
+    // get the latest competition
+    COMPETITION.findOne({}).sort({createdAt: -1})
+    .then(async(comp)=>{
+        let top;
+        if(!comp || Date.parse(comp.deadline) < Date.now()){
+            // no competition or competition is over
+            // sort by absPoints
+            try{
+                let topDocs = await USER.find({}, {name: 1, picture: 1, absPoints: 1}).sort({absPoints: -1}).limit(topUsers);
+                top = topDocs.map((user)=>{
+                    return {
+                        _id: user._id,
+                        name: user.name,
+                        picture: user.picture,
+                        points: user.absPoints
+                    };
+                });
+            }
+            catch(err){
+                console.log("Error from GET absPoints /competitions/top: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "internal server error",
+                    err: "find users error"
+                });
+            }
+        }
+        else{
+            // competition is running
+            // sort by comPoints
+            try{
+                let topDocs = await USER.find({}, {name: 1, picture: 1, comPoints: 1}).sort({comPoints: -1}).limit(topUsers);
+                top = topDocs.map((user)=>{
+                    return {
+                        _id: user._id,
+                        name: user.name,
+                        picture: user.picture,
+                        points: user.comPoints
+                    };
+                });
+            }
+            catch(err){
+                console.log("Error from GET comPoints /competitions/top: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "internal server error",
+                    err: "find users error"
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            users: top
+        });
+    });
 });
 
 

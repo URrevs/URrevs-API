@@ -43,5 +43,6 @@ const userSchema = new schema({
 
 userSchema.index({createdAt: -1});
 userSchema.index({comPoints: -1});
+userSchema.index({absPoints: -1});
 
 module.exports = mongoose.model("User", userSchema);
