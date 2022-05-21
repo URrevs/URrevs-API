@@ -28,7 +28,7 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
                 proms.push(likeCollection.create({user: user, [resourceType]: resourceId}))
                 if(resourceType == "answer"){
                     // if the resource is answer, give the answer author points
-                    proms.push(USER.findByIdAndUpdate(resoruce.user, {$inc: {comPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.process.env.ANSWER_LIKE_POINTS)}}))
+                    proms.push(USER.findByIdAndUpdate(resoruce.user, {$inc: {comPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}}))
                 }
                 
                 Promise.all(proms)
