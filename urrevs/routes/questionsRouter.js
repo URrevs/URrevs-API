@@ -949,7 +949,7 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
   }
 
   // get the question
-  PQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
+  CQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
 
     if(!question){
       return res.status(404).json({
@@ -2050,7 +2050,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
 
     // check liked state
     let proms = [];
-    //proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    //proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
     proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
     proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -2213,7 +2213,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
 
     // check liked state
     let proms = [];
-    //proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    //proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
     proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
     proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -2377,7 +2377,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
 
     // check liked state
     let proms = [];
-    proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
     proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
     proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -2540,7 +2540,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
 
     // check liked state
     let proms = [];
-    proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+    proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
     proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
     proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -2703,7 +2703,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
     if(req.user){
       // check liked state
       let proms = [];
-      proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+      proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
       proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
       proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -2876,7 +2876,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
     if(req.user){
       // check liked state
       let proms = [];
-      proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+      proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
       proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
       proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
@@ -3071,7 +3071,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
   
       // check liked state
       let proms = [];
-      proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}}));
+      proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
       proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
       proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
   
