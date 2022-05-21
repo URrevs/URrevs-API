@@ -129,24 +129,24 @@ userRouter.get("/logout", cors.cors, rateLimit, authenticate.verifyUser, (req, r
 
 // get my profile
 userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-    USER.findById(req.user._id).then((user)=>{
+    try{
         let result = {};
-        result._id = user._id;
-        result.name = user.name;
-        result.picture = user.picture;
-        result.refCode = user.refCode;
-        result.points = user.absPoints + user.comPoints;
+        result._id = req.user._id;
+        result.name = req.user.name;
+        result.picture = req.user.picture;
+        result.refCode = req.user.refCode;
+        result.points = req.user.absPoints + req.user.comPoints;
         
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json({success: true, user: result});
-    })
-    .catch((err)=>{
-        console.log("Error from /users/myprofile: ", err);
+    }
+    catch(err){
+        console.log("Error from /profile: ", err);
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({success: false, status: "process failed"});
-    });
+    }
 });
 
 

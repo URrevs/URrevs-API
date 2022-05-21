@@ -108,7 +108,7 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
 
     })
     .catch((err)=>{
-        console.log("Error from POST /leaderboard/competitions: ", err);
+        console.log("Error from POST /competitions: ", err);
         return res.status(500).json({
           success: false,
           status: "internal server error",
@@ -145,6 +145,14 @@ leaderBoardRouter.get("/latest", cors.cors, rateLimit, (req, res, next)=>{
         res.status(200).json({
             success: true,
             competition: result
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from GET /competitions/latest: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "find competition error"
         });
     });
 });
@@ -210,14 +218,86 @@ leaderBoardRouter.get("/top", cors.cors, rateLimit, authenticate.verifyUser, (re
             }
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             users: top
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from GET /competitions/top: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "find competition error"
         });
     });
 });
 
 
+
+
+
+
+// get my rank
+leaderBoardRouter.get("/rank", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    // get the latest competition
+    COMPETITION.findOne({}).sort({createdAt: -1})
+    .then(async(comp)=>{
+        let result;
+        let points;
+        if(!comp || Date.parse(comp.deadline) < Date.now()){
+            // no competition or competition is over
+            // sort by absPoints
+            points = req.user.absPoints;
+            try{
+                result = await USER.find({}).sort({absPoints: -1}).find({absPoints: {$gte: req.user.absPoints}, _id: {$lte: req.user._id}}).count();
+            }
+            catch(err){
+                console.log("Error from GET absPoints /competitions/rank: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "internal server error",
+                    err: "find users error"
+                });
+            }
+        }
+        else{
+            // competition is running
+            // sort by comPoints
+            points = req.user.comPoints;
+            try{
+                result = await USER.find({}).sort({comPoints: -1}).find({comPoints: {$gte: req.user.comPoints}, _id: {$lte: req.user._id}}).count();
+            }
+            catch(err){
+                console.log("Error from GET comPoints /competitions/rank: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "internal server error",
+                    err: "find users error"
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            user: {
+                _id: req.user._id,
+                name: req.user.name,
+                picture: req.user.picture,
+                points: points,
+                rank: result
+            }
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from GET /competitions/rank: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "find competition error"
+        });
+    })
+});
 
 
 
