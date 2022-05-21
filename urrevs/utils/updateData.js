@@ -48,6 +48,48 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
 }
 
 
+
+const convertFromINRtoEUR = async(conversion, backup)=>{
+  if(!conversion){
+    // Get latest conversions from USD to EUR
+    let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
+    let rates, oneEur, oneUsd, usdToeur;
+    try{
+      const {data: exRates} = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"INR,EUR"}}, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+      rates = exRates.rates;
+      oneEur = rates.EUR;
+      oneUsd = rates.INR;
+      usdToeur = oneEur / oneUsd;
+      
+      await CONSTANT.findOneAndUpdate({name: "INRToEUR"}, [{$set: {value: usdToeur.toString(), date: new Date()}}], {upsert: true});
+      
+      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and INR = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
+      return usdToeur;
+    }
+    catch(e){
+      try{
+        let constDoc = await CONSTANT.findOne({name: "INRToEUR"});
+        if(constDoc == null){
+          console.log("Auto Conversion failed due to API connection error: Using the backup value which is ", backup);
+          return backup;
+        }
+        else{
+          console.log("Auto Conversion failed due to API connection error: Using the latest stored value which is ", parseFloat(constDoc.value));
+          return parseFloat(constDoc.value);
+        }
+      }
+      catch(e){
+        console.log("Auto Conversion failed due to API connection error and we couldn't fetch the latest value from the database: Using the backup value which is ", backup);
+        return backup;
+      }
+    }
+  }
+  else{
+    return conversion;
+  }
+}
+
+
 /*
     Asynchronous delay
     use "await" to halt the execution until the delay finishes
@@ -127,7 +169,9 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       let startTime = new Date();
       console.log("Started the update operation at: ", startTime);
       let conversionFromUSDtoEur = null;
+      let conversionFromINRtoEur = null
       let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
+      let INR_TO_EUR = parseFloat(process.env.INR_TO_EUR) || config.INR_TO_EUR;
       let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
       let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
       let SOURCE = config.SOURCE;
@@ -1038,11 +1082,20 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                       conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
                       miscPrice = parseFloat(miscPriceAll[1]) * conversionFromUSDtoEur;
                     }
+                    else if(currency.match(new RegExp("INR", "i"))){
+                      conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
+                      miscPrice = parseFloat(miscPriceAll[1]) * conversionFromINRtoEur;
+                    }
                   }
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
                     conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
                     miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromUSDtoEur;
+                  }
+                  else if(miscPriceAll[1][0] == "₹"){
+                    // currency = "inr";
+                    conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
+                    miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromINRtoEur;
                   }
                 }
                 else{
@@ -1063,7 +1116,17 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                       miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
                     }
                     catch(e){
-                      miscPrice = null;
+                      try{
+                        let euroPrice = miscPriceAll.filter((item)=>{
+                          return item[0] == "₹";
+                        })[0];
+  
+                        conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
+                        miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromINRtoEur;
+                      }
+                      catch(e){
+                        miscPrice = null;
+                      }
                     }
                   }
                 }
