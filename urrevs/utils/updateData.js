@@ -6,7 +6,7 @@ const https = require("https");
 const CONSTANT = require("../models/constants");
 
 
-
+// from dollar to euro
 const convertFromUSDtoEUR = async(conversion, backup)=>{
   if(!conversion){
     // Get latest conversions from USD to EUR
@@ -48,7 +48,7 @@ const convertFromUSDtoEUR = async(conversion, backup)=>{
 }
 
 
-
+// from indian rupee to euro
 const convertFromINRtoEUR = async(conversion, backup)=>{
   if(!conversion){
     // Get latest conversions from USD to EUR
@@ -63,7 +63,7 @@ const convertFromINRtoEUR = async(conversion, backup)=>{
       
       await CONSTANT.findOneAndUpdate({name: "INRToEUR"}, [{$set: {value: usdToeur.toString(), date: new Date()}}], {upsert: true});
       
-      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and INR = ", oneUsd, " and the conversion from USD to EUR = ", usdToeur);
+      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and INR = ", oneUsd, " and the conversion from INR to EUR = ", usdToeur);
       return usdToeur;
     }
     catch(e){
@@ -88,6 +88,49 @@ const convertFromINRtoEUR = async(conversion, backup)=>{
     return conversion;
   }
 }
+
+
+// from sterling to euro
+const convertFromGBPtoEUR = async(conversion, backup)=>{
+  if(!conversion){
+    // Get latest conversions from USD to EUR
+    let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
+    let rates, oneEur, oneUsd, usdToeur;
+    try{
+      const {data: exRates} = await axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY), symbols:"GBP,EUR"}}, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
+      rates = exRates.rates;
+      oneEur = rates.EUR;
+      oneUsd = rates.GBP;
+      usdToeur = oneEur / oneUsd;
+      
+      await CONSTANT.findOneAndUpdate({name: "GBPToEUR"}, [{$set: {value: usdToeur.toString(), date: new Date()}}], {upsert: true});
+      
+      console.log("Auto Conversion succeeded: ", "EUR = ", oneEur, " and GBP = ", oneUsd, " and the conversion from GBP to EUR = ", usdToeur);
+      return usdToeur;
+    }
+    catch(e){
+      try{
+        let constDoc = await CONSTANT.findOne({name: "GBPToEUR"});
+        if(constDoc == null){
+          console.log("Auto Conversion failed due to API connection error: Using the backup value which is ", backup);
+          return backup;
+        }
+        else{
+          console.log("Auto Conversion failed due to API connection error: Using the latest stored value which is ", parseFloat(constDoc.value));
+          return parseFloat(constDoc.value);
+        }
+      }
+      catch(e){
+        console.log("Auto Conversion failed due to API connection error and we couldn't fetch the latest value from the database: Using the backup value which is ", backup);
+        return backup;
+      }
+    }
+  }
+  else{
+    return conversion;
+  }
+}
+
 
 
 /*
@@ -169,9 +212,11 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
       let startTime = new Date();
       console.log("Started the update operation at: ", startTime);
       let conversionFromUSDtoEur = null;
-      let conversionFromINRtoEur = null
+      let conversionFromINRtoEur = null;
+      let conversionFromGBPtoEur = null;
       let USD_TO_EUR = parseFloat(process.env.USD_TO_EUR) || config.USD_TO_EUR;
       let INR_TO_EUR = parseFloat(process.env.INR_TO_EUR) || config.INR_TO_EUR;
+      let GBP_TO_EUR = parseFloat(process.env.GBP_TO_EUR) || config.GBP_TO_EUR;
       let DELAY_AMOUNT = parseInt(process.env.DELAY_AMOUNT) || config.DELAY_AMOUNT;
       let TIMEOUT = parseInt(process.env.TIMEOUT) || config.TIMEOUT;
       let SOURCE = config.SOURCE;
@@ -1086,6 +1131,10 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                       conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
                       miscPrice = parseFloat(miscPriceAll[1]) * conversionFromINRtoEur;
                     }
+                    else if(currency.match(new RegExp("GBP", "i"))){
+                      conversionFromGBPtoEur = await convertFromGBPtoEUR(conversionFromGBPtoEur, GBP_TO_EUR);
+                      miscPrice = parseFloat(miscPriceAll[1]) * conversionFromGBPtoEur;
+                    }
                   }
                   else if(miscPriceAll[1][0] == "$"){
                     // currency = "usd";
@@ -1096,6 +1145,11 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                     // currency = "inr";
                     conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
                     miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromINRtoEur;
+                  }
+                  else if(miscPriceAll[1][0] == "£"){
+                    // currency = "gbp";
+                    conversionFromGBPtoEur = await convertFromGBPtoEUR(conversionFromGBPtoEur, GBP_TO_EUR);
+                    miscPrice = parseFloat(miscPrice[1].substring(1)) * conversionFromGBPtoEur;
                   }
                 }
                 else{
@@ -1112,7 +1166,6 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                       })[0];
 
                       conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
-
                       miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
                     }
                     catch(e){
@@ -1125,7 +1178,17 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                         miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromINRtoEur;
                       }
                       catch(e){
-                        miscPrice = null;
+                        try{
+                          let euroPrice = miscPriceAll.filter((item)=>{
+                            return item[0] == "£";
+                          })[0];
+    
+                          conversionFromGBPtoEur = await convertFromGBPtoEUR(conversionFromGBPtoEur, GBP_TO_EUR);
+                          miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromGBPtoEur;
+                        }
+                        catch(e){
+                          miscPrice = null;
+                        }
                       }
                     }
                   }
