@@ -2623,12 +2623,13 @@ reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verif
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already hated"
       });
     }
     else{
@@ -2656,12 +2657,13 @@ reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit, authenticate.ve
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already seemored"
       });
     }
     else{
@@ -2689,12 +2691,13 @@ reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already fullscreened"
       });
     }
     else{
@@ -2726,12 +2729,13 @@ reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.ver
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already hated"
       });
     }
     else{
@@ -2759,12 +2763,13 @@ reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit, authenticate.
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already seemored"
       });
     }
     else{
@@ -2792,12 +2797,13 @@ reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authentica
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "review not found"
+        status: "track review not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track already fullscreened"
       });
     }
     else{

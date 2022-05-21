@@ -3144,12 +3144,13 @@ questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.ver
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "question not found"
+        status: "track question not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track question already hated"
       });
     }
     else{
@@ -3177,12 +3178,13 @@ questionRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.v
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "question not found"
+        status: "track question not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track question already hated"
       });
     }
     else{
@@ -3209,12 +3211,13 @@ questionRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authentica
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "question not found"
+        status: "track question not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track question already fullscreened"
       });
     }
     else{
@@ -3241,12 +3244,13 @@ questionRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenti
     if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "question not found"
+        status: "track question not found"
       });
     }
     else if(result == 403){
       return res.status(403).json({
-        success: false
+        success: false,
+        status: "track question already fullscreened"
       });
     }
     else{

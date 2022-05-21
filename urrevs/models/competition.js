@@ -15,12 +15,15 @@ const competitionSchema = new schema({
     },
     prizePic: {
         type: String
+    },
+    deadline: {
+        type: Date
     }
 }, 
 {
     timestamps: true
 });
 
-competitionSchema.index({createdAt: 1});
+competitionSchema.index({createdAt: -1});
 
 module.exports = mongoose.model("Competition", competitionSchema);
