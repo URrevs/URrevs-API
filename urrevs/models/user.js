@@ -41,6 +41,7 @@ const userSchema = new schema({
     }
 }, {timestamps: true});
 
-userSchema.index({createdAt: 1});
+userSchema.index({createdAt: -1});
+userSchema.index({comPoints: -1});
 
 module.exports = mongoose.model("User", userSchema);
