@@ -108,7 +108,7 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
 
     })
     .catch((err)=>{
-        console.log("Error from POST /leaderboard/competitions: ", err);
+        console.log("Error from POST /competitions: ", err);
         return res.status(500).json({
           success: false,
           status: "internal server error",
@@ -145,6 +145,14 @@ leaderBoardRouter.get("/latest", cors.cors, rateLimit, (req, res, next)=>{
         res.status(200).json({
             success: true,
             competition: result
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from GET /competitions/latest: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "find competition error"
         });
     });
 });
