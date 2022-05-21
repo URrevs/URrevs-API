@@ -2642,7 +2642,7 @@ reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verif
     console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -2676,7 +2676,7 @@ reviewRouter.post("/phone/:revId/seemore", cors.cors, rateLimit, authenticate.ve
     console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -2710,7 +2710,7 @@ reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate
     console.log("Error from POST /reviews/phone/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -2748,7 +2748,7 @@ reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.ver
     console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -2782,7 +2782,7 @@ reviewRouter.post("/company/:revId/seemore", cors.cors, rateLimit, authenticate.
     console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -2816,7 +2816,7 @@ reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authentica
     console.log("Error from POST /reviews/company/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
