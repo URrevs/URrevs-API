@@ -63,6 +63,10 @@ const phoneSchema = new schema({
     totalRevsCount: {
         type: Number,
         default: 0
+    },
+    manual: {
+        type: Boolean,
+        default: false
     }
 }, 
 {

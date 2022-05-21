@@ -282,7 +282,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
           }
           else{
             // if the company exists, use its id to get its the latest phone from DB
-            let latestphoneDoc = await phoneCollection.find({company: brand._id}, {name:1, _id: 0}).sort({createdAt: -1}).limit(1);
+            let latestphoneDoc = await phoneCollection.find({company: brand._id, manual: {$ne: true}}, {name:1, _id: 0}).sort({createdAt: -1}).limit(1);
             if(latestphoneDoc.length > 0){
               latestPhone = latestphoneDoc[0].name;
             }
