@@ -376,6 +376,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         resultCques[cRepliesObj[id].answer].acceptedAns.replies[cRepliesObj[id].reply].liked = true;
                     }
 
+                    console.log("-----------------AI Recommendation Success-----------------");
                     return res.status(200).json({
                         success: true,
                         phoneRevs: resultPrevs,
@@ -405,6 +406,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
 
         }
         catch(err){
+            console.log("-----------------AI Recommendation Failed-----------------");
             // Apply backup routine
             let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
             
@@ -994,7 +996,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                     acceptedAns: resultAns
                   });
               }
-
+              console.log("-----------------AI Recommendation Success-----------------");
               return res.status(200).json({
                 success: true,
                 phoneRevs: resultPrevs,
@@ -1015,6 +1017,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
 
       }
       catch(err){
+          console.log("-----------------AI Recommendation Failed-----------------");
           // Apply backup routine
           let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
           
