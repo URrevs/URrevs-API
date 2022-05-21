@@ -27,6 +27,7 @@ const phoneRouter = require('./routes/phoneRouter');
 const reviewRouter = require('./routes/reviewRouter');
 const questionRouter = require('./routes/questionsRouter');
 const aIRouter = require('./routes/aiRouter');
+const leaderBoardRouter = require('./routes/leaderBoardRouter');
 
 
 // Importing Zone Ends Here
@@ -48,6 +49,7 @@ app.use('/companies', companyRouter);
 app.use('/phones', phoneRouter);
 app.use('/reviews', reviewRouter);
 app.use("/questions", questionRouter);
+app.use("/competitions", leaderBoardRouter);
 app.use('/ai', aIRouter);
 
 
