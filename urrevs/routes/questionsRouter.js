@@ -1175,7 +1175,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
 
       })
@@ -1215,7 +1215,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
         
       })
@@ -1313,7 +1313,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
 
       })
@@ -1353,7 +1353,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
         
       })
@@ -1489,7 +1489,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
 
       })
@@ -1619,7 +1619,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
 
         return res.status(200).json({
           success: true,
-          id: answer._id
+          _id: answer._id
         });
 
       })
