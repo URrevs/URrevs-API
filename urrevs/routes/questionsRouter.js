@@ -813,118 +813,98 @@ questionRouter.get("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.
       return;
   }
 
-  // get the question
-  PQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
+  PANS.find({question: req.params.quesId, accepted: false})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("replies.user", {name: 1, picture: 1})
+  .then(async(answers)=>{
+    let resultAnswers = [];
+    let answerIds = [];
+    let answersObj = {};
+    let comentRepliesIds = [];
+    let answerRepliesObj = {};
+    
+    for(let [index,answer] of answers.entries()){
+      
+      answerIds.push(answer._id);
+      answersObj[answer._id] = index;
 
-    if(!question){
-      return res.status(404).json({
-        success: false,
-        status: "question not found"
-      });
+      let resultAnswer = {
+        _id: answer._id,
+        userId: answer.user._id,
+        userName: answer.user.name,
+        picture: answer.user.picture,
+        content: answer.content,
+        createdAt: answer.createdAt,
+        upvotes: answer.likes,
+        ownedAt: answer.ownedAt,
+        upvoted: false,
+        replies: []
+      };
+
+
+      for(let i=0; i<answer.replies.length; i++){
+        let reply = answer.replies[i];
+        comentRepliesIds.push(reply._id);
+        answerRepliesObj[reply._id] = {answer: index, reply: i};
+        resultAnswer.replies.push({
+          _id: reply._id,
+          userId: reply.user._id,
+          userName: reply.user.name,
+          userPicture: reply.user.picture,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          likes: reply.likes,
+          liked: false
+        });
+      }
+      resultAnswers.push(resultAnswer);
     }
 
-    PANS.find({question: req.params.quesId, _id: {$ne: question.acceptedAns}})
-    .sort({likes: -1, createdAt: -1})
-    .skip((roundNum - 1) * itemsPerRound)
-    .limit(itemsPerRound)
-    .populate("user", {name: 1, picture: 1})
-    .populate("replies.user", {name: 1, picture: 1})
-    .then(async(answers)=>{
-      let resultAnswers = [];
-      let answerIds = [];
-      let answersObj = {};
-      let comentRepliesIds = [];
-      let answerRepliesObj = {};
-      
-      for(let [index,answer] of answers.entries()){
-        
-        answerIds.push(answer._id);
-        answersObj[answer._id] = index;
-  
-        let resultAnswer = {
-          _id: answer._id,
-          userId: answer.user._id,
-          userName: answer.user.name,
-          picture: answer.user.picture,
-          content: answer.content,
-          createdAt: answer.createdAt,
-          upvotes: answer.likes,
-          ownedAt: answer.ownedAt,
-          upvoted: false,
-          replies: []
-        };
-  
-  
-        for(let i=0; i<answer.replies.length; i++){
-          let reply = answer.replies[i];
-          comentRepliesIds.push(reply._id);
-          answerRepliesObj[reply._id] = {answer: index, reply: i};
-          resultAnswer.replies.push({
-            _id: reply._id,
-            userId: reply.user._id,
-            userName: reply.user.name,
-            userPicture: reply.user.picture,
-            content: reply.content,
-            createdAt: reply.createdAt,
-            likes: reply.likes,
-            liked: false
-          });
-        }
-        resultAnswers.push(resultAnswer);
+    if(req.user){
+      // check if the user has liked any of the answers or replies
+      let answersLikes;
+      let repliesLikes;
+      let proms = [];
+      proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+      proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
+      try{
+        let results = await Promise.all(proms);
+        answersLikes = results[1];
+        repliesLikes = results[0];
       }
-  
-      if(req.user){
-        // check if the user has liked any of the answers or replies
-        let answersLikes;
-        let repliesLikes;
-        let proms = [];
-        proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
-        proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
-        try{
-          let results = await Promise.all(proms);
-          answersLikes = results[1];
-          repliesLikes = results[0];
-        }
-        catch(err){
-          console.log("Error from GET /questions/phone/:quesId/answers: ", err);
-          return res.status(500).json({
-            success: false,
-            status: "internal server error",
-            err: "finding the user likes on answers failed"
-          });
-        }
-        // liked state for answers
-        for(let answerLike of answersLikes){
-          resultAnswers[answersObj[answerLike.answer]].upvoted = true;
-        }
-        // liked state for replies
-        for(let replyLike of repliesLikes){
-          let location = answerRepliesObj[replyLike.reply];
-          resultAnswers[location.answer].replies[location.reply].liked = true;
-        }
+      catch(err){
+        console.log("Error from GET /questions/phone/:quesId/answers: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the user likes on answers failed"
+        });
       }
-  
-      return res.status(200).json({
-        success: true,
-        answers: resultAnswers
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from GET /questions/phone/:quesId/answers: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the phone review answers failed"
-      });
-    });
+      // liked state for answers
+      for(let answerLike of answersLikes){
+        resultAnswers[answersObj[answerLike.answer]].upvoted = true;
+      }
+      // liked state for replies
+      for(let replyLike of repliesLikes){
+        let location = answerRepliesObj[replyLike.reply];
+        resultAnswers[location.answer].replies[location.reply].liked = true;
+      }
+    }
 
+    return res.status(200).json({
+      success: true,
+      answers: resultAnswers
+    });
   })
   .catch((err)=>{
-    console.log("Error from GET /questions/phone/:quesId/answers: ", err.e);
+    console.log("Error from GET /questions/phone/:quesId/answers: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: err.message
+      err: "Finding the phone review answers failed"
     });
   });
 });
@@ -948,120 +928,101 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
       return;
   }
 
-  // get the question
-  CQUES.findById(req.params.quesId, {acceptedAns: 1, _id: 0}).then((question)=>{
+  CANS.find({question: req.params.quesId, accepted:false})
+  .sort({likes: -1, createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .populate("replies.user", {name: 1, picture: 1})
+  .then(async(answers)=>{
+    let resultAnswers = [];
+    let answerIds = [];
+    let answersObj = {};
+    let comentRepliesIds = [];
+    let answerRepliesObj = {};
+    
+    for(let [index,answer] of answers.entries()){
+      
+      answerIds.push(answer._id);
+      answersObj[answer._id] = index;
 
-    if(!question){
-      return res.status(404).json({
-        success: false,
-        status: "question not found"
-      });
+      let resultAnswer = {
+        _id: answer._id,
+        userId: answer.user._id,
+        userName: answer.user.name,
+        picture: answer.user.picture,
+        content: answer.content,
+        createdAt: answer.createdAt,
+        upvotes: answer.likes,
+        ownedAt: answer.ownedAt,
+        upvoted: false,
+        replies: []
+      };
+
+
+      for(let i=0; i<answer.replies.length; i++){
+        let reply = answer.replies[i];
+        comentRepliesIds.push(reply._id);
+        answerRepliesObj[reply._id] = {answer: index, reply: i};
+        resultAnswer.replies.push({
+          _id: reply._id,
+          userId: reply.user._id,
+          userName: reply.user.name,
+          userPicture: reply.user.picture,
+          content: reply.content,
+          createdAt: reply.createdAt,
+          likes: reply.likes,
+          liked: false
+        });
+      }
+      resultAnswers.push(resultAnswer);
     }
 
-    CANS.find({question: req.params.quesId, _id: {$ne: question.acceptedAns}})
-    .sort({likes: -1, createdAt: -1})
-    .skip((roundNum - 1) * itemsPerRound)
-    .limit(itemsPerRound)
-    .populate("user", {name: 1, picture: 1})
-    .populate("replies.user", {name: 1, picture: 1})
-    .then(async(answers)=>{
-      let resultAnswers = [];
-      let answerIds = [];
-      let answersObj = {};
-      let comentRepliesIds = [];
-      let answerRepliesObj = {};
-      
-      for(let [index,answer] of answers.entries()){
-        
-        answerIds.push(answer._id);
-        answersObj[answer._id] = index;
-  
-        let resultAnswer = {
-          _id: answer._id,
-          userId: answer.user._id,
-          userName: answer.user.name,
-          picture: answer.user.picture,
-          content: answer.content,
-          createdAt: answer.createdAt,
-          upvotes: answer.likes,
-          ownedAt: answer.ownedAt,
-          upvoted: false,
-          replies: []
-        };
-  
-  
-        for(let i=0; i<answer.replies.length; i++){
-          let reply = answer.replies[i];
-          comentRepliesIds.push(reply._id);
-          answerRepliesObj[reply._id] = {answer: index, reply: i};
-          resultAnswer.replies.push({
-            _id: reply._id,
-            userId: reply.user._id,
-            userName: reply.user.name,
-            userPicture: reply.user.picture,
-            content: reply.content,
-            createdAt: reply.createdAt,
-            likes: reply.likes,
-            liked: false
-          });
-        }
-        resultAnswers.push(resultAnswer);
+    if(req.user){
+      // check if the user has liked any of the answers or replies
+      let answersLikes;
+      let repliesLikes;
+      let proms = [];
+      proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+      proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
+      try{
+        let results = await Promise.all(proms);
+        answersLikes = results[1];
+        repliesLikes = results[0];
       }
-  
-      if(req.user){
-        // check if the user has liked any of the answers or replies
-        let answersLikes;
-        let repliesLikes;
-        let proms = [];
-        proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
-        proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: answerIds}}));
-        try{
-          let results = await Promise.all(proms);
-          answersLikes = results[1];
-          repliesLikes = results[0];
-        }
-        catch(err){
-          console.log("Error from GET /questions/company/:quesId/answers: ", err);
-          return res.status(500).json({
-            success: false,
-            status: "internal server error",
-            err: "finding the user likes on answers failed"
-          });
-        }
-        // liked state for answers
-        for(let answerLike of answersLikes){
-          resultAnswers[answersObj[answerLike.answer]].upvoted = true;
-        }
-        // liked state for replies
-        for(let replyLike of repliesLikes){
-          let location = answerRepliesObj[replyLike.reply];
-          resultAnswers[location.answer].replies[location.reply].liked = true;
-        }
+      catch(err){
+        console.log("Error from GET /questions/company/:quesId/answers: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the user likes on answers failed"
+        });
       }
-  
-      return res.status(200).json({
-        success: true,
-        answers: resultAnswers
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from GET /questions/company/:quesId/answers: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the phone review answers failed"
-      });
-    });
+      // liked state for answers
+      for(let answerLike of answersLikes){
+        resultAnswers[answersObj[answerLike.answer]].upvoted = true;
+      }
+      // liked state for replies
+      for(let replyLike of repliesLikes){
+        let location = answerRepliesObj[replyLike.reply];
+        resultAnswers[location.answer].replies[location.reply].liked = true;
+      }
+    }
 
+    return res.status(200).json({
+      success: true,
+      answers: resultAnswers
+    });
   })
   .catch((err)=>{
-    console.log("Error from GET /questions/company/:quesId/answers: ", err.e);
+    console.log("Error from GET /questions/company/:quesId/answers: ", err);
     return res.status(500).json({
       success: false,
       status: "internal server error",
-      err: err.message
+      err: "Finding the phone review answers failed"
     });
   });
+
 });
 
 
@@ -1161,6 +1122,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       proms1.push(question.save());
       proms1.push(PQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
       .then(async (results1)=>{
@@ -1204,6 +1166,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+      proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
+      proms2.push(PANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
 
       Promise.all(proms2)
       .then(async (results2)=>{
@@ -1299,6 +1263,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       proms1.push(question.save());
       proms1.push(CQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
       .then(async (results1)=>{
@@ -1342,6 +1307,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+      proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
+      proms2.push(CANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
 
       Promise.all(proms2)
       .then(async (results2)=>{
@@ -1474,6 +1441,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
       proms2.push(question.save());
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+      proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
       Promise.all(proms2)
       .then(async (results2)=>{
@@ -1604,6 +1572,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
       proms2.push(question.save());
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
+      proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
       Promise.all(proms2)
       .then(async (results2)=>{
