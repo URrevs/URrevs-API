@@ -170,10 +170,12 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             }
 
             // get the currency conversion ratio
-            CONSTANT.find({$or: [{name: "EURToEGP"}, {name: "USDToEUR"}]}).then((conversions)=>{
+            CONSTANT.find({$or: [{name: "EURToEGP"}, {name: "USDToEUR"}, {name: "INRToEUR"}, {name: "GBPToEUR"}]}).then((conversions)=>{
                 
                 let eurToEgp = null;
                 let eurToUsd = null;
+                let eurToInr = null;
+                let eurToGbp = null;
                 
                 for(let conversion of conversions){
                     if(conversion.name === "EURToEGP"){
@@ -181,6 +183,12 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                     }
                     else if(conversion.name === "USDToEUR"){
                         eurToUsd = 1 / parseFloat(conversion.value);
+                    }
+                    else if(conversion.name === "INRToEUR"){
+                        eurToInr = 1 / parseFloat(conversion.value);
+                    }
+                    else if(conversion.name === "GBPToEUR"){
+                        eurToGbp = 1 / parseFloat(conversion.value);
                     }
                 }
                 
@@ -197,6 +205,20 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 else{
                     //console.log("EURtoUSD: ", eurToUsd);
                 }
+
+                if(eurToInr == null){
+                    eurToInr = 1 / parseFloat(process.env.INR_TO_EUR || config.INR_TO_EUR);
+                }
+                else{
+                    //console.log("INRtoEUR: ", eurToInr);
+                }
+
+                if(eurToGbp == null){
+                    eurToGbp = 1 / parseFloat(process.env.GBP_TO_EUR || config.GBP_TO_EUR);
+                }
+                else{
+                    //console.log("GBPtoEUR: ", eurToGbp);
+                }
                 
                 let result = {};
             
@@ -208,6 +230,8 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 result.companyName = companyName;
                 result.priceEgp = (specs.price)? (specs.price * eurToEgp) : null;
                 result.priceUsd = (specs.price)? (specs.price * eurToUsd) : null;
+                result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
+                result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
                 result.priceEur = specs.price;
                 result.releaseDate =  specs.releaseDate;
                 result.dimensions = specs.dimensions;

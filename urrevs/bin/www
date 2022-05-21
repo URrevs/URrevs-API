@@ -11,7 +11,7 @@ var http = require('http');
 /*
   Importing scheduled tasks
 */
-const convertEURtoEGP = require("../scheduled/currencyConversion");
+const currencyConversion = require("../scheduled/currencyConversion");
 const updateDataFromSource = require("../scheduled/updateData");
 
 /**
@@ -91,7 +91,7 @@ function onError(error) {
 
 function onListening() {
   // scheduled tasks
-  //convertEURtoEGP();  // Every day at 3:00 AM
+  //currencyConversion();  // Every day at 3:00 AM
   //updateDataFromSource(); // On the first day of each month at 3:00 AM
   
   var addr = server.address();
