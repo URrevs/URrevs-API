@@ -3163,7 +3163,7 @@ questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.ver
     console.log("Error from POST /questions/company/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -3197,7 +3197,7 @@ questionRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.v
     console.log("Error from POST /questions/company/:revId/hate: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -3230,7 +3230,7 @@ questionRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authentica
     console.log("Error from POST /questions/company/:revId/fullscreen: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
@@ -3263,7 +3263,7 @@ questionRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authenti
     console.log("Error from POST /questions/company/:revId/fullscreen: ", err.e);
     return res.status(500).json({
       success: false,
-      status: "internal server error",
+      status: "track internal server error",
       err: err.message
     });
   })
