@@ -104,6 +104,14 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
 
             // resetting all users' points
             USER.updateMany({}, [{$set: {absPoints: {$add: ["$comPoints", "$absPoints"]}}}, {$set: {comPoints: 0}}]).exec();
+        })
+        .catch((err)=>{
+            console.log("Error from POST /competitions: ", err);
+            res.status(500).json({
+                success: false,
+                status: "Internal server error",
+                err: "Error creating competition"
+            });
         });
 
     })
