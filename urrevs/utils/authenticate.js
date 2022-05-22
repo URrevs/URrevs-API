@@ -164,9 +164,9 @@ exports.verifyUser = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            TOKEN.findOne({_id: token, user: decoded._id}).populate("user").then((token)=>{
-                if(token){
-                    req.user = {_id: token.user._id, admin: token.user.admin, uid: token.user.uid, name: token.user.name, picture: token.user.picture, absPoints: token.user.absPoints, comPoints: token.user.comPoints, refCode: token.user.refCode};
+            TOKEN.findOne({_id: token, user: decoded._id}).populate("user").then((tokenDoc)=>{
+                if(tokenDoc){
+                    req.user = {_id: tokenDoc.user._id, admin: tokenDoc.user.admin, uid: tokenDoc.user.uid, name: tokenDoc.user.name, picture: tokenDoc.user.picture, absPoints: tokenDoc.user.absPoints, comPoints: tokenDoc.user.comPoints, refCode: tokenDoc.user.refCode};
                     return next();
                 }
                 else{
@@ -216,15 +216,15 @@ exports.verifyFlexible = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            USER.findById(decoded._id, {admin: 1}).then((user)=>{
-                if(user){
-                    req.user = {_id: user._id};
+            TOKEN.findOne({_id: token, user: decoded._id}).then((tokenDoc)=>{
+                if(tokenDoc){
+                    req.user = {_id: decoded._id};
                     return next();
                 }
                 else{
                     res.statusCode = 401;
                     res.setHeader("Content-Type", "application/json");
-                    res.json({success: false, status: "you do not exist in the system"});
+                    res.json({success: false, status: "invalid token"});
                 }
             })
             .catch((err)=>{
