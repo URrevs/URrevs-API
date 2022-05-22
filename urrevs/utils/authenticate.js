@@ -10,6 +10,7 @@ const config = require("../config");
 
 const USER = require("../models/user");
 const UPRODUCTS = require("../models/uproducts");
+const TOKEN = require("../models/tokens");
 
 
 const getTheRefCodeOfLatestUser = () => {
@@ -49,19 +50,25 @@ exports.authorize = (req) => {
             let n = decodedToken.name;
             let p = decodedToken.picture;
             let u = decodedToken.uid;
-            USER.findOneAndUpdate({uid: u}, {$set: {picture: p, name: n}}, {new: true}).then((user)=>{
+            USER.findOneAndUpdate({uid: u}, {$set: {picture: p, name: n}}, {new: true}).then(async (user)=>{
                 if(user){
                     // user exists
                     // isssue a jwt token
                     let token = jwt.sign({_id: user._id}, secretKey, {expiresIn: expiresIn});
-                    let prof = {
-                        _id: user._id,
-                        name: user.name,
-                        picture: user.picture,
-                        points: user.absPoints,
-                        refCode: user.refCode
+                    try{
+                        await TOKEN.create({_id: token, user: user._id});
+                        let prof = {
+                            _id: user._id,
+                            name: user.name,
+                            picture: user.picture,
+                            points: user.absPoints,
+                            refCode: user.refCode
+                        }
+                        return resolve({t: token, a: user.admin, p: prof});
                     }
-                    return resolve({t: token, a: user.admin, p: prof});
+                    catch(err){
+                        return reject(err);
+                    }
                 }
                 else{
                     // user does not exist
@@ -74,16 +81,22 @@ exports.authorize = (req) => {
                             picture: p,
                             refCode: "UR" + ((latestUser.length > 0)?(parseInt(latestUser[0].refCode.slice(2))+1):1),
                         }).then((newUser)=>{
-                            UPRODUCTS.create({_id: newUser._id}).then(()=>{
+                            UPRODUCTS.create({_id: newUser._id}).then(async ()=>{
                                 let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
-                                let prof = {
-                                    _id: newUser._id,
-                                    name: newUser.name,
-                                    picture: newUser.picture,
-                                    points: newUser.absPoints,
-                                    refCode: newUser.refCode
+                                try{
+                                    await TOKEN.create({_id: token, user: newUser._id});
+                                    let prof = {
+                                        _id: newUser._id,
+                                        name: newUser.name,
+                                        picture: newUser.picture,
+                                        points: newUser.absPoints,
+                                        refCode: newUser.refCode
+                                    }
+                                    return resolve({t: token, a: newUser.admin, p: prof});
                                 }
-                                return resolve({t: token, a: newUser.admin, p: prof});
+                                catch(err){
+                                    return reject(err);
+                                }
                             })
                             .catch((err)=>{
                                 USER.findByIdAndDelete(newUser._id).then(()=>{
