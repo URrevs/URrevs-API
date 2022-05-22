@@ -164,15 +164,15 @@ exports.verifyUser = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            USER.findById(decoded._id).then((user)=>{
-                if(user){
-                    req.user = {_id: user._id, admin: user.admin, uid: user.uid, name: user.name, picture: user.picture, absPoints: user.absPoints, comPoints: user.comPoints, refCode: user.refCode};
+            TOKEN.findOne({_id: token, user: decoded._id}).populate("user").then((token)=>{
+                if(token){
+                    req.user = {_id: token.user._id, admin: token.user.admin, uid: token.user.uid, name: token.user.name, picture: token.user.picture, absPoints: token.user.absPoints, comPoints: token.user.comPoints, refCode: token.user.refCode};
                     return next();
                 }
                 else{
                     res.statusCode = 401;
                     res.setHeader("Content-Type", "application/json");
-                    res.json({success: false, status: "you do not exist in the system"});
+                    res.json({success: false, status: "invalid token"});
                 }
             })
             .catch((err)=>{
