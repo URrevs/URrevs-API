@@ -58,7 +58,7 @@ exports.authorize = (req) => {
                         _id: user._id,
                         name: user.name,
                         picture: user.picture,
-                        points: user.absPoints + user.comPoints,
+                        points: user.absPoints,
                         refCode: user.refCode
                     }
                     return resolve({t: token, a: user.admin, p: prof});
@@ -80,7 +80,7 @@ exports.authorize = (req) => {
                                     _id: newUser._id,
                                     name: newUser.name,
                                     picture: newUser.picture,
-                                    points: newUser.absPoints + newUser.comPoints,
+                                    points: newUser.absPoints,
                                     refCode: newUser.refCode
                                 }
                                 return resolve({t: token, a: newUser.admin, p: prof});

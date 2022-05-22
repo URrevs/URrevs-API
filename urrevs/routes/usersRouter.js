@@ -70,6 +70,7 @@ userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (
             if(!(user.loggedInUsingMobile)){
                 user.loggedInUsingMobile = true;
                 user.comPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
+                user.absPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
                 user.save().then((user)=>{
                     res.statusCode = 200;
                     res.setHeader("Content-Type", "application/json");
@@ -135,7 +136,7 @@ userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, 
         result.name = req.user.name;
         result.picture = req.user.picture;
         result.refCode = req.user.refCode;
-        result.points = req.user.absPoints + req.user.comPoints;
+        result.points = req.user.absPoints;
         
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -163,7 +164,7 @@ userRouter.get("/:userId/profile", cors.cors, rateLimit, authenticate.verifyUser
             result._id = user._id;
             result.name = user.name;
             result.picture = user.picture;
-            result.points = user.absPoints + user.comPoints;
+            result.points = user.absPoints;
 
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");

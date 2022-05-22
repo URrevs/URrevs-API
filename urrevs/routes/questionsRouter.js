@@ -1121,7 +1121,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       let proms1 = [];
       proms1.push(question.save());
       proms1.push(PQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
-      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms1.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
@@ -1163,8 +1163,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       question.acceptedAns = answer._id;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
-      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
       proms2.push(PANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
@@ -1262,7 +1262,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       let proms1 = [];
       proms1.push(question.save());
       proms1.push(CQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
-      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms1.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
@@ -1304,8 +1304,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       question.acceptedAns = answer._id;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
-      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
       proms2.push(CANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
@@ -1439,7 +1439,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
       question.acceptedAns = null;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
@@ -1570,7 +1570,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
       question.acceptedAns = null;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
@@ -3381,7 +3381,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
         // updating the like document to have the unliked = false
         proms2.push(PHONE_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -3420,7 +3420,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 
         let proms = [];
         proms.push(PHONE_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -3560,7 +3560,7 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
           proms.push(PHONE_QUES_UNLIKES.create({user: req.user._id, question: req.params.quesId}));
         }
         proms.push(PHONE_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
@@ -3670,7 +3670,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         // updating the like document to have the unliked = false
         proms2.push(COMPANY_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -3709,7 +3709,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 
         let proms = [];
         proms.push(COMPANY_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -3849,7 +3849,7 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
           proms.push(COMPANY_QUES_UNLIKES.create({user: req.user._id, question: req.params.quesId}));
         }
         proms.push(COMPANY_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
