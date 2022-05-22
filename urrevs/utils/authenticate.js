@@ -216,7 +216,7 @@ exports.verifyFlexible = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            TOKEN.findOne({_id: token, user: decoded._id}).then((tokenDoc)=>{
+            TOKEN.findOne({_id: token, user: decoded._id}, {_id: 1}).then((tokenDoc)=>{
                 if(tokenDoc){
                     req.user = {_id: decoded._id};
                     return next();
