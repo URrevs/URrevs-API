@@ -9,13 +9,11 @@ const schema = mongoose.Schema;
 const phoneSchema = new schema({
     name: {
         type: String,
-        required: true,
         index: true
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Company",
-        required: true
+        ref: "Company"
     },
     picture: {
         type: String
