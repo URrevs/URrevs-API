@@ -155,7 +155,7 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
 
         let proms = [];
         proms.push(COMPANY.findById(specs._id.company, {name: 1, _id: 0}));
-        proms.push(CONSTANT.find({$or: [{name: "EURToEGP"}, {name: "USDToEUR"}, {name: "INRToEUR"}, {name: "GBPToEUR"}]}));
+        proms.push(CONSTANT.find({$or: [{name: "EURToEGP"}/*, {name: "USDToEUR"}, {name: "INRToEUR"}, {name: "GBPToEUR"}*/]}));
 
         Promise.all(proms)
         .then((values)=>{
@@ -175,23 +175,23 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             }
 
             let eurToEgp = null;
-            let eurToUsd = null;
-            let eurToInr = null;
-            let eurToGbp = null;
+            // let eurToUsd = null;
+            // let eurToInr = null;
+            // let eurToGbp = null;
             
             for(let conversion of conversions){
                 if(conversion.name === "EURToEGP"){
                     eurToEgp = parseFloat(conversion.value);
                 }
-                else if(conversion.name === "USDToEUR"){
-                    eurToUsd = 1 / parseFloat(conversion.value);
-                }
-                else if(conversion.name === "INRToEUR"){
-                    eurToInr = 1 / parseFloat(conversion.value);
-                }
-                else if(conversion.name === "GBPToEUR"){
-                    eurToGbp = 1 / parseFloat(conversion.value);
-                }
+                // else if(conversion.name === "USDToEUR"){
+                //     eurToUsd = 1 / parseFloat(conversion.value);
+                // }
+                // else if(conversion.name === "INRToEUR"){
+                //     eurToInr = 1 / parseFloat(conversion.value);
+                // }
+                // else if(conversion.name === "GBPToEUR"){
+                //     eurToGbp = 1 / parseFloat(conversion.value);
+                // }
             }
             
             if(eurToEgp == null){
@@ -201,26 +201,26 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 //console.log("EURtoEGP: ", eurToEgp);
             }
 
-            if(eurToUsd == null){
-                eurToUsd = parseFloat(process.env.EUR_TO_USD || config.EUR_TO_USD);
-            }
-            else{
-                //console.log("EURtoUSD: ", eurToUsd);
-            }
+            // if(eurToUsd == null){
+            //     eurToUsd = parseFloat(process.env.EUR_TO_USD || config.EUR_TO_USD);
+            // }
+            // else{
+            //     //console.log("EURtoUSD: ", eurToUsd);
+            // }
 
-            if(eurToInr == null){
-                eurToInr = 1 / parseFloat(process.env.INR_TO_EUR || config.INR_TO_EUR);
-            }
-            else{
-                //console.log("INRtoEUR: ", eurToInr);
-            }
+            // if(eurToInr == null){
+            //     eurToInr = 1 / parseFloat(process.env.INR_TO_EUR || config.INR_TO_EUR);
+            // }
+            // else{
+            //     //console.log("INRtoEUR: ", eurToInr);
+            // }
 
-            if(eurToGbp == null){
-                eurToGbp = 1 / parseFloat(process.env.GBP_TO_EUR || config.GBP_TO_EUR);
-            }
-            else{
-                //console.log("GBPtoEUR: ", eurToGbp);
-            }
+            // if(eurToGbp == null){
+            //     eurToGbp = 1 / parseFloat(process.env.GBP_TO_EUR || config.GBP_TO_EUR);
+            // }
+            // else{
+            //     //console.log("GBPtoEUR: ", eurToGbp);
+            // }
             
             let result = {};
         
@@ -231,10 +231,10 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             result.companyId = companyId;
             result.companyName = companyName;
             result.priceEgp = (specs.price)? (specs.price * eurToEgp) : null;
-            result.priceUsd = (specs.price)? (specs.price * eurToUsd) : null;
-            result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
-            result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
-            result.priceEur = specs.price;
+            // result.priceUsd = (specs.price)? (specs.price * eurToUsd) : null;
+            // result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
+            // result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
+            // result.priceEur = specs.price;
             result.releaseDate =  specs.releaseDate;
             result.dimensions = specs.dimensions;
             result.network = specs.newtork;
