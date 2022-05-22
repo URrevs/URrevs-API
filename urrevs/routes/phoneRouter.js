@@ -153,10 +153,15 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             return;
         }
 
-        // Get the name of the company
-        COMPANY.findById(specs._id.company, {name: 1, _id: 0})
-        .then((company)=>{
-            
+        let proms = [];
+        proms.push(COMPANY.findById(specs._id.company, {name: 1, _id: 0}));
+        proms.push(CONSTANT.find({$or: [{name: "EURToEGP"}, {name: "USDToEUR"}, {name: "INRToEUR"}, {name: "GBPToEUR"}]}));
+
+        Promise.all(proms)
+        .then((values)=>{
+            let company = values[0];
+            let conversions = values[1];
+
             let companyName;
             let companyId
 
@@ -169,109 +174,99 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 companyId = specs._id.company;
             }
 
-            // get the currency conversion ratio
-            CONSTANT.find({$or: [{name: "EURToEGP"}, {name: "USDToEUR"}, {name: "INRToEUR"}, {name: "GBPToEUR"}]}).then((conversions)=>{
-                
-                let eurToEgp = null;
-                let eurToUsd = null;
-                let eurToInr = null;
-                let eurToGbp = null;
-                
-                for(let conversion of conversions){
-                    if(conversion.name === "EURToEGP"){
-                        eurToEgp = parseFloat(conversion.value);
-                    }
-                    else if(conversion.name === "USDToEUR"){
-                        eurToUsd = 1 / parseFloat(conversion.value);
-                    }
-                    else if(conversion.name === "INRToEUR"){
-                        eurToInr = 1 / parseFloat(conversion.value);
-                    }
-                    else if(conversion.name === "GBPToEUR"){
-                        eurToGbp = 1 / parseFloat(conversion.value);
-                    }
-                }
-                
-                if(eurToEgp == null){
-                    eurToEgp = parseFloat(process.env.EUR_TO_EGP || config.EUR_TO_EGP);
-                }
-                else{
-                    //console.log("EURtoEGP: ", eurToEgp);
-                }
-
-                if(eurToUsd == null){
-                    eurToUsd = parseFloat(process.env.EUR_TO_USD || config.EUR_TO_USD);
-                }
-                else{
-                    //console.log("EURtoUSD: ", eurToUsd);
-                }
-
-                if(eurToInr == null){
-                    eurToInr = 1 / parseFloat(process.env.INR_TO_EUR || config.INR_TO_EUR);
-                }
-                else{
-                    //console.log("INRtoEUR: ", eurToInr);
-                }
-
-                if(eurToGbp == null){
-                    eurToGbp = 1 / parseFloat(process.env.GBP_TO_EUR || config.GBP_TO_EUR);
-                }
-                else{
-                    //console.log("GBPtoEUR: ", eurToGbp);
-                }
-                
-                let result = {};
+            let eurToEgp = null;
+            let eurToUsd = null;
+            let eurToInr = null;
+            let eurToGbp = null;
             
-                result._id = specs._id._id;
-                result.name = specs._id.name;
-                result.type = "phone";
-                result.picture = specs._id.picture;
-                result.companyId = companyId;
-                result.companyName = companyName;
-                result.priceEgp = (specs.price)? (specs.price * eurToEgp) : null;
-                result.priceUsd = (specs.price)? (specs.price * eurToUsd) : null;
-                result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
-                result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
-                result.priceEur = specs.price;
-                result.releaseDate =  specs.releaseDate;
-                result.dimensions = specs.dimensions;
-                result.network = specs.newtork;
-                result.screenType = specs.screenType;
-                result.screenSize = specs.screenSize;
-                result.screenResolution = specs.screenResolution;                
-                result.screenProtection = specs.screenProtection;
-                result.os = specs.os;
-                result.chipset = specs.chipset;
-                result.cpu = specs.cpu;
-                result.gpu = specs.gpu;
-                result.externalMem = specs.exMem;
-                result.internalMem = specs.intMem;
-                result.mainCam = specs.mainCam;
-                result.selfieCam = specs.selfieCam;
-                result.loudspeaker = specs.loudspeaker;
-                result.slot3p5mm = specs.slot3p5mm;
-                result.wlan = specs.wlan;
-                result.bluetooth = specs.bluetooth;
-                result.gps = specs.gps;
-                result.nfc = specs.nfc;
-                result.radio = specs.radio;
-                result.usb = specs.usb;
-                result.sensors = specs.sensors;
-                result.battery = specs.battery;
-                result.charging = specs.charging;
-                result.weight = specs.weight;
-                result.sim = specs.sim;
+            for(let conversion of conversions){
+                if(conversion.name === "EURToEGP"){
+                    eurToEgp = parseFloat(conversion.value);
+                }
+                else if(conversion.name === "USDToEUR"){
+                    eurToUsd = 1 / parseFloat(conversion.value);
+                }
+                else if(conversion.name === "INRToEUR"){
+                    eurToInr = 1 / parseFloat(conversion.value);
+                }
+                else if(conversion.name === "GBPToEUR"){
+                    eurToGbp = 1 / parseFloat(conversion.value);
+                }
+            }
+            
+            if(eurToEgp == null){
+                eurToEgp = parseFloat(process.env.EUR_TO_EGP || config.EUR_TO_EGP);
+            }
+            else{
+                //console.log("EURtoEGP: ", eurToEgp);
+            }
 
-                res.statusCode = 200;
-                res.setHeader("Content-Type", "application/json");
-                res.json({success: true, specs: result});
-            })
-            .catch((err)=>{
-                console.log("Error from /phones/:phoneId/specs: ", err);
-                res.statusCode = 500;
-                res.setHeader("Content-Type", "application/json");
-                res.json({success: false, status: "process failed"});
-            });
+            if(eurToUsd == null){
+                eurToUsd = parseFloat(process.env.EUR_TO_USD || config.EUR_TO_USD);
+            }
+            else{
+                //console.log("EURtoUSD: ", eurToUsd);
+            }
+
+            if(eurToInr == null){
+                eurToInr = 1 / parseFloat(process.env.INR_TO_EUR || config.INR_TO_EUR);
+            }
+            else{
+                //console.log("INRtoEUR: ", eurToInr);
+            }
+
+            if(eurToGbp == null){
+                eurToGbp = 1 / parseFloat(process.env.GBP_TO_EUR || config.GBP_TO_EUR);
+            }
+            else{
+                //console.log("GBPtoEUR: ", eurToGbp);
+            }
+            
+            let result = {};
+        
+            result._id = specs._id._id;
+            result.name = specs._id.name;
+            result.type = "phone";
+            result.picture = specs._id.picture;
+            result.companyId = companyId;
+            result.companyName = companyName;
+            result.priceEgp = (specs.price)? (specs.price * eurToEgp) : null;
+            result.priceUsd = (specs.price)? (specs.price * eurToUsd) : null;
+            result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
+            result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
+            result.priceEur = specs.price;
+            result.releaseDate =  specs.releaseDate;
+            result.dimensions = specs.dimensions;
+            result.network = specs.newtork;
+            result.screenType = specs.screenType;
+            result.screenSize = specs.screenSize;
+            result.screenResolution = specs.screenResolution;                
+            result.screenProtection = specs.screenProtection;
+            result.os = specs.os;
+            result.chipset = specs.chipset;
+            result.cpu = specs.cpu;
+            result.gpu = specs.gpu;
+            result.externalMem = specs.exMem;
+            result.internalMem = specs.intMem;
+            result.mainCam = specs.mainCam;
+            result.selfieCam = specs.selfieCam;
+            result.loudspeaker = specs.loudspeaker;
+            result.slot3p5mm = specs.slot3p5mm;
+            result.wlan = specs.wlan;
+            result.bluetooth = specs.bluetooth;
+            result.gps = specs.gps;
+            result.nfc = specs.nfc;
+            result.radio = specs.radio;
+            result.usb = specs.usb;
+            result.sensors = specs.sensors;
+            result.battery = specs.battery;
+            result.charging = specs.charging;
+            result.weight = specs.weight;
+            result.sim = specs.sim;
+
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: true, specs: result});
         })
         .catch((err)=>{
             console.log("Error from /phones/:phoneId/specs: ", err);
