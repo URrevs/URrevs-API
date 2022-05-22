@@ -12,7 +12,8 @@ const schema_ = new schema({
     },
     user: {
         type: schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        index: true
     }
 }, 
 {
