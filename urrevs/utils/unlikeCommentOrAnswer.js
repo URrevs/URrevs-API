@@ -27,7 +27,7 @@ module.exports = (resourceCollection, likeCollection, user, resourceId, resource
                     if(resourceType == "answer"){
                         // if the resource is answer, deduct user points
                         try{
-                            await USER.findByIdAndUpdate(resource.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}});
+                            await USER.findByIdAndUpdate(resource.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS), absPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}});
                             return resolve(200);
                         }
                         catch(err){

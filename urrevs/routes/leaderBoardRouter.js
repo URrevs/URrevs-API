@@ -103,7 +103,7 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
             });
 
             // resetting all users' points
-            USER.updateMany({}, [{$set: {absPoints: {$add: ["$comPoints", "$absPoints"]}}}, {$set: {comPoints: 0}}]).exec();
+            USER.updateMany({}, {$set: {comPoints: 0}}).exec();
         })
         .catch((err)=>{
             console.log("Error from POST /competitions: ", err);

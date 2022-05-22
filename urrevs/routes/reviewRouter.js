@@ -180,7 +180,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   stage1Proms.push(COMPANY.findById(companyId));
   stage1Proms.push(PHONEREV.findOne({user: req.user._id, phone: phoneId}));
   if(refCode){
-    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
   }
   
   
@@ -351,7 +351,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
           // give points to the user
           let staeg3Proms = [];
-          staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade}}));
+          staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade, absPoints: grade}}));
           
 
           Promise.all(staeg3Proms).then((staeg3Results)=>{
@@ -1299,7 +1299,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
         // updating the like document to have the unliked = false
         proms2.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -1338,7 +1338,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 
         let proms = [];
         proms.push(PHONE_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -1474,7 +1474,7 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
           proms.push(PHONE_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
         }
         proms.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
@@ -1582,7 +1582,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
         // updating the like document to have the unliked = false
         proms2.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -1621,7 +1621,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 
         let proms = [];
         proms.push(COMPANY_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -1757,7 +1757,7 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
           proms.push(COMPANY_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
         }
         proms.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
