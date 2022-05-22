@@ -373,6 +373,12 @@ searchRouter.get("/recent", cors.cors, rateLimitSearch, authenticate.verifyUser,
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json({success: true, recent: user.recentSearches});
+      })
+      .catch((err)=>{
+        console.log("Error from /search/recent: ", err);
+        res.statusCode = 500;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "process failed"});
       });
       return;
     }
