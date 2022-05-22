@@ -67,7 +67,7 @@ module.exports = ()=>{
                                         console.log("End of scheduled USD to EUR currency update (FAILURE)..........................");
                                     });
                                 }).catch((e)=>{
-                                    console.log("End of scheduled GBP to EUR currency update (FAILURE)..........................");
+                                    console.log("End of scheduled USD to EUR currency update (FAILURE)..........................");
                                 });
 
                             })
