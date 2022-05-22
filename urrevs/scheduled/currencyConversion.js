@@ -39,11 +39,11 @@ module.exports = ()=>{
                 console.log("End of scheduled EUR to EGP currency update (SUCCESS)..........................");
             }
             catch(err){
-                console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................");
+                console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................", err);
             }
         }
         catch(err){
-            console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................");
+            console.log("End of scheduled EUR to EGP currency update (FAILURE)..........................", err);
         }
 
         // //-------------------------------------------------------------------------------------
@@ -65,11 +65,11 @@ module.exports = ()=>{
         //         console.log("End of scheduled INR to EUR currency update (SUCCESS)..........................");
         //     }
         //     catch(err){
-        //         console.log("End of scheduled INR to EUR currency update (FAILURE)..........................");
+        //         console.log("End of scheduled INR to EUR currency update (FAILURE)..........................", err);
         //     }
         // }
         // catch(err){
-        //     console.log("End of scheduled INR to EUR currency update (FAILURE)..........................");
+        //     console.log("End of scheduled INR to EUR currency update (FAILURE)..........................", err);
         // }
 
         // //-------------------------------------------------------------------------------------
@@ -91,11 +91,11 @@ module.exports = ()=>{
         //         console.log("End of scheduled GBP to EUR currency update (SUCCESS)..........................");
         //     }
         //     catch(err){
-        //         console.log("End of scheduled GBP to EUR currency update (FAILURE)..........................");
+        //         console.log("End of scheduled GBP to EUR currency update (FAILURE)..........................", err);
         //     }
         // }
         // catch(err){
-        //     console.log("End of scheduled GBP to EUR currency update (FAILURE)..........................");
+        //     console.log("End of scheduled GBP to EUR currency update (FAILURE)..........................", err);
         // }
 
         // //-------------------------------------------------------------------------------------
@@ -117,11 +117,11 @@ module.exports = ()=>{
         //         console.log("End of scheduled USD to EUR currency update (SUCCESS)..........................");
         //     }
         //     catch(err){
-        //         console.log("End of scheduled USD to EUR currency update (FAILURE)..........................");
+        //         console.log("End of scheduled USD to EUR currency update (FAILURE)..........................", err);
         //     }
         // }
         // catch(err){
-        //     console.log("End of scheduled USD to EUR currency update (FAILURE)..........................");
+        //     console.log("End of scheduled USD to EUR currency update (FAILURE)..........................", err);
         // }
     });
 };

@@ -13,6 +13,7 @@ var http = require('http');
 */
 const currencyConversion = require("../scheduled/currencyConversion");
 const updateDataFromSource = require("../scheduled/updateData");
+const clearExpiredTokens = require("../scheduled/clearTokens");
 
 /**
  * Get port from environment and store in Express.
@@ -93,6 +94,7 @@ function onListening() {
   // scheduled tasks
   //currencyConversion();  // Every day at 3:00 AM
   //updateDataFromSource(); // On the first day of each month at 3:00 AM
+  //clearExpiredTokens(); // dynamically depending on the token duration
   
   var addr = server.address();
   var bind = typeof addr === 'string'
