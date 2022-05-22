@@ -52,7 +52,7 @@ module.exports = ()=>{
                             CONSTANT.findOneAndUpdate({name: "GBPToEUR"}, [{$set: {value: eurToEgp.toString(), date: new Date()}}], {upsert: true}).then(async()=>{
                                 console.log("End of scheduled GBP to EUR currency update (SUCCESS)..........................");
                                 await delay(1000);
-                                // convert from GBP to EUR
+                                // convert from USD to EUR
                                 axios.get(config.EXCHANGE_RATES_API+"/latest", {params: {access_key: (process.env.EXCHANGE_RATES_ACCESS_KEY2), symbols:"USD,EUR"}}, 
                                 {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })}).then(({data: exRates})=>{
                                     rates = exRates.rates;
