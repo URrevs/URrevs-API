@@ -299,8 +299,8 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         brands = await getBrandsInfo();
         
         // brands = [{
-        //   "name": "Microsoft",
-        //   "url": "microsoft-phones-64.php"
+        //   "name": "Sony",
+        //   "url": "sony-phones-7.php"
         // }];
 
         // initialize an update log (isUpdating: true)
@@ -1111,7 +1111,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               try{
                 let miscPriceAll = body[0].specs.filter((item)=>{
                   return item.name == "Price";
-                })[0].value.trim().replace(",", "");
+                })[0].value.trim().replaceAll(",", "");
 
                 miscPriceAll = miscPriceAll.split(" ");
                 miscPrice = miscPriceAll;
