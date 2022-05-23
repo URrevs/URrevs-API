@@ -1,3 +1,8 @@
+/*
+  Author: Abdelrahman Hany
+  Created on: 16-Apr-2022
+*/
+
 const cron = require("node-cron");
 const updateData = require("../utils/updateData");
 
@@ -13,7 +18,7 @@ module.exports = ()=>{
             console.log("End of scheduled update process (SUCCESS)..........................");
         })
         .catch((e)=>{
-            console.log("End of scheduled update process (FAILURE)..........................");
+            console.log("End of scheduled update process (FAILURE)..........................", e);
         });
     });
 }

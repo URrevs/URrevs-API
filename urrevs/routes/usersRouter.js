@@ -13,6 +13,7 @@ const config = require("../config");
 
 const USER = require("../models/user");
 const OWNED_PHONE = require("../models/ownedPhone");
+const TOKEN = require("../models/tokens");
 
 const userRouter = express.Router();
 
@@ -107,7 +108,11 @@ userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (
 
 // logout from all devices
 userRouter.get("/logout", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-    authenticate.revoke(req.user.uid).then(()=>{
+    let proms = [];
+    proms.push(authenticate.revoke(req.user.uid));
+    proms.push(TOKEN.deleteMany({user: req.user._id}));
+    
+    Promise.all(proms).then(()=>{
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
         res.json({success: true, status: "user logged out successfully"});
