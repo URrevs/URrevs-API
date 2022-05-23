@@ -33,7 +33,7 @@ const config = require("../config");
 
 
 // preflight
-homeRouter.options("*", cors.cors, (req, res) => {
+homeRouter.options("*", cors.cors, (req, res, next) => {
     res.sendStatus(200);
 });
 
