@@ -326,6 +326,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
           }
           catch(e){
             console.log("--------------------Review grading AI Failed---------------------");
+            console.log(e.response.status, e.response.data);
             //console.log(e);
             // since the AI service is down, we will use the backup routine
 
