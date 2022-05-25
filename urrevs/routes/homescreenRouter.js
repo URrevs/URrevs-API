@@ -72,9 +72,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
             
             let proms = [];
             proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CREVS.find({_id: {$in: cRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CREVS.find({_id: {$in: cRevs}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
             proms.push(PQUES.find({_id: {$in: pQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CQUES.find({_id: {$in: cQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CQUES.find({_id: {$in: cQues}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
 
             Promise.all(proms)
             .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -107,9 +107,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                     resultPrevs.push({
                         _id: rev._id,
                         type: "phone",
-                        phoneId: rev.phone,
-                        phoneName: rev.phone.name,
-                        userId: rev.user,
+                        targetId: rev.phone._id._id,
+                        targetName: rev.phone.name,
+                        userId: rev.user._id,
                         userName: rev.user.name,
                         picture: rev.user.picture,
                         createdAt: rev.createdAt,
@@ -142,7 +142,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         type: "company",
                         targetId: rev.company._id,
                         targetName: rev.company.name,
-                        userId: rev.user._id,
+                        userId: rev.user._id._id,
                         userName: rev.user.name,
                         picture: rev.user.picture,
                         createdAt: rev.createdAt,
@@ -447,9 +447,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                     resultPrevs.push({
                         _id: rev._id,
                         type: "phone",
-                        phoneId: rev.phone,
-                        phoneName: rev.phone.name,
-                        userId: rev.user,
+                        targetId: rev.phone._id,
+                        targetName: rev.phone.name,
+                        userId: rev.user._id,
                         userName: rev.user.name,
                         picture: rev.user.picture,
                         createdAt: rev.createdAt,
@@ -482,7 +482,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         type: "company",
                         targetId: rev.company._id,
                         targetName: rev.company.name,
-                        userId: rev.user._id,
+                        userId: rev.user._id._id,
                         userName: rev.user.name,
                         picture: rev.user.picture,
                         createdAt: rev.createdAt,
@@ -796,9 +796,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                   resultPrevs.push({
                       _id: rev._id,
                       type: "phone",
-                      phoneId: rev.phone,
-                      phoneName: rev.phone.name,
-                      userId: rev.user,
+                      targetId: rev.phone._id,
+                      targetName: rev.phone.name,
+                      userId: rev.user._id,
                       userName: rev.user.name,
                       picture: rev.user.picture,
                       createdAt: rev.createdAt,
@@ -831,7 +831,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       type: "company",
                       targetId: rev.company._id,
                       targetName: rev.company.name,
-                      userId: rev.user._id,
+                      userId: rev.user._id._id,
                       userName: rev.user.name,
                       picture: rev.user.picture,
                       createdAt: rev.createdAt,
@@ -1022,10 +1022,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
           
           let proms = [];
-          proms.push(PREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound));
-          proms.push(CREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound));
-          proms.push(PQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound));
-          proms.push(CQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound));
+          proms.push(PREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
         
           Promise.all(proms)
           .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -1058,9 +1058,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                   resultPrevs.push({
                       _id: rev._id,
                       type: "phone",
-                      phoneId: rev.phone,
-                      phoneName: rev.phone.name,
-                      userId: rev.user,
+                      targetId: rev.phone._id,
+                      targetName: rev.phone.name,
+                      userId: rev.user._id,
                       userName: rev.user.name,
                       picture: rev.user.picture,
                       createdAt: rev.createdAt,
