@@ -406,7 +406,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
 
         }
         catch(err){
-            console.log("-----------------AI Recommendation Failed-----------------");
+            console.log("-----------------AI Recommendation Failed-----------------", err.response.status, err.response.data);
             // Apply backup routine
             let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
             
@@ -761,9 +761,9 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           
           let proms = [];
           proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CREVS.find({_id: {$in: cRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CREVS.find({_id: {$in: cRevs}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
           proms.push(PQUES.find({_id: {$in: pQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CQUES.find({_id: {$in: cQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CQUES.find({_id: {$in: cQues}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
 
           Promise.all(proms)
           .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -1017,7 +1017,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
 
       }
       catch(err){
-          console.log("-----------------AI Recommendation Failed-----------------");
+          console.log("-----------------AI Recommendation Failed-----------------", err.response.status, err.response.data);
           // Apply backup routine
           let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
           
