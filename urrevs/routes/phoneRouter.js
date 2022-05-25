@@ -443,7 +443,7 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
         }
         catch(err){
             console.log("--------------------Similar phones AI failed--------------------");
-            console.log(err.stack);
+            console.log(err.response.status, err.response.data);
             // Now, let's do it my way
 
             // get the release date of the phone
