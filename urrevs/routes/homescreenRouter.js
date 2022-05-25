@@ -69,6 +69,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
             let cRevs = resp.companyRevs;
             let pQues = resp.phoneQuestions;
             let cQues = resp.companyQuestions;
+            let totalIds = resp.total;
             
             let proms = [];
             proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
@@ -382,7 +383,8 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         phoneRevs: resultPrevs,
                         companyRevs: resultCrevs,
                         phoneQuestions: resultPques,
-                        companyQuestions: resultCques
+                        companyQuestions: resultCques,
+                        total: totalIds
                     });
 
                 }
@@ -758,6 +760,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           let cRevs = resp.companyRevs;
           let pQues = resp.phoneQuestions;
           let cQues = resp.companyQuestions;
+          let totalIds = resp.total;
           
           let proms = [];
           proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
@@ -1002,7 +1005,8 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                 phoneRevs: resultPrevs,
                 companyRevs: resultCrevs,
                 phoneQuestions: resultPques,
-                companyQuestions: resultCques
+                companyQuestions: resultCques,
+                total: totalIds
             });
 
           })
