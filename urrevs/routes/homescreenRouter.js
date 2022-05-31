@@ -108,7 +108,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                     resultPrevs.push({
                         _id: rev._id,
                         type: "phone",
-                        targetId: rev.phone._id._id,
+                        targetId: rev.phone._id,
                         targetName: rev.phone.name,
                         userId: rev.user._id,
                         userName: rev.user.name,
