@@ -92,9 +92,9 @@ function onError(error) {
 
 function onListening() {
   // scheduled tasks
-  //currencyConversion();  // Every day at 3:00 AM
-  //updateDataFromSource(); // On the first day of each month at 3:00 AM
-  //clearExpiredTokens(); // dynamically depending on the token duration
+  currencyConversion();  // Every day at 3:00 AM
+  updateDataFromSource(); // On the first day of each month at 3:00 AM
+  clearExpiredTokens(); // dynamically depending on the token duration
   
   var addr = server.address();
   var bind = typeof addr === 'string'
