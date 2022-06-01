@@ -1111,7 +1111,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               try{
                 let miscPriceAll = body[0].specs.filter((item)=>{
                   return item.name == "Price";
-                })[0].value.trim().replaceAll(",", "");
+                })[0].value.trim().replace(/,/g, "");
 
                 miscPriceAll = miscPriceAll.split(" ");
                 miscPrice = miscPriceAll;
