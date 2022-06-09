@@ -23,7 +23,7 @@ router.options("*", cors.cors, (req, res, next)=>{
 
 /* GET home page. */
 router.get('/', cors.cors, rateLimit, function(req, res, next) {
-  res.json({"status": "deployed successfully"});
+  res.json({"userAgent": req.get("User-Agent")});
 });
 
 module.exports = router;
