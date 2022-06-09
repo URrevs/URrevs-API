@@ -554,15 +554,26 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
 
 // get similar phones given user agent
 phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
+    let itemsPerRound = parseInt((process.env.APPROX_PHONES_PER_ROUND || config.APPROX_PHONES_PER_ROUND));
+    let roundNum = req.query.round;
+  
+    if(roundNum == null || isNaN(roundNum)){
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json");
+        res.json({success: false, status: "bad request"});
+        return;
+    }
+
     let uA = req.headers['user-agent'];
-    let uAObj = useragent.parse(uA);
+    let uAObj = useragent.parse("Mozilla/5.0 (Linux; Android 9; Redmi Note 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.78 Mobile Safari/537.36");
     
     if(uAObj.isMobile && !uAObj.isiPhone){
         try{
             let deviceStats = uAObj.source.match(/\((.*?)\)/)[1];
-            let phoneName = deviceStats.split("; ").pop();
-            
+            let phoneName = deviceStats.split("; ").pop().trim();
+
             PHONE.find({name: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
+            .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
             .populate("company", {name: 1})
             .then((phonesDocs)=>{
                 let result = [];
