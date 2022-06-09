@@ -585,7 +585,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
                 phoneName = phoneNameArr.slice(0, cutOffIndex).join(" ");
             }
 
-            PHONE.find({name: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
+            PHONE.find({otherNames: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
             .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
             .populate("company", {name: 1})
             .then((phonesDocs)=>{
