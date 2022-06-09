@@ -7,6 +7,8 @@ const express = require("express");
 const axios = require("axios");
 const https = require("https");
 
+const useragent = require("express-useragent");
+
 const phoneRouter = express.Router();
 
 const cors = require("../utils/cors");
@@ -548,5 +550,48 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
     });
 });
 
+
+
+// get similar phones given user agent
+phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
+    let uA = req.headers['user-agent'];
+    let uAObj = useragent.parse(uA);
+    
+    if(uAObj.isMobile && !uAObj.isiPhone){
+        try{
+            let deviceStats = uAObj.source.match(/\((.*?)\)/)[1];
+            let phoneName = deviceStats.split("; ").pop();
+            
+            PHONE.find({name: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
+            .populate("company", {name: 1})
+            .then((phonesDocs)=>{
+                let result = [];
+                for(let phone of phonesDocs){
+                    result.push({
+                        _id: phone._id,
+                        name: phone.name,
+                        picture: phone.picture,
+                        companyId: phone.company._id,
+                        companyName: phone.company.name,
+                        type: "phone"
+                    });
+                }
+
+                return res.status(200).json({success: true, phones: result});
+            })
+            .catch((err)=>{
+                console.log("Error from /phones/my/approx: ", err);
+                return res.status(500).json({success: false, status: "internal server error"});
+            });
+        }
+        catch(err){
+            console.log("THE ENDPOINT WORKED Error from /phones/my/approx: ", err);
+            return res.status(200).json({success: true, phones: []});
+        }
+    }
+    else{
+        res.status(200).json({success: true, phones: []});
+    }
+});
 
 module.exports = phoneRouter;
