@@ -565,7 +565,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
     }
 
     let uA = req.headers['user-agent'];
-    let uAObj = useragent.parse("Mozilla/5.0 (Linux; Android 9; Redmi Note 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.78 Mobile Safari/537.36");
+    let uAObj = useragent.parse(uA);
     
     if(uAObj.isMobile && !uAObj.isiPhone){
         try{
