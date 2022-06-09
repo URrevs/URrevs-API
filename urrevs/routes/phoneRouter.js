@@ -8,6 +8,7 @@ const axios = require("axios");
 const https = require("https");
 
 const useragent = require("express-useragent");
+const useragentParser = require('ua-parser-js');
 
 const phoneRouter = express.Router();
 
@@ -569,23 +570,13 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
     
     if(uAObj.isMobile && !uAObj.isiPhone){
         try{
-            let deviceStats = uAObj.source.match(/\((.*?)\)/)[1];
-            let phoneName = deviceStats.split("; ").pop().trim();
             
-            // eliminating the "build" directive from the phone name
-            let phoneNameArr = phoneName.split(" ");
-            let cutOffIndex = -1;
-            for(let [index, element] of phoneNameArr.entries()){
-                if(element.match(/build/gi)){
-                    cutOffIndex = index;
-                    break;
-                }
-            }
-            if(cutOffIndex != -1){
-                phoneName = phoneNameArr.slice(0, cutOffIndex).join(" ");
-            }
+            // get the model name
+            let parsedUa = useragentParser(uA);
+            let modelName = parsedUa.device.model;
 
-            PHONE.find({otherNames: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
+
+            PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1})
             .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
             .populate("company", {name: 1})
             .then((phonesDocs)=>{
