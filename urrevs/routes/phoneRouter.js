@@ -571,6 +571,19 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
         try{
             let deviceStats = uAObj.source.match(/\((.*?)\)/)[1];
             let phoneName = deviceStats.split("; ").pop().trim();
+            
+            // eliminating the "build" directive from the phone name
+            let phoneNameArr = phoneName.split(" ");
+            let cutOffIndex = -1;
+            for(let [index, element] of phoneNameArr.entries()){
+                if(element.match(/build/gi)){
+                    cutOffIndex = index;
+                    break;
+                }
+            }
+            if(cutOffIndex != -1){
+                phoneName = phoneNameArr.slice(0, cutOffIndex).join(" ");
+            }
 
             PHONE.find({name: {$regex: phoneName, $options: "i"}}, {name: 1, picture: 1, company: 1})
             .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
