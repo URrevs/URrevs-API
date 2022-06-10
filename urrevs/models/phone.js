@@ -68,6 +68,7 @@ const phoneSchema = new schema({
     },
     otherNames: {
         type: String,
+        default: "",
         index: true
     }
 }, 
