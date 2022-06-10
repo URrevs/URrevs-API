@@ -70,6 +70,11 @@ module.exports = (useragent, modelName, itemsPerRound, roundNum)=>{
             }
         }
         catch(err){
+            if(err && err.response && err.response.status && err.response.data){
+                // axios error
+                return reject({status: err.response.status, data: err.response.data});
+            }
+            
             return reject(err);
         }
     });
