@@ -15,6 +15,7 @@ const phoneRouter = express.Router();
 const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
+const mapUaToPhones = require("../utils/mapUaToPhones");
 
 const PHONE = require("../models/phone");
 const PSPECS = require("../models/phoneSpecs");
@@ -554,6 +555,19 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
 
 
 // get similar phones given user agent
+/*
+    steps:
+        1- get the user agent
+        2- check if the user agent doesn't correspond to pc nor iphone --> if violated, return empty array
+        3- get the model name from the user agent
+        4- search the phones that have the same model name (with rounding)
+        5- check the returned phones --> if not empty, return the phones
+        6- if the returned phones is empty, do the following:
+            6.1- send the user agent to the specialized api --> in case of request failure, return empty array
+            6.2- receive the brand and name of the phone
+            6.3- apply updateMany to the phones collection to the phones matching the brand and name
+            6.4- return those phones
+*/
 phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.APPROX_PHONES_PER_ROUND || config.APPROX_PHONES_PER_ROUND));
     let roundNum = req.query.round;
@@ -579,7 +593,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
             PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1})
             .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
             .populate("company", {name: 1})
-            .then((phonesDocs)=>{
+            .then(async(phonesDocs)=>{
                 let result = [];
                 for(let phone of phonesDocs){
                     result.push({
@@ -590,6 +604,17 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
                         companyName: phone.company.name,
                         type: "phone"
                     });
+                }
+
+                if(result.length == 0){
+                    try{
+                        result = await mapUaToPhones(uA, modelName, itemsPerRound, roundNum);
+                    }
+                    catch(err){
+                        if(err != 404){
+                            console.log("Error from /phones/my/approx: ", err);
+                        }
+                    }
                 }
 
                 return res.status(200).json({success: true, phones: result});
