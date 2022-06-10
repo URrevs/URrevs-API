@@ -613,7 +613,10 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
                     catch(err){
                         if(err != 404){
                             console.log("Error from /phones/my/approx: ", err);
+                            return res.status(500).json({success: false, status: "internal server error"});
                         }
+                        
+                        return res.status(200).json({success: true, phones: []});
                     }
                 }
 
@@ -625,12 +628,12 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
             });
         }
         catch(err){
-            console.log("THE ENDPOINT WORKED Error from /phones/my/approx: ", err);
-            return res.status(200).json({success: true, phones: []});
+            console.log("Error from /phones/my/approx: ", err);
+            return res.status(500).json({success: false, status: "internal server error"});
         }
     }
     else{
-        res.status(200).json({success: true, phones: []});
+        return res.status(200).json({success: true, phones: []});
     }
 });
 
