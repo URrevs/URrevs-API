@@ -14,6 +14,37 @@ module.exports = (useragent, modelName, itemsPerRound, roundNum)=>{
             const {data: resp} = await axios.get(URL, {params: {access_key: key, fields:"device", ua: useragent}}, {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
             let phoneName = resp.device.brand + " " + resp.device.name;
 
+            phoneName = phoneName.trim();
+  
+            // replace multiple spaces with single space then convert to array
+            phoneName = phoneName.replace(/\s+/g, " "); 
+            phoneName = phoneName.split(" ");
+            
+            // add braces to each word in search word then join the words together
+            phoneName = phoneName.map((word)=>{
+              word = "[{(" + word + ")}]";
+              return word;
+            });
+            phoneName = phoneName.join(" ");
+            
+            // escaping special characters
+            phoneName = phoneName.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+          
+            // replace any space with any number of spaces
+            phoneName = phoneName.replace(/\s+/g, "\\s*"); 
+          
+            // allowing any number of round brackets
+            phoneName = phoneName.replace(/\(/g, "(*");
+            phoneName = phoneName.replace(/\)/g, ")*");
+          
+            // allowing any number of square brackets
+            phoneName = phoneName.replace(/\[/g, "[*");
+            phoneName = phoneName.replace(/\]/g, "]*");
+          
+            // allowing any number of curly brackets
+            phoneName = phoneName.replace(/\{/g, "{*");
+            phoneName = phoneName.replace(/\}/g, "}*");
+
             let updateRes = await PHONE.updateMany({name: {$regex: new RegExp(phoneName, "i")}}, [{$set: {otherNames: {$concat: ["$otherNames", "," + modelName]}}}]);
             
             if(updateRes.modifiedCount > 0){
