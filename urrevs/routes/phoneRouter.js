@@ -23,6 +23,7 @@ const COMPANY = require("../models/company");
 const CONSTANT = require("../models/constants");
 const PHONEPROFILEVISIT = require("../models/phoneProfileVisit");
 const PHONECOMPARISON = require("../models/phoneComparison");
+const OWNED_PHONE = require("../models/ownedPhone");
 
 const config = require("../config");
 
@@ -568,7 +569,7 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
             6.3- apply updateMany to the phones collection to the phones matching the brand and name
             6.4- return those phones
 */
-phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
+phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.APPROX_PHONES_PER_ROUND || config.APPROX_PHONES_PER_ROUND));
     let roundNum = req.query.round;
   
@@ -589,11 +590,15 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
+            let proms = [];
+            proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
+            if(req.user){
+                proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, _id: 0}));
+            }
+            
+            Promise.all(proms).then(async(results)=>{
+                let phonesDocs = results[0];
 
-            PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1})
-            .skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound)
-            .populate("company", {name: 1})
-            .then(async(phonesDocs)=>{
                 let result = [];
                 for(let phone of phonesDocs){
                     result.push({
@@ -606,7 +611,8 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
                     });
                 }
 
-                if(result.length == 0){
+                // phone model name is not found in the phones collection
+                if(result.length == 0 && roundNum == 1){
                     try{
                         result = await mapUaToPhones(uA, modelName, itemsPerRound, roundNum);
                     }
@@ -617,6 +623,21 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, (req, res, next)=>{
                         }
                         
                         return res.status(200).json({success: true, phones: []});
+                    }
+                }
+
+                if(req.user){
+                    let ownedPhonesDocs = results[1];
+
+                    let ownedPhones = {};
+                    for(let phoneDoc of ownedPhonesDocs){
+                        ownedPhones[phoneDoc.phone] = true;
+                    }
+                    // remove the owned phones from the result
+                    for(let [index, phone] of result.entries()){
+                        if(ownedPhones[phone._id]){
+                            result.splice(index, 1);
+                        }
                     }
                 }
 
