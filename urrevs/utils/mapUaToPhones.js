@@ -18,7 +18,7 @@ module.exports = (useragent, modelName, itemsPerRound, roundNum)=>{
   
             // replace multiple spaces with single space then convert to array
             phoneName = phoneName.replace(/\s+/g, " "); 
-            phoneName = phoneName.split(" ");
+            phoneName = phoneName.split("");
             
             // add braces to each word in search word then join the words together
             phoneName = phoneName.map((word)=>{
