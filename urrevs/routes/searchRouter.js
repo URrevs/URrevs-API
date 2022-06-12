@@ -47,7 +47,7 @@ searchRouter.get("/products/phones", cors.cors, rateLimitSearch, (req, res, next
   
   // replace multiple spaces with single space then convert to array
   searchWord = searchWord.replace(/\s+/g, " "); 
-  searchWord = searchWord.split(" ");
+  searchWord = searchWord.split("");
   
   // add braces to each word in search word then join the words together
   searchWord = searchWord.map((word)=>{
@@ -115,7 +115,7 @@ searchRouter.get("/products", cors.cors, rateLimitSearch, (req, res, next)=>{
   
     // replace multiple spaces with single space then convert to array
     searchWord = searchWord.replace(/\s+/g, " "); 
-    searchWord = searchWord.split(" ");
+    searchWord = searchWord.split("");
     
     // add braces to each word in search word then join the words together
     searchWord = searchWord.map((word)=>{
@@ -190,7 +190,7 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
   
     // replace multiple spaces with single space then convert to array
     searchWord = searchWord.replace(/\s+/g, " "); 
-    searchWord = searchWord.split(" ");
+    searchWord = searchWord.split("");
     
     // add braces to each word in search word then join the words together
     searchWord = searchWord.map((word)=>{
