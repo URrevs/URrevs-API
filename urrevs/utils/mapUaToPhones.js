@@ -45,7 +45,7 @@ module.exports = (useragent, modelName, itemsPerRound, roundNum)=>{
             phoneName = phoneName.replace(/\{/g, "{*");
             phoneName = phoneName.replace(/\}/g, "}*");
 
-            let updateRes = await PHONE.updateMany({name: {$regex: new RegExp(phoneName, "i")}}, [{$set: {otherNames: {$concat: ["$otherNames", "," + modelName + ","]}}}]);
+            let updateRes = await PHONE.updateMany({name: {$regex: new RegExp(phoneName, "i")}}, [{$set: {otherNames: {$concat: ["$otherNames", modelName]}}}]);
             
             if(updateRes.modifiedCount > 0){
                 let phonesDocs = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1});
