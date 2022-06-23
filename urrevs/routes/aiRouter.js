@@ -10,12 +10,17 @@ const authenticate = require("../utils/authenticate");
 const rateLimit = require("../utils/rateLimit/regular");
 
 const CONSTANT = require("../models/constants");
+const USER = require("../models/user");
 
 // update date of the last query
 aiRouter.put("/lastquery/set", rateLimit, authenticate.verifyAPIkey("X-Api-Key"), (req, res, next)=>{
     let date = req.body.date;
     if(Date.parse(date)){
-      CONSTANT.findOneAndUpdate({name: "AILastQuery"}, {$set: {date: date}}, {upsert: true})
+      let proms = [];
+      proms.push(CONSTANT.findOneAndUpdate({name: "AILastQuery"}, {$set: {date: date}}, {upsert: true}));
+      proms.push(USER.updateMany({}, {$set: {currentRoundForRecommendation: 1}}));
+      
+      Promise.all(proms)
       .then((doc)=>{
         res.status(200).json({success: true});
       })

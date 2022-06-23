@@ -38,6 +38,10 @@ const userSchema = new schema({
     loggedInUsingMobile:{
         type: Boolean,
         default: false
+    },
+    currentRoundForRecommendation: {
+        type: Number,
+        default: 1
     }
 }, {timestamps: true});
 

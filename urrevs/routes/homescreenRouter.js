@@ -27,6 +27,7 @@ const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
 const COMPANY_QUES_LIKES = require("../models/companyQuesLike");
 const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
 const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
+const USER = require("../models/user");
 
 
 const config = require("../config");
@@ -57,10 +58,11 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
     let resultCques = [];
 
     if(req.user){
+        let userDoc = await USER.findByIdAndUpdate(req.user._id, {$inc: {currentRoundForRecommendation: 1}});
+        let roundNum = userDoc.currentRoundForRecommendation;
         // get recommendations for authenticated user
         try{
             let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
-
             const {data: resp} = await axios.get(process.env.AI_LINK + "/all/" + req.user._id + "/recommend",
             {headers: {'X-Api-Key': process.env.AI_API_KEY}, params: {"round": roundNum}},
             {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })});
