@@ -588,7 +588,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             
             // get the model name
             let parsedUa = useragentParser(uA);
-            let modelName = parsedUa.device.model;
+            let modelName = "," + parsedUa.device.model + ",";
 
             let proms = [];
             proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
