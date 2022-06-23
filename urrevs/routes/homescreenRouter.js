@@ -43,14 +43,6 @@ homeRouter.options("*", cors.cors, (req, res, next) => {
 
 // get recommended reviews and questions
 homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible, async(req, res, next) => {
-    let roundNum = req.query.round;
-
-    if(roundNum == null || isNaN(roundNum)){
-        res.statusCode = 400;
-        res.setHeader("Content-Type", "application/json");
-        res.json({success: false, status: "bad request"});
-        return;
-    }
 
     let resultPrevs = [];
     let resultCrevs = [];
@@ -750,6 +742,14 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           }
     }
     else{
+        let roundNum = req.query.round;
+
+        if(roundNum == null || isNaN(roundNum)){
+            res.statusCode = 400;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "bad request"});
+            return;
+        }
         // get recommendations for unauthenticated user
         try{
           let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
