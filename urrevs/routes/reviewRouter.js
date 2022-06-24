@@ -7,6 +7,8 @@ const express = require("express");
 const axios = require("axios");
 const https = require("https");
 const fs = require("fs");
+const useragent = require("express-useragent");
+const useragentParser = require('ua-parser-js');
 
 const reviewRouter = express.Router();
 
@@ -69,6 +71,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   4- checking if the company exists
   5- checking if the user has already reviewed the phone
   6- checking if the phone and company are matched
+  7- check if the the phone review, company review, and ownedPhone can be verified or not
                  
                 CREATION
   7- create the phone review
@@ -174,20 +177,35 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
+
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
   stage1Proms.push(COMPANY.findById(companyId));
-  stage1Proms.push(PHONEREV.findOne({user: req.user._id, phone: phoneId}));
+  stage1Proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: phoneId}, {_id: 1}));
   if(refCode){
     stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
   }
   
-  
+  // checking verification
+  let verificationRatio = 0;
+
+  let uA = req.headers['user-agent'];
+  let uAObj = useragent.parse(uA);
+
+  if(uAObj.isMobile){
+    if(!uAObj.isiPhone){
+      let parsedUa = useragentParser(uA);
+      let modelName = "," + parsedUa.device.model + ",";
+      stage1Proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1}));
+    }
+  }
+
   Promise.all(stage1Proms).then((stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
     let pprev = stage1Results[2];
+    let phonesWithTheSameModelName = (stage1Results[3]) ? stage1Results[3] : [];
     
     if(!phone || !company){
       return res.status(404).json({
@@ -221,6 +239,23 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       }
     }
 
+    if(uAObj.isiPhone){
+      if(phone.name.match(/^Apple/gi)){
+        verificationRatio = -1;
+      }
+    }
+    else{
+      let listLength = phonesWithTheSameModelName.length
+      if(listLength > 0){
+         for(let possiblePhone of phonesWithTheSameModelName){
+          if(possiblePhone.name == phone.name){
+            verificationRatio = (1 / listLength) * 100;
+            break;
+          }
+         }
+      }
+    }
+
     // create the phone review
     PHONEREV.create({
       user: req.user._id,
@@ -234,7 +269,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       callQuality: callQuality,
       batteryRating: battery,
       pros: pros,
-      cons: cons
+      cons: cons,
+      verificationRatio: verificationRatio
     })
     .then((prev)=>{
 
@@ -245,7 +281,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         generalRating: companyRating,
         pros: compPros,
         cons: compCons,
-        corresPrev: prev._id
+        corresPrev: prev._id,
+        verificationRatio: verificationRatio
       })
       .then((crev)=>{
         
@@ -298,7 +335,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         let staeg2Proms = [];
         staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
         staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
-        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId}));
+        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId, verificationRatio: verificationRatio}));
         
         Promise.all(staeg2Proms).then(async(staeg2Results)=>{
           
@@ -382,6 +419,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
               battery: battery,
               pros: pros,
               cons: cons,
+              verificationRatio: verificationRatio
             }
             res.status(200).json({
               success: true,

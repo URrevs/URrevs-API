@@ -306,6 +306,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
         }
 
         let owned = false;
+        let verified = false;
 
         if(req.user){
             // an authenticated user has triggered the tracker
@@ -313,7 +314,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
             // check if the phone is owned by the user or not
             let proms = [];
 
-            proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: req.params.phoneId}));
+            proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: req.params.phoneId}, {verificationRatio: 1}));
             proms.push(PHONEPROFILEVISIT.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$inc: {times: 1}}, {upsert: true}));
             
 
@@ -322,6 +323,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
             try{
                 outs = await Promise.all(proms);
                 owned = (outs[0]) ? true : false;
+                verified = (outs[0].verificationRatio != 0) ? true : false;
             }
             catch(err){
                 console.log("Error from /phones/:phoneId/stats: ", err);
@@ -345,6 +347,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
         result.callQuality = phone.callQuality;
         result.battery = phone.batteryRating;
         result.owned = owned;
+        result.verified = verified;
 
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
