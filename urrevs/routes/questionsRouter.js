@@ -3022,9 +3022,9 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
         resultQuess.push({
           _id: ques._id,
           type: "phone",
-          userId: req.user._id,
-          userName: req.user.name,
-          picture: req.user.picture,
+          userId: ques.user._id,
+          userName: ques.user.name,
+          picture: ques.user.picture,
           createdAt: ques.createdAt,
           targetId: ques.phone._id,
           targetName: ques.phone.name,
