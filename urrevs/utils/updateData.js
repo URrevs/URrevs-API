@@ -576,7 +576,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
             console.log("Adding: ", newPhones[i].url);
 
 
-            let testDoc = await phoneCollection.findOneAndUpdate({name: newPhones[i].name}, {$set: {company: brand._id}});
+            let testDoc = await phoneCollection.findOneAndUpdate({name: {$regex: "^"+newPhones[i].name+"$", $options: "i"}}, {$set: {company: brand._id}});
             if(testDoc){
               console.log("Phone: ", newPhones[i].name, " already exists in the DB. Upading company id");
               continue;
