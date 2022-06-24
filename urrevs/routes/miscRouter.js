@@ -171,17 +171,49 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
         usb += usbVersion;
       }
 
+      let screenS = "";
+      if(screenSize) {
+        screenS += screenSize + " inches";
+      }
+      if(screen2bodyRatio) {
+        if(screenS.length > 0) {
+          screenS += ", ";
+        }
+        screenS += "(~" + screen2bodyRatio + "% screen-to-body ratio)";
+      }
+
+      let screenR = "";
+      if(resolutionLength && resolutionWidth) {
+        screenR += resolutionLength + " x " + resolutionWidth + " pixels";
+      }
+      if(resolutionDensity) {
+        if(screenR.length > 0) {
+          screenR += ", ";
+        }
+        screenR += "(~" + resolutionDensity + " ppi density)";
+      }
+
+      let dimensions = "";
+      if(length && width && height) {
+        dimensions += length + " x " + width + " x " + height + " mm";
+      }
+
+      let weightString = "";
+      if(weight) {
+        weightString += weight + " g";
+      }
+
       proms.push(PSPECS.create({
         _id: newPhone._id,
         price: (price)? parseFloat(price): null,
         releaseDate: releaseDate,
-        dimensions: length + " x " + width + " x " + height + " mm",
+        dimensions: dimensions,
         newtork: network,
-        weight: weight + " g",
+        weight: weightString,
         sim: sim,
         screenType: screenType,
-        screenSize: screenSize + " inches, (~" + screen2bodyRatio + "% screen-to-body ratio)",
-        screenResolution: resolutionLength + " x " + resolutionWidth + " pixels, (~" + resolutionDensity + " ppi density)",
+        screenSize: screenS,
+        screenResolution: screenR,
         screenProtection: screenProtection,
         os: os,
         chipset: chipset,
