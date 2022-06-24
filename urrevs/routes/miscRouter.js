@@ -25,7 +25,7 @@ miscRouter.options("*", cors.cors, (req, res, next)=>{
 
 
 // manual phone addition
-miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin ,(req, res, next)=>{
   const {
     // string
     name, picture, network, sim, screenType, screenProtection, os, chipset, cpu, gpu, exMem, mainCam, selfieCam, wlan, radio, usbType, fingerprintDetails, gps,
@@ -153,7 +153,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
       if(hasFastCharging) {
         charging += "Fast charging";
       }
-      if(chargingPower != "0") {
+      if(chargingPower) {
         if(charging.length > 0) {
           charging += ", ";
         }
@@ -162,7 +162,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
 
       proms.push(PSPECS.create({
         _id: newPhone._id,
-        price: parseFloat(price),
+        price: (price)? parseFloat(price): null,
         releaseDate: releaseDate,
         dimensions: length + " x " + width + " x " + height + " mm",
         newtork: network,
@@ -195,7 +195,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
 
       proms.push(NPHONE.create({
         _id: newPhone._id,
-        price: price,
+        price: (price)? parseFloat(price): null,
         name: name,
         company: company.name,
         releaseDate: releaseDate,
@@ -233,7 +233,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
         fingerprintDetails: fingerprintDetails,
         batteryCapacity: batteryCapacity,
         hasFastCharging: hasFastCharging, // boolean
-        chargingPower: chargingPower
+        chargingPower: (chargingPower)? chargingPower : "0"
       }));
 
 
