@@ -160,6 +160,17 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
         charging += chargingPower + "W";
       }
 
+      let usb = "";
+      if(usbType) {
+        usb += usbType;
+      }
+      if(usbVersion) {
+        if(usb.length > 0) {
+          usb += " ";
+        }
+        usb += usbVersion;
+      }
+
       proms.push(PSPECS.create({
         _id: newPhone._id,
         price: (price)? parseFloat(price): null,
@@ -187,7 +198,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
         gps: gps,
         nfc: (hasNfc ? "Yes" : ""),
         radio: radio,
-        usb: usbType + " " + usbVersion,
+        usb: usb,
         sensors: sensors,
         battery: (batteryCapacity)? batteryCapacity + " mAh battery" : "",
         charging: charging
