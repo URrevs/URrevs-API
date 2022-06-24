@@ -296,7 +296,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
     // increase the view count
     PHONE.findByIdAndUpdate(req.params.phoneId, {$inc: {views: 1}}, {new: false})
     .populate("company", {avgRating: 1})
-    .then((phone)=>{
+    .then(async (phone)=>{
         
         if(!phone){
             res.statusCode = 404;
@@ -305,19 +305,28 @@ authenticate.verifyFlexible, (req, res, next)=>{
             return;
         }
 
+        let owned = false;
+
         if(req.user){
             // an authenticated user has triggered the tracker
             // track the activity
-            PHONEPROFILEVISIT.findOneAndUpdate({
-                user: req.user._id,
-                phone: req.params.phoneId
-            }, {$inc: {times: 1}}, {upsert: true}).then((visit)=>{})
-            .catch((err)=>{
+            // check if the phone is owned by the user or not
+            let proms = [];
+
+            proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: req.params.phoneId}));
+            proms.push(PHONEPROFILEVISIT.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$inc: {times: 1}}, {upsert: true}));
+            
+
+            let outs = null;
+
+            try{
+                outs = await Promise.all(proms);
+                owned = (outs[0]) ? true : false;
+            }
+            catch(err){
                 console.log("Error from /phones/:phoneId/stats: ", err);
-                res.statusCode = 500;
-                res.setHeader("Content-Type", "application/json");
-                res.json({success: false, status: "process failed"});
-            })
+                return res.status(500).json({success: false, status: "process failed"});
+            }
         }
 
         // get the stats of the phone then send them
@@ -335,6 +344,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
         result.camera = phone.cam;
         result.callQuality = phone.callQuality;
         result.battery = phone.batteryRating;
+        result.owned = owned;
 
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
