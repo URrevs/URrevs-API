@@ -57,6 +57,15 @@ const cReviewSchema = new schema({
         type: Number,
         default: 0,
         min: 0
+    },
+    verificationRatio: {
+        /*
+            positive: android,
+            negative: ios
+            zero: not verified
+        */
+        type: Number,
+        default: 0
     }
 },
 {

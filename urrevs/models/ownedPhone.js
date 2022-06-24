@@ -25,6 +25,15 @@ const ownedPhonesSchema = new schema({
     ownedAt: {
         type: Date,
         required: true
+    },
+    verificationRatio: {
+        /*
+            positive: android,
+            negative: ios
+            zero: not verified
+        */
+        type: Number,
+        default: 0
     }
 });
 
