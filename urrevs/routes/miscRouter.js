@@ -127,7 +127,7 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
     }
 
     // create new phone
-    PHONE.create({name: name, company: company._id, picture: picture}).then((newPhone)=>{
+    PHONE.create({name: name, company: company._id, picture: picture, manual: true}).then((newPhone)=>{
       let proms = [];
 
       // parsing the fields for PSPECS collections
