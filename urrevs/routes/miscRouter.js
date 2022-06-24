@@ -17,6 +17,7 @@ const PSPECS = require("../models/phoneSpecs");
 const NPHONE = require("../models/newPhone");
 
 const mongoose = require("mongoose");
+const config = require('../config');
 
 // preflight
 miscRouter.options("*", cors.cors, (req, res, next)=>{
@@ -329,7 +330,7 @@ miscRouter.post("/company/:companyId/logo", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    multerUploadS3("img", /\.(jpg|jpeg|png)$/, "urrevs2", "brandsLogos/"+Date.now().toString())(req, res, (err)=>{
+    multerUploadS3("img", /\.(jpg|jpeg|png)$/, (process.env.URREVS_BUCKET || config.URREVS_BUCKET), "brandsLogos/"+Date.now().toString())(req, res, (err)=>{
       if(err){
         console.log("Error from POST /misc/pic: " + err);
         return res.status(500).json({
