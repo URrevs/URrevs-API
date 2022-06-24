@@ -240,7 +240,8 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
       Promise.all(proms)
       .then((results) => {
         return res.status(200).json({
-          success: true
+          success: true,
+          _id: newPhone._id
         });
       })
       .catch((err) => {
