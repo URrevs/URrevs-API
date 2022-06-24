@@ -424,7 +424,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
             res.status(200).json({
               success: true,
               review: resultRev,
-              earnedPoints: grade
+              earnedPoints: grade,
+              useMobile: (uAObj.isMobile) ? true : false
             });
           })
           .catch((err)=>{
