@@ -22,6 +22,7 @@ const phonesSearchLimit = parseInt(process.env.PHONES_SEARCH_LIMIT || config.PHO
 const productsSearchLimitPhones = parseInt(process.env.PRODUCTS_SEARCH_LIMIT_PHONES || config.PRODUCTS_SEARCH_LIMIT_PHONES);
 const globalSearchLimitPhones = parseInt(process.env.GLOBAL_SEARCH_LIMIT_PHONES || config.GLOBAL_SEARCH_LIMIT_PHONES);
 const globalSearchLimitCompanies = parseInt(process.env.GLOBAL_SEARCH_LIMIT_COMPANIES || config.GLOBAL_SEARCH_LIMIT_COMPANIES);
+const companiesSearchLimit = parseInt(process.env.COMPANIES_SEARCH_LIMIT || config.COMPANIES_SEARCH_LIMIT);
 
 //--------------------------------------------------------------------
 
@@ -256,6 +257,82 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
     res.json({success: false, status: "process failed"});
   });
 });
+
+
+
+
+// search all products and companies
+searchRouter.get("/companies", cors.cors, rateLimitSearch, (req, res, next)=>{
+  let searchWord = req.query.q;
+  if(!searchWord){
+    res.statusCode = 400;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "bad request"});
+    return;
+  }
+  
+    // SEARCHWORD PROCESSING BEGINS HERE
+
+    searchWord = searchWord.trim();
+  
+    // replace multiple spaces with single space then convert to array
+    searchWord = searchWord.replace(/\s+/g, " "); 
+    searchWord = searchWord.split("");
+    
+    // add braces to each word in search word then join the words together
+    searchWord = searchWord.map((word)=>{
+      word = "[{(" + word + ")}]";
+      return word;
+    });
+    searchWord = searchWord.join(" ");
+    
+    // escaping special characters
+    searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+  
+    // replace any space with any number of spaces
+    searchWord = searchWord.replace(/\s+/g, "\\s*"); 
+  
+    // allowing any number of round brackets
+    searchWord = searchWord.replace(/\(/g, "(*");
+    searchWord = searchWord.replace(/\)/g, ")*");
+  
+    // allowing any number of square brackets
+    searchWord = searchWord.replace(/\[/g, "[*");
+    searchWord = searchWord.replace(/\]/g, "]*");
+  
+    // allowing any number of curly brackets
+    searchWord = searchWord.replace(/\{/g, "{*");
+    searchWord = searchWord.replace(/\}/g, "}*");
+  
+    // SEARCHWORD PROCESSING ENDS HERE
+
+  let promises = [];
+  promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(companiesSearchLimit));
+
+  Promise.all(promises).then((results)=>{
+    let companiesRes = results[0];
+    let companies = [];
+
+    for(c of companiesRes){
+      companies.push({
+        _id: c._id,
+        name: c.name,
+        type: "company"
+      });
+    }
+
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: true, companies: companies});
+  })
+  .catch((err)=>{
+    console.log("Error from /search/all: ", err);
+    res.statusCode = 500;
+    res.setHeader("Content-Type", "application/json");
+    res.json({success: false, status: "process failed"});
+  });
+});
+
 
 
 
