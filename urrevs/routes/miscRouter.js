@@ -330,7 +330,7 @@ miscRouter.post("/company/:companyId/logo", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    multerUploadS3("img", /\.(jpg|jpeg|png)$/, (process.env.URREVS_BUCKET || config.URREVS_BUCKET), "brandsLogos/"+Date.now().toString())(req, res, (err)=>{
+    multerUploadS3("img", /\.(jpg|jpeg|png)$/, (process.env.URREVS_BUCKET || config.URREVS_BUCKET), (process.env.BRAND_LOGOS_DESTINATION || config.BRAND_LOGOS_DESTINATION)+"/"+Date.now().toString())(req, res, (err)=>{
       if(err){
         console.log("Error from POST /misc/pic: " + err);
         return res.status(500).json({
