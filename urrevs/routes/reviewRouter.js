@@ -550,7 +550,8 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexi
       battery: rev.batteryRating,
       pros: rev.pros,
       cons: rev.cons,
-      liked: false
+      liked: false,
+      verificationRatio: rev.verificationRatio
     };
 
     // request is done by a user
@@ -623,7 +624,8 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFle
       generalRating: rev.generalRating,
       pros: rev.pros,
       cons: rev.cons,
-      liked: false
+      liked: false,
+      verificationRatio: rev.verificationRatio
     };
 
     // request is done by a user
@@ -724,7 +726,8 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -825,7 +828,8 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyU
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -920,7 +924,8 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -1015,7 +1020,8 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verif
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -1115,7 +1121,8 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verify
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -1213,7 +1220,8 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.ve
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
