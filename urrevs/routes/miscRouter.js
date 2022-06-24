@@ -9,6 +9,7 @@ const miscRouter = express.Router();
 const cors = require("../utils/cors");
 const authenticate = require("../utils/authenticate");
 const rateLimit = require("../utils/rateLimit/regular");
+const multerUploadS3 = require("../utils/multerUploadS3");
 
 const COMPANY = require("../models/company");
 const PHONE = require("../models/phone");
@@ -313,6 +314,65 @@ miscRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, authent
   });
 });
 
+
+
+// upload brands logos
+miscRouter.post("/company/:companyId/logo", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  let companyId = req.params.companyId;
+
+  COMPANY.findById(companyId, {_id: 1})
+  .then((company)=>{
+    if(!company){
+      return res.status(404).json({
+        success: false,
+        status: "company not found"
+      });
+    }
+
+    multerUploadS3("img", /\.(jpg|jpeg|png)$/, "urrevs2", "brandsLogos/"+Date.now().toString())(req, res, (err)=>{
+      if(err){
+        console.log("Error from POST /misc/pic: " + err);
+        return res.status(500).json({
+          success: false,
+          status: "error uploading photo"
+        });
+      }
+  
+      if(req.wrongFormat){
+        return res.status(400).json({
+          success: false,
+          status: "Invalid format. Only jpg, jpeg, and png are allowed."
+        })
+      }
+
+      let photoUrl = req.file.location;
+      
+      company.picture = photoUrl;
+
+      company.save().then((comp)=>{
+        return res.status(200).json({
+          success: true,
+          company: comp._id
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from POST /misc/pic: " + err);
+        return res.status(500).json({
+          success: false,
+          status: "error adding photo to db"
+        });
+      });
+    });
+
+  })
+  .catch((err)=>{
+    console.log("Error from POST /misc/pic: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error finding the company"
+    });
+  });
+});
 
 
 module.exports = miscRouter;
