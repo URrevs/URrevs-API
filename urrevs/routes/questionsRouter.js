@@ -282,8 +282,15 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
       });
     }
 
-    PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId}, {$inc: {ansCount: 1}})
-    .then((question)=>{
+    let proms1 = [];
+    proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId}, {$inc: {ansCount: 1}}));
+    proms1.push(PANS.findOne({user: req.user._id, question: req.params.quesId}));
+    
+    Promise.all(proms1)
+    .then((results)=>{
+      let question = results[0];
+      let ansFlag = results[1];
+
       if(!question){
         return res.status(404).json({
           success: false,
@@ -293,7 +300,7 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
 
       let proms = [];
       proms.push(PANS.create({user: req.user._id, question: question._id, content: content, ownedAt: own.ownedAt}));
-      if(!(question.user.equals(req.user._id))){
+      if(!(question.user.equals(req.user._id)) && !ansFlag){
         proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {questionsAnswered: 1}}));
       }
       
@@ -568,8 +575,15 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
       });
     }
 
-    CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId}, {$inc: {ansCount: 1}})
-    .then((question)=>{
+    let proms1 = [];
+    proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId}, {$inc: {ansCount: 1}}))
+    proms1.push(CANS.findOne({user: req.user._id, question: req.params.quesId}));
+    
+    Promise.all(proms1)
+    .then((results)=>{
+      let question = results[0];
+      let ansFlag = results[1];
+
       if(!question){
         return res.status(404).json({
           success: false,
@@ -579,7 +593,7 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
 
       let proms = [];
       proms.push(CANS.create({user: req.user._id, question: question._id, content: content}));
-      if(!(question.user.equals(req.user._id))){
+      if(!(question.user.equals(req.user._id)) && !ansFlag){
         proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {questionsAnswered: 1}}));
       }
       
