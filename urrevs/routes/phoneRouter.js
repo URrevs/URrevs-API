@@ -748,8 +748,9 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
         let proms2 = [];
+        ownedPhoneDoc.verificationRatio = verificationRatio;
         proms2.push(PHONEREV.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
-        proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
+        proms2.push(ownedPhoneDoc.save());
     
         Promise.all(proms2)
         .then((results2)=>{
