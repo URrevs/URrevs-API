@@ -291,13 +291,16 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
         })
       }
 
-      PANS.create({
-        user: req.user._id,
-        question: question._id,
-        content: content,
-        ownedAt: own.ownedAt
-      })
-      .then((answer)=>{
+      let proms = [];
+      proms.push(PANS.create({user: req.user._id, question: question._id, content: content, ownedAt: own.ownedAt}));
+      if(!(question.user.equals(req.user._id))){
+        proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {questionsAnswered: 1}}));
+      }
+      
+      
+      Promise.all(proms)
+      .then((results)=>{
+        let answer = results[0];
         return res.status(200).json({
           success: true,
           answer: answer._id,
@@ -574,12 +577,15 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
         })
       }
 
-      CANS.create({
-        user: req.user._id,
-        question: question._id,
-        content: content
-      })
-      .then((answer)=>{
+      let proms = [];
+      proms.push(CANS.create({user: req.user._id, question: question._id, content: content}));
+      if(!(question.user.equals(req.user._id))){
+        proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {questionsAnswered: 1}}));
+      }
+      
+      Promise.all(proms)
+      .then((results)=>{
+        let answer = results[0];
         return res.status(200).json({
           success: true,
           answer: answer._id
