@@ -699,7 +699,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
     let uAObj = useragent.parse(uA);
 
     if(!uAObj.isMobile){
-        return res.status(200).json({success: false, status: "not a mobile device"});
+        return res.status(400).json({success: false, status: "not mobile"});
     }
 
     let proms1 = [];
