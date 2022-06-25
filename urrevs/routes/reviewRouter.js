@@ -24,6 +24,7 @@ const increaseViews = require("../utils/increaseViews");
 const increaseShares = require("../utils/increaseShares");
 const addComment = require("../utils/addComment");
 const lameTrack = require("../utils/lameTrack");
+const mapUaToPhones = require("../utils/mapUaToPhones");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -2911,6 +2912,17 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
             let phones;
             try{
                 phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                
+                if(phones.length == 0){
+                    try{
+                      let newPhones = await mapUaToPhones(uA, modelName, null, null, true);
+                      phones = newPhones;
+                    }
+                    catch(err){
+                      // DO NOTHING
+                    }
+                }
+                
                 for(let phone of phones){
                     if(phone.name == rev.phone.name){
                         verificationRatio = (1 / phones.length) * 100;

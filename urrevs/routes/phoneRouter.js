@@ -727,6 +727,17 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             let phones;
             try{
                 phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                
+                if(phones.length == 0){
+                    try{
+                      let newPhones = await mapUaToPhones(uA, modelName, null, null, true);
+                      phones = newPhones;
+                    }
+                    catch(err){
+                      // DO NOTHING
+                    }
+                }
+                
                 for(let phone of phones){
                     if(phone.name == rev.phone.name){
                         verificationRatio = (1 / phones.length) * 100;
