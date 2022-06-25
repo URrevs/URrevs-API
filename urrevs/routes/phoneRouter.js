@@ -703,26 +703,20 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
     }
 
     let proms1 = [];
-    proms1.push(PHONE.findById(req.params.phoneId, {name: 1}));
-    proms1.push(OWNED_PHONE.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1}));
+    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1}).populate("phone", {name: 1}));
 
     Promise.all(proms1)
     .then(async(results)=>{
-        let phoneDoc = results[0];
-        let ownedPhoneDoc = results[1];
+        let rev = results[0];
 
-        if(phoneDoc == null){
-            return res.status(404).json({success: false, status: "phone not found"});
-        }
-        
-        if(ownedPhoneDoc == null){
-            return res.status(403).json({success: false, status: "phone not owned"});
+        if(rev == null){
+            return res.status(403).json({success: false, status: "phone not found or not owned"});
         }
 
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
-            if(phoneDoc.name.match(/^Apple/gi)){
+            if(rev.phone.name.match(/^Apple/gi)){
                 verificationRatio = -1;
             }
         }
@@ -734,7 +728,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             try{
                 phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
                 for(let phone of phones){
-                    if(phone.name == phoneDoc.name){
+                    if(phone.name == rev.phone.name){
                         verificationRatio = (1 / phones.length) * 100;
                         break;
                       }
@@ -747,28 +741,15 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         }
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
+        rev.verificationRatio = verificationRatio;
         let proms2 = [];
-        ownedPhoneDoc.verificationRatio = verificationRatio;
-        proms2.push(PHONEREV.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
-        proms2.push(ownedPhoneDoc.save());
+        proms2.push(rev.save());
+        proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
+        proms2.push(COMPANYREV.findOneAndUpdate({corresPrev: rev._id}, {$set: {verificationRatio: verificationRatio}}));
     
         Promise.all(proms2)
         .then((results2)=>{
-            let pRevId = (results2[0] == null) ? null : results2[0]._id;
-
-            let proms3 = [];
-            if(pRevId != null){
-                proms3.push(COMPANYREV.findOneAndUpdate({corresPrev: pRevId}, {$set: {verificationRatio: verificationRatio}}));
-            }
-
-            Promise.all(proms3)
-            .then((results3)=>{
-                return res.status(200).json({success: true, verificationRatio: verificationRatio});
-            })
-            .catch((err)=>{
-                console.log("Error from /phones/:phoneId/verify: ", err);
-                return res.status(500).json({success: false, status: "error updating the reviews"});
-            });
+            return res.status(200).json({success: true, verificationRatio: verificationRatio});
         })
         .catch((err)=>{
             console.log("Error from /phones/:phoneId/verify: ", err);
