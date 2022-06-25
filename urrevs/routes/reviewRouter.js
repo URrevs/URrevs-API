@@ -2873,8 +2873,75 @@ reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authentica
 
 
 
+// verify a phone review with its corresponding phone and company review
+reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  let uA = req.headers['user-agent'];
+  let uAObj = useragent.parse(uA);
 
+  if(!uAObj.isMobile){
+      return res.status(400).json({success: false, status: "not mobile"});
+  }
 
+  let proms1 = [];
+  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1}).populate("phone", {name: 1}));
+
+  Promise.all(proms1)
+    .then(async(results)=>{
+        let rev = results[0];
+
+        if(rev == null){
+            return res.status(403).json({success: false, status: "review not found or not owned"});
+        }
+
+        let verificationRatio = 0;
+
+        if(uAObj.isiPhone){
+            if(rev.phone.name.match(/^Apple/gi)){
+                verificationRatio = -1;
+            }
+        }
+        else{
+            let parsedUa = useragentParser(uA);
+            let modelName = "," + parsedUa.device.model + ",";
+
+            let phones;
+            try{
+                phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                for(let phone of phones){
+                    if(phone.name == rev.phone.name){
+                        verificationRatio = (1 / phones.length) * 100;
+                        break;
+                      }
+                }
+            }
+            catch(err){
+                console.log("Error from /reviews/phone/:revId/verify: ", err);
+                return res.status(500).json({success: false, status: "error finding the matched phones"});
+            }
+        }
+
+        // update the verification ratio in the owned phones, phone reviews, company reviews
+        rev.verificationRatio = verificationRatio;
+        let proms2 = [];
+        proms2.push(rev.save());
+        proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: rev.phone._id}, {$set: {verificationRatio: verificationRatio}}));
+        proms2.push(COMPANYREV.findOneAndUpdate({corresPrev: rev._id}, {$set: {verificationRatio: verificationRatio}}));
+    
+        Promise.all(proms2)
+        .then((results2)=>{
+            return res.status(200).json({success: true, verificationRatio: verificationRatio});
+        })
+        .catch((err)=>{
+            console.log("Error from /reviews/phone/:revId/verify: ", err);
+            return res.status(500).json({success: false, status: "error updating the verification ratio"});
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reviews/phone/:revId/verify: ", err);
+        return res.status(500).json({success: false, status: "error finding the phone"});
+    });
+
+});
 
 
 
