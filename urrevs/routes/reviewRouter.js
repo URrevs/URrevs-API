@@ -22,7 +22,7 @@ const likeReply = require("../utils/likeReply");
 const addReply = require("../utils/addReply");
 const increaseViews = require("../utils/increaseViews");
 const increaseShares = require("../utils/increaseShares");
-const addComment = require("../utils/addCommentOrAnswer");
+const addComment = require("../utils/addComment");
 const lameTrack = require("../utils/lameTrack");
 
 const USER = require("../models/user");
