@@ -823,7 +823,8 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       battery: rev.batteryRating,
                       pros: rev.pros,
                       cons: rev.cons,
-                      liked: false
+                      liked: false,
+                      verificationRatio: rev.verificationRatio
                   });
               }
 
@@ -850,7 +851,8 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       generalRating: rev.generalRating,
                       pros: rev.pros,
                       cons: rev.cons,
-                      liked: false
+                      liked: false,
+                      verificationRatio: rev.verificationRatio
                   });
               }
 
