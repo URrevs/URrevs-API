@@ -823,8 +823,8 @@ questionRouter.get("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
-  .populate("replies.user", {name: 1, picture: 1})
+  .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+  .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
   .then(async(answers)=>{
     let resultAnswers = [];
     let answerIds = [];
@@ -842,6 +842,7 @@ questionRouter.get("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.
         userId: answer.user._id,
         userName: answer.user.name,
         picture: answer.user.picture,
+        userQuestionsAnswered: answer.user.questionsAnswered,
         content: answer.content,
         createdAt: answer.createdAt,
         upvotes: answer.likes,
@@ -860,6 +861,7 @@ questionRouter.get("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.
           userId: reply.user._id,
           userName: reply.user.name,
           userPicture: reply.user.picture,
+          userQuestionsAnswered: reply.user.questionsAnswered,
           content: reply.content,
           createdAt: reply.createdAt,
           likes: reply.likes,
@@ -938,8 +940,8 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
-  .populate("replies.user", {name: 1, picture: 1})
+  .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+  .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
   .then(async(answers)=>{
     let resultAnswers = [];
     let answerIds = [];
@@ -957,6 +959,7 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
         userId: answer.user._id,
         userName: answer.user.name,
         picture: answer.user.picture,
+        userQuestionsAnswered: answer.user.questionsAnswered,
         content: answer.content,
         createdAt: answer.createdAt,
         upvotes: answer.likes,
@@ -975,6 +978,7 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
           userId: reply.user._id,
           userName: reply.user.name,
           userPicture: reply.user.picture,
+          userQuestionsAnswered: reply.user.questionsAnswered,
           content: reply.content,
           createdAt: reply.createdAt,
           likes: reply.likes,
@@ -1649,7 +1653,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
     let repliesIds = [];
     if(question.acceptedAns){
       try{
-        let acceptedAnsDoc_ = await PANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+        let acceptedAnsDoc_ = await PANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
         if(acceptedAnsDoc_){
           let answer_replies = [];
           
@@ -1663,6 +1667,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
               userId: reply.user._id,
               userName: reply.user.name,
               userPicture: reply.user.picture,
+              userQusestionsAnswered: reply.user.questionsAnswered,
               content: reply.content,
               likes: reply.likes,
               liked: false,
@@ -1675,6 +1680,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
             userId: acceptedAnsDoc_.user._id,
             userName: acceptedAnsDoc_.user.name,
             picture: acceptedAnsDoc_.user.picture,
+            userQusestionsAnswered: acceptedAnsDoc_.user.questionsAnswered,
             content: acceptedAnsDoc_.content,
             upvotes: acceptedAnsDoc_.likes,
             createdAt: acceptedAnsDoc_.createdAt,
@@ -1792,7 +1798,7 @@ questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verify
     let repliesIds = [];
     if(question.acceptedAns){
       try{
-        let acceptedAnsDoc_ = await CANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+        let acceptedAnsDoc_ = await CANS.findById(question.acceptedAns).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
         if(acceptedAnsDoc_){
           let answer_replies = [];
           
@@ -1806,6 +1812,7 @@ questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verify
               userId: reply.user._id,
               userName: reply.user.name,
               userPicture: reply.user.picture,
+              userQusestionsAnswered: reply.user.questionsAnswered,
               content: reply.content,
               likes: reply.likes,
               liked: false,
@@ -1818,6 +1825,7 @@ questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verify
             userId: acceptedAnsDoc_.user._id,
             userName: acceptedAnsDoc_.user.name,
             picture: acceptedAnsDoc_.user.picture,
+            userQusestionsAnswered: acceptedAnsDoc_.user.questionsAnswered,
             content: acceptedAnsDoc_.content,
             upvotes: acceptedAnsDoc_.likes,
             createdAt: acceptedAnsDoc_.createdAt,
@@ -1957,7 +1965,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -1972,6 +1980,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                userQusestionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -1985,6 +1994,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            userQusestionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
@@ -2120,7 +2130,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -2135,6 +2145,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                userQusestionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -2148,6 +2159,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            questionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
@@ -2284,7 +2296,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -2299,6 +2311,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                questionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -2312,6 +2325,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            questionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
@@ -2447,7 +2461,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -2462,6 +2476,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                questionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -2475,6 +2490,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            questionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
@@ -2609,7 +2625,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -2624,6 +2640,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                userQuestionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -2637,6 +2654,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            userQuestionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
@@ -2782,7 +2800,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+          let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
@@ -2797,6 +2815,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
                 userId: reply.user._id,
                 userName: reply.user.name,
                 userPicture: reply.user.picture,
+                userQuestionsAnswered: reply.user.questionsAnswered,
                 content: reply.content,
                 likes: reply.likes,
                 liked: false,
@@ -2810,6 +2829,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
             userId: ans.user._id,
             userName: ans.user.name,
             picture: ans.user.picture,
+            userQuestionsAnswered: ans.user.questionsAnswered,
             content: ans.content,
             upvotes: ans.likes,
             createdAt: ans.createdAt,
