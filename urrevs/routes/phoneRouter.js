@@ -325,7 +325,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
             try{
                 outs = await Promise.all(proms);
                 owned = (outs[0]) ? true : false;
-                verified = (outs[0].verificationRatio != 0) ? true : false;
+                verified = (outs[0]) ? ((outs[0].verificationRatio == -1 || outs[0].verificationRatio > parseFloat(process.env.MOBILE_VERIFICATION_CAP || config.MOBILE_VERIFICATION_CAP)) ? true : false) : false;
             }
             catch(err){
                 console.log("Error from /phones/:phoneId/stats: ", err);
