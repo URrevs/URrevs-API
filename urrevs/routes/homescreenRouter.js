@@ -165,7 +165,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         pAcceptedAnsIds.push(ques.acceptedAns);
                         pAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
@@ -180,6 +180,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                               userId: reply.user._id,
                               userName: reply.user.name,
                               userPicture: reply.user.picture,
+                              userQuestionsAnswered: reply.user.questionsAnswered,
                               content: reply.content,
                               likes: reply.likes,
                               liked: false,
@@ -193,6 +194,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                           userId: ans.user._id,
                           userName: ans.user.name,
                           picture: ans.user.picture,
+                          userQuestionsAnswered: ans.user.questionsAnswered,
                           content: ans.content,
                           upvotes: ans.likes,
                           createdAt: ans.createdAt,
@@ -240,7 +242,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         cAcceptedAnsIds.push(ques.acceptedAns);
                         cAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
@@ -255,6 +257,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                               userId: reply.user._id,
                               userName: reply.user.name,
                               userPicture: reply.user.picture,
+                              userQuestionsAnswered: reply.user.questionsAnswered,
                               content: reply.content,
                               likes: reply.likes,
                               liked: false,
@@ -268,6 +271,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                           userId: ans.user._id,
                           userName: ans.user.name,
                           picture: ans.user.picture,
+                          userQuestionsAnswered: ans.user.questionsAnswered,
                           content: ans.content,
                           upvotes: ans.likes,
                           createdAt: ans.createdAt,
@@ -508,7 +512,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         pAcceptedAnsIds.push(ques.acceptedAns);
                         pAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
@@ -523,6 +527,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                               userId: reply.user._id,
                               userName: reply.user.name,
                               userPicture: reply.user.picture,
+                              userQuestionsAnswered: reply.user.questionsAnswered,
                               content: reply.content,
                               likes: reply.likes,
                               liked: false,
@@ -536,6 +541,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                           userId: ans.user._id,
                           userName: ans.user.name,
                           picture: ans.user.picture,
+                          userQuestionsAnswered: ans.user.questionsAnswered,
                           content: ans.content,
                           upvotes: ans.likes,
                           createdAt: ans.createdAt,
@@ -583,7 +589,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         cAcceptedAnsIds.push(ques.acceptedAns);
                         cAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
@@ -598,6 +604,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                               userId: reply.user._id,
                               userName: reply.user.name,
                               userPicture: reply.user.picture,
+                              userQuestionsAnswered: reply.user.questionsAnswered,
                               content: reply.content,
                               likes: reply.likes,
                               liked: false,
@@ -611,6 +618,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                           userId: ans.user._id,
                           userName: ans.user.name,
                           picture: ans.user.picture,
+                          userQuestionsAnswered: ans.user.questionsAnswered,
                           content: ans.content,
                           upvotes: ans.likes,
                           createdAt: ans.createdAt,
@@ -868,7 +876,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       pAcceptedAnsIds.push(ques.acceptedAns);
                       pAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
@@ -883,6 +891,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                             userId: reply.user._id,
                             userName: reply.user.name,
                             userPicture: reply.user.picture,
+                            userQuestionsAnswered: reply.user.questionsAnswered,
                             content: reply.content,
                             likes: reply.likes,
                             liked: false,
@@ -896,6 +905,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         userId: ans.user._id,
                         userName: ans.user.name,
                         picture: ans.user.picture,
+                        userQuestionsAnswered: ans.user.questionsAnswered,
                         content: ans.content,
                         upvotes: ans.likes,
                         createdAt: ans.createdAt,
@@ -943,7 +953,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       cAcceptedAnsIds.push(ques.acceptedAns);
                       cAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
@@ -958,6 +968,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                             userId: reply.user._id,
                             userName: reply.user.name,
                             userPicture: reply.user.picture,
+                            userQuestionsAnswered: reply.user.questionsAnswered,
                             content: reply.content,
                             likes: reply.likes,
                             liked: false,
@@ -971,6 +982,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         userId: ans.user._id,
                         userName: ans.user.name,
                         picture: ans.user.picture,
+                        userQuestionsAnswered: ans.user.questionsAnswered,
                         content: ans.content,
                         upvotes: ans.likes,
                         createdAt: ans.createdAt,
@@ -1133,7 +1145,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       pAcceptedAnsIds.push(ques.acceptedAns);
                       pAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
@@ -1148,6 +1160,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                             userId: reply.user._id,
                             userName: reply.user.name,
                             userPicture: reply.user.picture,
+                            userQuestionsAnswered: reply.user.questionsAnswered,
                             content: reply.content,
                             likes: reply.likes,
                             liked: false,
@@ -1161,6 +1174,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         userId: ans.user._id,
                         userName: ans.user.name,
                         picture: ans.user.picture,
+                        userQuestionsAnswered: ans.user.questionsAnswered,
                         content: ans.content,
                         upvotes: ans.likes,
                         createdAt: ans.createdAt,
@@ -1208,7 +1222,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       cAcceptedAnsIds.push(ques.acceptedAns);
                       cAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
+                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
@@ -1223,6 +1237,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                             userId: reply.user._id,
                             userName: reply.user.name,
                             userPicture: reply.user.picture,
+                            userQuestionsAnswered: reply.user.questionsAnswered,
                             content: reply.content,
                             likes: reply.likes,
                             liked: false,
@@ -1236,6 +1251,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         userId: ans.user._id,
                         userName: ans.user.name,
                         picture: ans.user.picture,
+                        userQuestionsAnswered: ans.user.questionsAnswered,
                         content: ans.content,
                         upvotes: ans.likes,
                         createdAt: ans.createdAt,
