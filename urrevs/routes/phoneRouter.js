@@ -758,7 +758,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
 
             let proms3 = [];
             if(pRevId != null){
-                proms3.push(COMPANYREV.findOneAndUpdate({user: req.user._id, corresPrev: pRevId}, {$set: {verificationRatio: verificationRatio}}));
+                proms3.push(COMPANYREV.findOneAndUpdate({corresPrev: pRevId}, {$set: {verificationRatio: verificationRatio}}));
             }
 
             Promise.all(proms3)
