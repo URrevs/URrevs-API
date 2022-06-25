@@ -63,7 +63,8 @@ exports.authorize = (req) => {
                             picture: user.picture,
                             points: user.absPoints,
                             refCode: user.refCode,
-                            questionsAnswered: user.questionsAnswered
+                            questionsAnswered: user.questionsAnswered,
+                            totalViews: user.totalViews
                         }
                         return resolve({t: token, a: user.admin, p: prof});
                     }
@@ -92,7 +93,8 @@ exports.authorize = (req) => {
                                         picture: newUser.picture,
                                         points: newUser.absPoints,
                                         refCode: newUser.refCode,
-                                        questionsAnswered: newUser.questionsAnswered
+                                        questionsAnswered: newUser.questionsAnswered,
+                                        totalViews: newUser.totalViews
                                     }
                                     return resolve({t: token, a: newUser.admin, p: prof});
                                 }
@@ -168,7 +170,7 @@ exports.verifyUser = (req, res, next)=>{
             let decoded = jwt.verify(token, secretKey);
             TOKEN.findOne({_id: token, user: decoded._id}).populate("user").then((tokenDoc)=>{
                 if(tokenDoc){
-                    req.user = {_id: tokenDoc.user._id, admin: tokenDoc.user.admin, uid: tokenDoc.user.uid, name: tokenDoc.user.name, picture: tokenDoc.user.picture, absPoints: tokenDoc.user.absPoints, comPoints: tokenDoc.user.comPoints, refCode: tokenDoc.user.refCode, questionsAnswered: tokenDoc.user.questionsAnswered};
+                    req.user = {_id: tokenDoc.user._id, admin: tokenDoc.user.admin, uid: tokenDoc.user.uid, name: tokenDoc.user.name, picture: tokenDoc.user.picture, absPoints: tokenDoc.user.absPoints, comPoints: tokenDoc.user.comPoints, refCode: tokenDoc.user.refCode, questionsAnswered: tokenDoc.user.questionsAnswered, totalViews: tokenDoc.user.totalViews};
                     return next();
                 }
                 else{
