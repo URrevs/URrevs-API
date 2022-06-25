@@ -528,6 +528,13 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexi
       });
     }
     
+    try{
+      await USER.findByIdAndUpdate(rev.user._id, {$inc: {totalViews: 1}});
+    }
+    catch(err){
+      console.log("Error from GET /reviews/phone/:revId WHILE INCREASING THE TOTAL VIEWS COUNT OF A REVIEW AUTHOR: ", err);
+    }
+
     let resultRev = {
       _id: rev._id,
       type: "phone",
@@ -608,6 +615,13 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFle
       });
     }
     
+    try{
+      await USER.findByIdAndUpdate(rev.user._id, {$inc: {totalViews: 1}});
+    }
+    catch(err){
+      console.log("Error from GET /reviews/phone/:revId WHILE INCREASING THE TOTAL VIEWS COUNT OF A REVIEW AUTHOR: ", err);
+    }
+
     let resultRev = {
       _id: rev._id,
       type: "company",
@@ -2558,7 +2572,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/unlike", cors.c
 
 // increase views count for a phone review
 reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit, (req, res, next)=>{
-  increaseViews(PHONEREV, req.params.reviewId).then((result)=>{
+  increaseViews(PHONEREV, req.params.reviewId, true).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2586,7 +2600,7 @@ reviewRouter.put("/phone/:reviewId/view", cors.cors, rateLimit, (req, res, next)
 
 // increase views count for a company review
 reviewRouter.put("/company/:reviewId/view", cors.cors, rateLimit, (req, res, next)=>{
-  increaseViews(COMPANYREV, req.params.reviewId).then((result)=>{
+  increaseViews(COMPANYREV, req.params.reviewId, true).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,

@@ -46,6 +46,10 @@ const userSchema = new schema({
     questionsAnswered: {
         type: Number,
         default: 0
+    },
+    totalViews: {
+        type: Number,
+        default: 0
     }
 }, {timestamps: true});
 
