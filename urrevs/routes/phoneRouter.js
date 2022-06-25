@@ -308,7 +308,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
         }
 
         let owned = false;
-        let verified = false;
+        let verificationRatio = 0;
 
         if(req.user){
             // an authenticated user has triggered the tracker
@@ -325,7 +325,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
             try{
                 outs = await Promise.all(proms);
                 owned = (outs[0]) ? true : false;
-                verified = (outs[0]) ? ((outs[0].verificationRatio == -1 || outs[0].verificationRatio > parseFloat(process.env.MOBILE_VERIFICATION_CAP || config.MOBILE_VERIFICATION_CAP)) ? true : false) : false;
+                verificationRatio = (outs[0]) ? (outs[0].verificationRatio) : 0;
             }
             catch(err){
                 console.log("Error from /phones/:phoneId/stats: ", err);
@@ -349,7 +349,7 @@ authenticate.verifyFlexible, (req, res, next)=>{
         result.callQuality = phone.callQuality;
         result.battery = phone.batteryRating;
         result.owned = owned;
-        result.verified = verified;
+        result.verificationRatio = verificationRatio;
 
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
