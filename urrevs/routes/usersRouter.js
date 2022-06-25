@@ -197,7 +197,7 @@ userRouter.get("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, r
         return;
     }
 
-    OWNED_PHONE.find({user: req.user._id})
+    OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1, _id: 0})
     .sort({ownedAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
@@ -208,7 +208,8 @@ userRouter.get("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, r
             result.push({
                 _id: phone.phone._id,
                 name: phone.phone.name,
-                type: "phone"
+                type: "phone",
+                verificationRatio: phone.verificationRatio
             });
         }
         res.statusCode = 200;

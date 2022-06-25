@@ -7,6 +7,8 @@ const express = require("express");
 const axios = require("axios");
 const https = require("https");
 const fs = require("fs");
+const useragent = require("express-useragent");
+const useragentParser = require('ua-parser-js');
 
 const reviewRouter = express.Router();
 
@@ -69,6 +71,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   4- checking if the company exists
   5- checking if the user has already reviewed the phone
   6- checking if the phone and company are matched
+  7- check if the the phone review, company review, and ownedPhone can be verified or not
                  
                 CREATION
   7- create the phone review
@@ -174,20 +177,35 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
+
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
   stage1Proms.push(COMPANY.findById(companyId));
-  stage1Proms.push(PHONEREV.findOne({user: req.user._id, phone: phoneId}));
+  stage1Proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: phoneId}, {_id: 1}));
   if(refCode){
     stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
   }
   
-  
+  // checking verification
+  let verificationRatio = 0;
+
+  let uA = req.headers['user-agent'];
+  let uAObj = useragent.parse(uA);
+
+  if(uAObj.isMobile){
+    if(!uAObj.isiPhone){
+      let parsedUa = useragentParser(uA);
+      let modelName = "," + parsedUa.device.model + ",";
+      stage1Proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1}));
+    }
+  }
+
   Promise.all(stage1Proms).then((stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
     let pprev = stage1Results[2];
+    let phonesWithTheSameModelName = (stage1Results[3]) ? stage1Results[3] : [];
     
     if(!phone || !company){
       return res.status(404).json({
@@ -221,6 +239,23 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       }
     }
 
+    if(uAObj.isiPhone){
+      if(phone.name.match(/^Apple/gi)){
+        verificationRatio = -1;
+      }
+    }
+    else{
+      let listLength = phonesWithTheSameModelName.length
+      if(listLength > 0){
+         for(let possiblePhone of phonesWithTheSameModelName){
+          if(possiblePhone.name == phone.name){
+            verificationRatio = (1 / listLength) * 100;
+            break;
+          }
+         }
+      }
+    }
+
     // create the phone review
     PHONEREV.create({
       user: req.user._id,
@@ -234,7 +269,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       callQuality: callQuality,
       batteryRating: battery,
       pros: pros,
-      cons: cons
+      cons: cons,
+      verificationRatio: verificationRatio
     })
     .then((prev)=>{
 
@@ -245,7 +281,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         generalRating: companyRating,
         pros: compPros,
         cons: compCons,
-        corresPrev: prev._id
+        corresPrev: prev._id,
+        verificationRatio: verificationRatio
       })
       .then((crev)=>{
         
@@ -298,7 +335,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         let staeg2Proms = [];
         staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
         staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
-        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId}));
+        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId, verificationRatio: verificationRatio}));
         
         Promise.all(staeg2Proms).then(async(staeg2Results)=>{
           
@@ -382,11 +419,13 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
               battery: battery,
               pros: pros,
               cons: cons,
+              verificationRatio: verificationRatio
             }
             res.status(200).json({
               success: true,
               review: resultRev,
-              earnedPoints: grade
+              earnedPoints: grade,
+              useMobile: (uAObj.isMobile) ? true : false
             });
           })
           .catch((err)=>{
@@ -511,7 +550,8 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexi
       battery: rev.batteryRating,
       pros: rev.pros,
       cons: rev.cons,
-      liked: false
+      liked: false,
+      verificationRatio: rev.verificationRatio
     };
 
     // request is done by a user
@@ -584,7 +624,8 @@ reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFle
       generalRating: rev.generalRating,
       pros: rev.pros,
       cons: rev.cons,
-      liked: false
+      liked: false,
+      verificationRatio: rev.verificationRatio
     };
 
     // request is done by a user
@@ -685,7 +726,8 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -786,7 +828,8 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyU
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -881,7 +924,8 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -976,7 +1020,8 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verif
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -1076,7 +1121,8 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verify
         battery: rev.batteryRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -1174,7 +1220,8 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.ve
         generalRating: rev.generalRating,
         pros: rev.pros,
         cons: rev.cons,
-        liked: false
+        liked: false,
+        verificationRatio: rev.verificationRatio
       });
     }
 
@@ -2826,8 +2873,75 @@ reviewRouter.post("/company/:revId/fullscreen", cors.cors, rateLimit, authentica
 
 
 
+// verify a phone review with its corresponding phone and company review
+reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  let uA = req.headers['user-agent'];
+  let uAObj = useragent.parse(uA);
 
+  if(!uAObj.isMobile){
+      return res.status(400).json({success: false, status: "not mobile"});
+  }
 
+  let proms1 = [];
+  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1}).populate("phone", {name: 1}));
+
+  Promise.all(proms1)
+    .then(async(results)=>{
+        let rev = results[0];
+
+        if(rev == null){
+            return res.status(403).json({success: false, status: "review not found or not owned"});
+        }
+
+        let verificationRatio = 0;
+
+        if(uAObj.isiPhone){
+            if(rev.phone.name.match(/^Apple/gi)){
+                verificationRatio = -1;
+            }
+        }
+        else{
+            let parsedUa = useragentParser(uA);
+            let modelName = "," + parsedUa.device.model + ",";
+
+            let phones;
+            try{
+                phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                for(let phone of phones){
+                    if(phone.name == rev.phone.name){
+                        verificationRatio = (1 / phones.length) * 100;
+                        break;
+                      }
+                }
+            }
+            catch(err){
+                console.log("Error from /reviews/phone/:revId/verify: ", err);
+                return res.status(500).json({success: false, status: "error finding the matched phones"});
+            }
+        }
+
+        // update the verification ratio in the owned phones, phone reviews, company reviews
+        rev.verificationRatio = verificationRatio;
+        let proms2 = [];
+        proms2.push(rev.save());
+        proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: rev.phone._id}, {$set: {verificationRatio: verificationRatio}}));
+        proms2.push(COMPANYREV.findOneAndUpdate({corresPrev: rev._id}, {$set: {verificationRatio: verificationRatio}}));
+    
+        Promise.all(proms2)
+        .then((results2)=>{
+            return res.status(200).json({success: true, verificationRatio: verificationRatio});
+        })
+        .catch((err)=>{
+            console.log("Error from /reviews/phone/:revId/verify: ", err);
+            return res.status(500).json({success: false, status: "error updating the verification ratio"});
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reviews/phone/:revId/verify: ", err);
+        return res.status(500).json({success: false, status: "error finding the phone"});
+    });
+
+});
 
 
 

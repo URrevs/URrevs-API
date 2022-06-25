@@ -21,7 +21,8 @@ const cReviewSchema = new schema({
     corresPrev: {
         type: schema.Types.ObjectId,
         ref: "pReview",
-        required: true
+        required: true,
+        index: true
     },
     // ratings
     generalRating: {
