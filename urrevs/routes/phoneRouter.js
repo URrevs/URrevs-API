@@ -24,6 +24,8 @@ const CONSTANT = require("../models/constants");
 const PHONEPROFILEVISIT = require("../models/phoneProfileVisit");
 const PHONECOMPARISON = require("../models/phoneComparison");
 const OWNED_PHONE = require("../models/ownedPhone");
+const PHONEREV = require("../models/phoneReview");
+const COMPANYREV = require("../models/companyReview");
 
 const config = require("../config");
 
@@ -670,5 +672,115 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
         return res.status(200).json({success: true, phones: []});
     }
 });
+
+
+
+
+// verify an owned phone with its corresponding reviews
+/*
+    steps:
+        1- obtain the user agent
+        2- check if the user agent corresponds to a mobile device else return an error
+        3- check if the phone exists and is owned by the user
+        4- if the user agent is for an iphone
+            4.1- if the phone is an iphone, set verificationRatio to -1 and return
+            4.2- if the phone is not an iphone, set verificationRatio to 0 and return
+        5- if the user agent is not for an iphone
+            5.1- obtain the model name
+            5.2- search the phones that have the same model name
+            5.3- check the result list
+                5.3.1- if empty, set verificationRatio to 0 and return
+                5.3.2- if not empty
+                    5.3.2.1- loop over the result list
+                    5.3.2.2- if the phone is found in the list, set verificationRatio to (1 / result list length) * 100, then return else, set verificationRatio to 0 and return
+*/
+phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    let uA = req.headers['user-agent'];
+    let uAObj = useragent.parse(uA);
+
+    if(!uAObj.isMobile){
+        return res.status(200).json({success: false, status: "not a mobile device"});
+    }
+
+    let proms1 = [];
+    proms1.push(PHONE.findById(req.params.phoneId, {name: 1}));
+    proms1.push(OWNED_PHONE.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1}));
+
+    Promise.all(proms1)
+    .then(async(results)=>{
+        let phoneDoc = results[0];
+        let ownedPhoneDoc = results[1];
+
+        if(phoneDoc == null){
+            return res.status(404).json({success: false, status: "phone not found"});
+        }
+        
+        if(ownedPhoneDoc == null){
+            return res.status(403).json({success: false, status: "phone not owned"});
+        }
+
+        let verificationRatio = 0;
+
+        if(uAObj.isiPhone){
+            if(phoneDoc.name.match(/^Apple/gi)){
+                verificationRatio = -1;
+            }
+        }
+        else{
+            let parsedUa = useragentParser(uA);
+            let modelName = "," + parsedUa.device.model + ",";
+
+            let phones;
+            try{
+                phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                for(let phone of phones){
+                    if(phone.name == phoneDoc.name){
+                        verificationRatio = (1 / phones.length) * 100;
+                        break;
+                      }
+                }
+            }
+            catch(err){
+                console.log("Error from /phones/:phoneId/verify: ", err);
+                return res.status(500).json({success: false, status: "error finding the matched phones"});
+            }
+        }
+
+        // update the verification ratio in the owned phones, phone reviews, company reviews
+        let proms2 = [];
+        proms2.push(PHONEREV.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
+        proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
+    
+        Promise.all(proms2)
+        .then((results2)=>{
+            let pRevId = (results2[0] == null) ? null : results2[0]._id;
+
+            let proms3 = [];
+            if(pRevId != null){
+                proms3.push(COMPANYREV.findOneAndUpdate({user: req.user._id, corresPrev: pRevId}, {$set: {verificationRatio: verificationRatio}}));
+            }
+
+            Promise.all(proms3)
+            .then((results3)=>{
+                return res.status(200).json({success: true, verificationRatio: verificationRatio});
+            })
+            .catch((err)=>{
+                console.log("Error from /phones/:phoneId/verify: ", err);
+                return res.status(500).json({success: false, status: "error updating the reviews"});
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from /phones/:phoneId/verify: ", err);
+            return res.status(500).json({success: false, status: "error updating the verification ratio"});
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /phones/:phoneId/verify: ", err);
+        return res.status(500).json({success: false, status: "error finding the phone"});
+    });
+
+});
+
+
 
 module.exports = phoneRouter;
