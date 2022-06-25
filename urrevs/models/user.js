@@ -42,6 +42,10 @@ const userSchema = new schema({
     currentRoundForRecommendation: {
         type: Number,
         default: 1
+    },
+    questionsAnswered: {
+        type: Number,
+        default: 0
     }
 }, {timestamps: true});
 

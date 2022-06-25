@@ -142,6 +142,7 @@ userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, 
         result.picture = req.user.picture;
         result.refCode = req.user.refCode;
         result.points = req.user.absPoints;
+        result.questionsAnswered = req.user.questionsAnswered;
         
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -170,6 +171,7 @@ userRouter.get("/:userId/profile", cors.cors, rateLimit, authenticate.verifyUser
             result.name = user.name;
             result.picture = user.picture;
             result.points = user.absPoints;
+            result.questionsAnswered = user.questionsAnswered;
 
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
