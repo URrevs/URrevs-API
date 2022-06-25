@@ -2084,8 +2084,8 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
-  .populate("replies.user", {name: 1, picture: 1})
+  .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+  .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
   .then(async(comments)=>{
     let resultComments = [];
     let commentIds = [];
@@ -2103,6 +2103,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
         userId: comment.user._id,
         userName: comment.user.name,
         userPicture: comment.user.picture,
+        userQuestionsAnswered: comment.user.questionsAnswered,
         content: comment.content,
         createdAt: comment.createdAt,
         likes: comment.likes,
@@ -2120,6 +2121,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
           userId: reply.user._id,
           userName: reply.user.name,
           userPicture: reply.user.picture,
+          userQuestionsAnswered: reply.user.questionsAnswered,
           content: reply.content,
           createdAt: reply.createdAt,
           likes: reply.likes,
@@ -2196,8 +2198,8 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
-  .populate("user", {name: 1, picture: 1})
-  .populate("replies.user", {name: 1, picture: 1})
+  .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+  .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
   .then(async(comments)=>{
     let resultComments = [];
     let commentIds = [];
@@ -2215,6 +2217,7 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
         userId: comment.user._id,
         userName: comment.user.name,
         userPicture: comment.user.picture,
+        userQuestionsAnswered: comment.user.questionsAnswered,
         content: comment.content,
         createdAt: comment.createdAt,
         likes: comment.likes,
@@ -2232,6 +2235,7 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
           userId: reply.user._id,
           userName: reply.user.name,
           userPicture: reply.user.picture,
+          userQuestionsAnswered: reply.user.questionsAnswered,
           content: reply.content,
           createdAt: reply.createdAt,
           likes: reply.likes,
