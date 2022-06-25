@@ -2883,13 +2883,13 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
   }
 
   let proms1 = [];
-  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1}).populate("phone", {name: 1}));
+  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1, user: 1}).populate("phone", {name: 1}));
 
   Promise.all(proms1)
     .then(async(results)=>{
         let rev = results[0];
 
-        if(rev == null){
+        if(rev == null || !(rev.user.equals(req.user._id))){
             return res.status(403).json({success: false, status: "review not found or not owned"});
         }
 
