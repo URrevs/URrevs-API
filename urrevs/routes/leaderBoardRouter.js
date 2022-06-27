@@ -258,7 +258,7 @@ leaderBoardRouter.get("/rank", cors.cors, rateLimit, authenticate.verifyUser, (r
             // sort by absPoints
             points = req.user.absPoints;
             try{
-                result = await USER.find({}).sort({absPoints: -1}).find({absPoints: {$gte: req.user.absPoints}, _id: {$lte: req.user._id}}).count();
+                result = await USER.find({}).sort({absPoints: -1}).find({$or:[{absPoints: {$gt: req.user.absPoints}}, {absPoints: req.user.absPoints, _id: {$lte: req.user._id}}]}).count();
             }
             catch(err){
                 console.log("Error from GET absPoints /competitions/rank: ", err);
@@ -274,7 +274,7 @@ leaderBoardRouter.get("/rank", cors.cors, rateLimit, authenticate.verifyUser, (r
             // sort by comPoints
             points = req.user.comPoints;
             try{
-                result = await USER.find({}).sort({comPoints: -1}).find({comPoints: {$gte: req.user.comPoints}, _id: {$lte: req.user._id}}).count();
+                result = await USER.find({}).sort({comPoints: -1}).find({$or:[{comPoints: {$gt: req.user.comPoints}}, {comPoints: req.user.comPoints, _id: {$lte: req.user._id}}]}).count();
             }
             catch(err){
                 console.log("Error from GET comPoints /competitions/rank: ", err);
