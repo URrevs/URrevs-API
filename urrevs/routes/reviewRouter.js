@@ -197,7 +197,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   if(uAObj.isMobile){
     if(!uAObj.isiPhone){
       let parsedUa = useragentParser(uA);
-      let modelName = "," + parsedUa.device.model + ",";
+      let modelName = parsedUa.device.model.trim();
       stage1Proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1}));
     }
   }
@@ -2921,7 +2921,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
         }
         else{
             let parsedUa = useragentParser(uA);
-            let modelName = "," + parsedUa.device.model + ",";
+            let modelName = parsedUa.device.model.trim();
 
             let phones;
             try{
@@ -2929,7 +2929,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
                 
                 if(phones.length == 0){
                     try{
-                      let newPhones = await mapUaToPhones(uA, modelName, null, null, true);
+                      let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
                       phones = newPhones;
                     }
                     catch(err){
