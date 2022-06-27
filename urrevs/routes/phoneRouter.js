@@ -603,7 +603,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             
             // get the model name
             let parsedUa = useragentParser(uA);
-            let modelName = "," + parsedUa.device.model + ",";
+            let modelName = parsedUa.device.model.trim();
 
             let proms = [];
             proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
@@ -629,7 +629,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
                 // phone model name is not found in the phones collection
                 if(result.length == 0 && roundNum == 1){
                     try{
-                        result = await mapUaToPhones(uA, modelName, itemsPerRound, roundNum);
+                        result = await mapUaToPhones(uA, "," + modelName + ",", itemsPerRound, roundNum);
                     }
                     catch(err){
                         if(err != 404){
@@ -722,7 +722,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         }
         else{
             let parsedUa = useragentParser(uA);
-            let modelName = "," + parsedUa.device.model + ",";
+            let modelName = parsedUa.device.model.trim();
 
             let phones;
             try{
@@ -730,7 +730,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
                 
                 if(phones.length == 0){
                     try{
-                      let newPhones = await mapUaToPhones(uA, modelName, null, null, true);
+                      let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
                       phones = newPhones;
                     }
                     catch(err){
