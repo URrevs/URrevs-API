@@ -66,7 +66,7 @@ userRouter.get("/authenticate", cors.cors, rateLimit, (req, res, next)=>{
 
 
 // give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
-userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
+userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     let uA = req.headers['user-agent'];
     let uAObj = useragent.parse(uA);
 
