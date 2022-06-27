@@ -7,8 +7,9 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const schema_ = new schema({
-    _id: {
-        type: String
+    token: {
+        type: String,
+        index: true
     },
     user: {
         type: schema.Types.ObjectId,

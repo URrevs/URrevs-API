@@ -56,7 +56,7 @@ exports.authorize = (req) => {
                     // isssue a jwt token
                     let token = jwt.sign({_id: user._id}, secretKey, {expiresIn: expiresIn});
                     try{
-                        await TOKEN.create({_id: token, user: user._id});
+                        await TOKEN.create({token: token, user: user._id});
                         let prof = {
                             _id: user._id,
                             name: user.name,
@@ -86,7 +86,7 @@ exports.authorize = (req) => {
                             UPRODUCTS.create({_id: newUser._id}).then(async ()=>{
                                 let token = jwt.sign({_id: newUser._id}, secretKey, {expiresIn: expiresIn});
                                 try{
-                                    await TOKEN.create({_id: token, user: newUser._id});
+                                    await TOKEN.create({token: token, user: newUser._id});
                                     let prof = {
                                         _id: newUser._id,
                                         name: newUser.name,
@@ -168,7 +168,7 @@ exports.verifyUser = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            TOKEN.findOne({_id: token, user: decoded._id}).populate("user").then((tokenDoc)=>{
+            TOKEN.findOne({token: token, user: decoded._id}).populate("user").then((tokenDoc)=>{
                 if(tokenDoc){
                     req.user = {_id: tokenDoc.user._id, admin: tokenDoc.user.admin, uid: tokenDoc.user.uid, name: tokenDoc.user.name, picture: tokenDoc.user.picture, absPoints: tokenDoc.user.absPoints, comPoints: tokenDoc.user.comPoints, refCode: tokenDoc.user.refCode, questionsAnswered: tokenDoc.user.questionsAnswered, totalViews: tokenDoc.user.totalViews};
                     return next();
@@ -220,7 +220,7 @@ exports.verifyFlexible = (req, res, next)=>{
         try{
             let token = req.headers.authorization.split("bearer ")[1];
             let decoded = jwt.verify(token, secretKey);
-            TOKEN.findOne({_id: token, user: decoded._id}, {_id: 1}).then((tokenDoc)=>{
+            TOKEN.findOne({token: token, user: decoded._id}, {_id: 1}).then((tokenDoc)=>{
                 if(tokenDoc){
                     req.user = {_id: decoded._id};
                     return next();
