@@ -606,7 +606,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             let modelName = parsedUa.device.model.trim();
 
             let proms = [];
-            proms.push(PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
+            proms.push(PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
             if(req.user){
                 proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, _id: 0}));
             }
@@ -726,7 +726,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
 
             let phones;
             try{
-                phones = await PHONE.find({otherNames: {$regex: modelName, $options: "i"}}, {name: 1});
+                phones = await PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1});
                 
                 if(phones.length == 0){
                     try{
