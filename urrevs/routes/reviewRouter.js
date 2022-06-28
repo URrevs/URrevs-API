@@ -257,251 +257,223 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       }
     }
 
-    // create the phone review
-    PHONEREV.create({
-      user: req.user._id,
-      phone: phoneId,
-      ownedDate: ownedDate,
-      generalRating: generalRating,
-      uiRating: uiRating,
-      manQuality: manQuality,
-      valFMon: valFMon,
-      camera: camera,
-      callQuality: callQuality,
-      batteryRating: battery,
-      pros: pros,
-      cons: cons,
-      verificationRatio: verificationRatio
-    })
-    .then((prev)=>{
 
-      // create the company review
-      COMPANYREV.create({
+    // calculate the average company rating
+    let oldAvgRating = company.avgRating;
+    let oldTotalRevs = company.totalRevsCount;
+    let newAvgRating = ((oldAvgRating * oldTotalRevs) + companyRating) / (oldTotalRevs + 1);
+
+    /* 
+        calculate the average generalRating for the phone
+        calculate the average uiRating for the phone
+        calculate the average manQuality for the phone
+        calculate the average valFMon for the phone
+        calculate the average cam for the phone
+        calculate the average callQuality for the phone
+        calculate the average batteryRating for the phone
+    */
+
+    let oldTotalRevsPhone = phone.totalRevsCount;
+
+    // calculate the average generalRating for the phone
+    let oldGeneralRating = phone.generalRating;
+    let newGeneralRating = ((oldGeneralRating * oldTotalRevsPhone) + generalRating) / (oldTotalRevsPhone + 1);
+    
+    // calculate the average uiRating for the phone
+    let oldUiRating = phone.uiRating;
+    let newUiRating = ((oldUiRating * oldTotalRevsPhone) + uiRating) / (oldTotalRevsPhone + 1);
+
+    // calculate the average manQuality for the phone
+    let oldManQuality = phone.manQuality;
+    let newManQuality = ((oldManQuality * oldTotalRevsPhone) + manQuality) / (oldTotalRevsPhone + 1);
+
+    // calculate the average valFMon for the phone
+    let oldValFMon = phone.valFMon;
+    let newValFMon = ((oldValFMon * oldTotalRevsPhone) + valFMon) / (oldTotalRevsPhone + 1);
+
+    // calculate the average cam for the phone
+    let oldCam = phone.cam;
+    let newCam = ((oldCam * oldTotalRevsPhone) + camera) / (oldTotalRevsPhone + 1);
+    
+    // calculate the average callQuality for the phone
+    let oldCallQuality = phone.callQuality;
+    let newCallQuality = ((oldCallQuality * oldTotalRevsPhone) + callQuality) / (oldTotalRevsPhone + 1);
+
+    // calculate the average batteryRating for the phone
+    let oldBatteryRating = phone.batteryRating;
+    let newBatteryRating = ((oldBatteryRating * oldTotalRevsPhone) + battery) / (oldTotalRevsPhone + 1);
+
+    // increase the total reviews count in the company - increase the total reviews count in the phone - add the phone to the owned phones for the user
+    let staeg2Proms = [];
+    staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
+    staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
+    staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId, verificationRatio: verificationRatio}));
+    
+    Promise.all(staeg2Proms).then(async(staeg2Results)=>{
+      
+      // calculate the points to give to the user using either AI service or the backup routine
+      let grade;
+      // let's try to communicate to the AI service
+      try{
+        let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
+        var axiosConfig = {
+          method: 'post',
+          url: process.env.AI_LINK + '/reviews/grade',
+          headers: { 
+            'x-api-key': process.env.AI_API_KEY, 
+            'Content-Type': 'application/json'
+          },
+          data : JSON.stringify({phoneRevPros: pros, phoneRevCons: cons, companyRevPros: compPros, companyRevCons: compCons}),
+          timeout: TIMEOUT,
+          httpsAgent: new https.Agent({ keepAlive: true })
+        };
+        
+        const {data:resp} = await axios(axiosConfig);
+        
+        grade = resp.grade;
+        console.log("--------------------Review grading AI Success--------------------");
+      }
+      catch(e){
+        console.log("--------------------Review grading AI Failed---------------------");
+        console.log(e.response.status, e.response.data);
+        //console.log(e);
+        // since the AI service is down, we will use the backup routine
+
+        // read the stop words file
+        let stopWords = fs.readFileSync("./stopwords.txt", "utf8").split("\r\n");
+        // console.log(stopWords);
+        // tokenize the pros, cons, compPros, compCons
+        let tokenizedPros = pros.split(" ");
+        let tokenizedCons = cons.split(" ");
+        let tokenizeCompPros = compPros.split(" ");
+        let tokenizeCompCons = compCons.split(" ");
+        let tokenizedReview = tokenizedPros.concat(tokenizedCons, tokenizeCompPros, tokenizeCompCons);
+        // remove the stop words from the tokenized pros, cons, compPros, compCons
+        let filtered_review = tokenizedReview.filter(word=>{
+          return !(stopWords.includes(word));
+        });
+        let count_filtered = filtered_review.length;
+        let max_count = parseInt((process.env.MAX_COUNT || config.MAX_COUNT));
+        let minCount = parseInt((process.env.MIN_COUNT || config.MIN_COUNT));
+        grade = 30 * (count_filtered - minCount) / (max_count - minCount) + 10;
+        grade = Math.round(grade);
+      }
+
+      // give points to the user
+      let staeg3Proms = [];
+      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade, absPoints: grade}}));
+      staeg3Proms.push(PHONEREV.create({
         user: req.user._id,
-        company: companyId,
-        generalRating: companyRating,
-        pros: compPros,
-        cons: compCons,
-        corresPrev: prev._id,
-        verificationRatio: verificationRatio
-      })
-      .then((crev)=>{
+        phone: phoneId,
+        ownedDate: ownedDate,
+        generalRating: generalRating,
+        uiRating: uiRating,
+        manQuality: manQuality,
+        valFMon: valFMon,
+        camera: camera,
+        callQuality: callQuality,
+        batteryRating: battery,
+        pros: pros,
+        cons: cons,
+        verificationRatio: verificationRatio,
+        totalGrade: grade
+      }))
+
+      Promise.all(staeg3Proms).then((staeg3Results)=>{
         
-        // calculate the average company rating
-        let oldAvgRating = company.avgRating;
-        let oldTotalRevs = company.totalRevsCount;
-        let newAvgRating = ((oldAvgRating * oldTotalRevs) + companyRating) / (oldTotalRevs + 1);
+        let user = staeg3Results[0];
+        let prev = staeg3Results[1];
 
-        /* 
-            calculate the average generalRating for the phone
-            calculate the average uiRating for the phone
-            calculate the average manQuality for the phone
-            calculate the average valFMon for the phone
-            calculate the average cam for the phone
-            calculate the average callQuality for the phone
-            calculate the average batteryRating for the phone
-        */
-
-        let oldTotalRevsPhone = phone.totalRevsCount;
-
-        // calculate the average generalRating for the phone
-        let oldGeneralRating = phone.generalRating;
-        let newGeneralRating = ((oldGeneralRating * oldTotalRevsPhone) + generalRating) / (oldTotalRevsPhone + 1);
-        
-        // calculate the average uiRating for the phone
-        let oldUiRating = phone.uiRating;
-        let newUiRating = ((oldUiRating * oldTotalRevsPhone) + uiRating) / (oldTotalRevsPhone + 1);
-
-        // calculate the average manQuality for the phone
-        let oldManQuality = phone.manQuality;
-        let newManQuality = ((oldManQuality * oldTotalRevsPhone) + manQuality) / (oldTotalRevsPhone + 1);
-
-        // calculate the average valFMon for the phone
-        let oldValFMon = phone.valFMon;
-        let newValFMon = ((oldValFMon * oldTotalRevsPhone) + valFMon) / (oldTotalRevsPhone + 1);
-
-        // calculate the average cam for the phone
-        let oldCam = phone.cam;
-        let newCam = ((oldCam * oldTotalRevsPhone) + camera) / (oldTotalRevsPhone + 1);
-        
-        // calculate the average callQuality for the phone
-        let oldCallQuality = phone.callQuality;
-        let newCallQuality = ((oldCallQuality * oldTotalRevsPhone) + callQuality) / (oldTotalRevsPhone + 1);
-
-        // calculate the average batteryRating for the phone
-        let oldBatteryRating = phone.batteryRating;
-        let newBatteryRating = ((oldBatteryRating * oldTotalRevsPhone) + battery) / (oldTotalRevsPhone + 1);
-
-        // increase the total reviews count in the company - increase the total reviews count in the phone - add the phone to the owned phones for the user
-        let staeg2Proms = [];
-        staeg2Proms.push(COMPANY.findByIdAndUpdate(companyId, {$inc: {totalRevsCount: 1}, $set: {avgRating: newAvgRating}}));
-        staeg2Proms.push(PHONE.findByIdAndUpdate(phoneId, {$inc: {totalRevsCount: 1}, $set: {generalRating: newGeneralRating, uiRating: newUiRating, manQuality: newManQuality, valFMon: newValFMon, cam: newCam, callQuality: newCallQuality, batteryRating: newBatteryRating}}));
-        staeg2Proms.push(OWNED_PHONE.create({user: req.user._id, phone: phoneId, ownedAt: ownedDate, company: companyId, verificationRatio: verificationRatio}));
-        
-        Promise.all(staeg2Proms).then(async(staeg2Results)=>{
-          
-          // calculate the points to give to the user using either AI service or the backup routine
-          let grade;
-          // let's try to communicate to the AI service
-          try{
-            let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
-            var axiosConfig = {
-              method: 'post',
-              url: process.env.AI_LINK + '/reviews/grade',
-              headers: { 
-                'x-api-key': process.env.AI_API_KEY, 
-                'Content-Type': 'application/json'
-              },
-              data : JSON.stringify({phoneRevPros: pros, phoneRevCons: cons, companyRevPros: compPros, companyRevCons: compCons}),
-              timeout: TIMEOUT,
-              httpsAgent: new https.Agent({ keepAlive: true })
-            };
-            
-            const {data:resp} = await axios(axiosConfig);
-            
-            grade = resp.grade;
-            console.log("--------------------Review grading AI Success--------------------");
+        COMPANYREV.create({
+          user: req.user._id,
+          company: companyId,
+          generalRating: companyRating,
+          pros: compPros,
+          cons: compCons,
+          corresPrev: prev._id,
+          verificationRatio: verificationRatio,
+          totalGrade: grade
+        })
+        .then((crev)=>{
+          // send the phone review as a response
+          let resultRev = {
+            _id: prev._id,
+            type: "phone",
+            createdAt: prev.createdAt,
+            phoneId: phoneId,
+            phoneName: phone.name,
+            userId: req.user._id,
+            userName: user.name,
+            picture: user.picture,
+            ownedAt: ownedDate,
+            views: prev.views,
+            likes: prev.likes,
+            commentsCount: prev.commentsCount,
+            shares: prev.shares,
+            generalRating: generalRating,
+            uiRating: uiRating,
+            manufacturingQuality: manQuality,
+            valueForMoney: valFMon,
+            camera: camera,
+            callQuality: callQuality,
+            battery: battery,
+            pros: pros,
+            cons: cons,
+            verificationRatio: verificationRatio
           }
-          catch(e){
-            console.log("--------------------Review grading AI Failed---------------------");
-            console.log(e.response.status, e.response.data);
-            //console.log(e);
-            // since the AI service is down, we will use the backup routine
-
-            // read the stop words file
-            let stopWords = fs.readFileSync("./stopwords.txt", "utf8").split("\r\n");
-            // console.log(stopWords);
-            // tokenize the pros, cons, compPros, compCons
-            let tokenizedPros = pros.split(" ");
-            let tokenizedCons = cons.split(" ");
-            let tokenizeCompPros = compPros.split(" ");
-            let tokenizeCompCons = compCons.split(" ");
-            let tokenizedReview = tokenizedPros.concat(tokenizedCons, tokenizeCompPros, tokenizeCompCons);
-            // remove the stop words from the tokenized pros, cons, compPros, compCons
-            let filtered_review = tokenizedReview.filter(word=>{
-              return !(stopWords.includes(word));
-            });
-            let count_filtered = filtered_review.length;
-            let max_count = parseInt((process.env.MAX_COUNT || config.MAX_COUNT));
-            let minCount = parseInt((process.env.MIN_COUNT || config.MIN_COUNT));
-            grade = 30 * (count_filtered - minCount) / (max_count - minCount) + 10;
-            grade = Math.round(grade);
-          }
-
-          // give points to the user
-          let staeg3Proms = [];
-          staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade, absPoints: grade}}));
-          
-
-          Promise.all(staeg3Proms).then((staeg3Results)=>{
-            
-            let user = staeg3Results[0];
-            // send the phone review as a response
-            let resultRev = {
-              _id: prev._id,
-              type: "phone",
-              createdAt: prev.createdAt,
-              phoneId: phoneId,
-              phoneName: phone.name,
-              userId: req.user._id,
-              userName: user.name,
-              picture: user.picture,
-              ownedAt: ownedDate,
-              views: prev.views,
-              likes: prev.likes,
-              commentsCount: prev.commentsCount,
-              shares: prev.shares,
-              generalRating: generalRating,
-              uiRating: uiRating,
-              manufacturingQuality: manQuality,
-              valueForMoney: valFMon,
-              camera: camera,
-              callQuality: callQuality,
-              battery: battery,
-              pros: pros,
-              cons: cons,
-              verificationRatio: verificationRatio
-            }
-            res.status(200).json({
-              success: true,
-              review: resultRev,
-              earnedPoints: grade,
-              useMobile: (uAObj.isMobile) ? true : false
-            });
-          })
-          .catch((err)=>{
-            console.log("Error from /reviews/phone: ", err);
-            return res.status(500).json({
-              success: false,
-              status: "internal servere ssserror",
-              err: "Either giving the user or the referral points failed"
-            });
+          res.status(200).json({
+            success: true,
+            review: resultRev,
+            earnedPoints: grade,
+            useMobile: (uAObj.isMobile) ? true : false
           });
         })
         .catch((err)=>{
-            console.log("Error from /reviews/phone: ", err);
-            return res.status(500).json({
-              success: false,
-              status: "internal server error",
-              err: "Either updaing the average rating or adding the phone to the owned phones failed - the phone and company reviews are created successfully"
-            });
-          // delete the previously created phone and company reviews
-          // let deleteProms = [];
-          // deleteProms.push(PHONEREV.findByIdAndDelete(prev._id));
-          // deleteProms.push(COMPANYREV.findByIdAndDelete(crev._id));
-          // Promise.all(deleteProms).then(()=>{
-          //   console.log("Error from /reviews/phone: ", err);
-          //   return res.status(500).json({
-          //     success: false,
-          //     status: "internal server error",
-          //     err: "Either updaing the average rating or adding the phone to the owned phones failed - successfully deleted the phone and company reviews"
-          //   });
-          // })
-          // .catch((err2)=>{
-          //   console.log("Error from /reviews/phone: ", err, "also there is an error deleting the reviews: ", err2);
-          //   return res.status(500).json({
-          //     success: false,
-          //     status: "internal server error",
-          //     err: "Either updaing the average rating or adding the phone to the owned phones failed - Either deleting the phone and company reviews failed"
-          //   });
-          // });
-        });
-      })
-      .catch((err)=>{
           console.log("Error from /reviews/phone: ", err);
           return res.status(500).json({
             success: false,
-            status: "internal server error",
-            err: "creating the company review failed, but the phone review is created successfully"
+            status: "internal servere error",
+            err: "Error creating the company review"
           });
-        // // delete the previously created phone review
-        // PHONEREV.findByIdAndDelete(prev._id).then(()=>{
-        //   console.log("Error from /reviews/phone: ", err);
-        //   return res.status(500).json({
-        //     success: false,
-        //     status: "internal server error",
-        //     err: "creating the company review failed - deleting the phone review successfully"
-        //   });
-        // })
-        // .catch((err2)=>{
-        //   console.log("Error from /reviews/phone: ", err, "also there is an error from deleting the phone review: ", err2);
-        //   return res.status(500).json({
-        //     success: false,
-        //     status: "internal server error",
-        //     err: "creating the company review failed - deleting the phone review failed"
-        //   });
-        // });
+        });
+      })
+      .catch((err)=>{
+        console.log("Error from /reviews/phone: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal servere error",
+          err: "Either giving the user or the referral points failed or creating the phone review failed"
+        });
       });
     })
     .catch((err)=>{
-      console.log("Error from /reviews/phone: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "creating the phone review failed"
-      });
+        console.log("Error from /reviews/phone: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Either updaing the average rating or adding the phone to the owned phones failed - the phone and company reviews are created successfully"
+        });
+      // delete the previously created phone and company reviews
+      // let deleteProms = [];
+      // deleteProms.push(PHONEREV.findByIdAndDelete(prev._id));
+      // deleteProms.push(COMPANYREV.findByIdAndDelete(crev._id));
+      // Promise.all(deleteProms).then(()=>{
+      //   console.log("Error from /reviews/phone: ", err);
+      //   return res.status(500).json({
+      //     success: false,
+      //     status: "internal server error",
+      //     err: "Either updaing the average rating or adding the phone to the owned phones failed - successfully deleted the phone and company reviews"
+      //   });
+      // })
+      // .catch((err2)=>{
+      //   console.log("Error from /reviews/phone: ", err, "also there is an error deleting the reviews: ", err2);
+      //   return res.status(500).json({
+      //     success: false,
+      //     status: "internal server error",
+      //     err: "Either updaing the average rating or adding the phone to the owned phones failed - Either deleting the phone and company reviews failed"
+      //   });
+      // });
     });
-    
   })
   .catch((err)=>{
     console.log("Error from POST /reviews/phone: ", err);
