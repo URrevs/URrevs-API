@@ -67,6 +67,10 @@ const cReviewSchema = new schema({
         */
         type: Number,
         default: 0
+    },
+    totalGrade: {
+        type: Number,
+        default: 0
     }
 },
 {
