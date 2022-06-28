@@ -3149,7 +3149,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
 
 // "I don't like this" for phone question
 questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(PQUES_HATE, PQUES, req.params.revId, req.user._id, "question").then((result)=>{
+  lameTrack(PQUES_HATE, PQUES, req.params.revId, req.user._id, "question", 0).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -3159,7 +3159,7 @@ questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.ver
     else if(result == 403){
       return res.status(403).json({
         success: false,
-        status: "track question already hated"
+        status: "track question owned"
       });
     }
     else{
@@ -3183,7 +3183,7 @@ questionRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.ver
 
 // "I don't like this" for company question
 questionRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(CQUES_HATE, CQUES, req.params.revId, req.user._id, "question").then((result)=>{
+  lameTrack(CQUES_HATE, CQUES, req.params.revId, req.user._id, "question", 0).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -3193,7 +3193,7 @@ questionRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.v
     else if(result == 403){
       return res.status(403).json({
         success: false,
-        status: "track question already hated"
+        status: "track question owned"
       });
     }
     else{
