@@ -2658,7 +2658,7 @@ reviewRouter.put("/company/:reviewId/share", cors.cors, rateLimit, (req, res, ne
 
 // I don't like this for a phone review
 reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(PHONE_REV_HATED, PHONEREV, req.params.revId, req.user._id, "review", 0).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2668,7 +2668,7 @@ reviewRouter.post("/phone/:revId/hate", cors.cors, rateLimit, authenticate.verif
     else if(result == 403){
       return res.status(403).json({
         success: false,
-        status: "track already hated"
+        status: "track review owned"
       });
     }
     else{
@@ -2764,7 +2764,7 @@ reviewRouter.post("/phone/:revId/fullscreen", cors.cors, rateLimit, authenticate
 
 // I don't like this for a company review
 reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-  lameTrack(COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review").then((result)=>{
+  lameTrack(COMPANY_REVS_HATED, COMPANYREV, req.params.revId, req.user._id, "review", 0).then((result)=>{
     if(result == 404){
       return res.status(404).json({
         success: false,
@@ -2774,7 +2774,7 @@ reviewRouter.post("/company/:revId/hate", cors.cors, rateLimit, authenticate.ver
     else if(result == 403){
       return res.status(403).json({
         success: false,
-        status: "track already hated"
+        status: "track review owned"
       });
     }
     else{
