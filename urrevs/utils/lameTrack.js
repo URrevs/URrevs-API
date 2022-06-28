@@ -16,13 +16,14 @@ const config = require("../config");
 
 module.exports = (trackerCollection, resourceCollection, resourceId, user, resourceType, action=1)=>{
     return new Promise((resolve, reject)=>{
-        resourceCollection.findById(resourceId, {_id: 1})
+        resourceCollection.findById(resourceId, {_id: 1, user: 1})
         .then((resource)=>{
             if(!resource){
                 return resolve(404);
             }
 
             if(action == 0){
+                // action is hate
                 if(resource.user.equals(user)){
                     return resolve(403);
                 }
