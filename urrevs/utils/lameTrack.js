@@ -23,6 +23,7 @@ module.exports = (trackerCollection, resourceCollection, resourceId, user, resou
             }
 
             if(action == 0){
+                // action is hate
                 if(resource.user.equals(user)){
                     return resolve(403);
                 }
