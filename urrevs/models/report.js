@@ -7,6 +7,11 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const reportSchema = new schema({
+    closed:{
+        type:Boolean,
+        default: false,
+        index: true
+    },
     reporter: {
         type: schema.Types.ObjectId,
         ref: "User",
@@ -27,19 +32,23 @@ const reportSchema = new schema({
         ],
     },
     reason: {
-        type: String,
-        enum: ["disturbance", "violence", "harassment", "hate", "porn", "other"],
+        type: Number,
+        enum: [1, 2, 3, 4, 5, 6]
     },
     info: {
         type: String
     },
     obj: {
         type: schema.Types.ObjectId,
-        refPath: "onModel" 
+        refPath: "onModelObj" 
     },
-    parentObj: {
+    parObj: {
         type: schema.Types.ObjectId,
         refPath: "onModelParObj" 
+    },
+    par2Obj: {
+        type: schema.Types.ObjectId,
+        refPath: "onModelPar2Obj" 
     },
     onModelObj: {
         type: String,
@@ -58,9 +67,29 @@ const reportSchema = new schema({
             "pRevsComment", "cRevsComment",
             "pQuesAnswer", "cQuesAnswer"
         ]
+    },
+    onModelPar2Obj: {
+        type: String,
+        enum: [
+            "pRev", "cRev", 
+            "pQues", "cQues", 
+            "pRevsComment", "cRevsComment",
+            "pQuesAnswer", "cQuesAnswer"
+        ]
+    },
+    blockUser: {
+        type: Boolean,
+        default: false
+    },
+    hideContent: {
+        type: Boolean,
+        default: false
     }
 },
-{timestamps: true});
+{timestamps: true}
+);
 
+reportSchema.index({reporter: 1, obj: 1});
+reportSchema.index({createdAt: -1});
 
 module.exports = mongoose.model("Report", reportSchema);
