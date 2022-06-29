@@ -17,7 +17,7 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
             }
 
             // check resource existence + increment the likes by 1
-            resourceCollection.findOneAndUpdate({_id: resourceId, user: {$ne: user}}, {$inc: {likes: 1}})
+            resourceCollection.findOneAndUpdate({_id: resourceId, user: {$ne: user}, hidden: false}, {$inc: {likes: 1}})
             .then((resoruce)=>{
                 if(!resoruce){
                     return resolve(404);

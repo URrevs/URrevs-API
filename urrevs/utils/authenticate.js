@@ -170,7 +170,24 @@ exports.verifyUser = (req, res, next)=>{
             let decoded = jwt.verify(token, secretKey);
             TOKEN.findOne({token: token, user: decoded._id}).populate("user").then((tokenDoc)=>{
                 if(tokenDoc){
-                    req.user = {_id: tokenDoc.user._id, admin: tokenDoc.user.admin, uid: tokenDoc.user.uid, name: tokenDoc.user.name, picture: tokenDoc.user.picture, absPoints: tokenDoc.user.absPoints, comPoints: tokenDoc.user.comPoints, refCode: tokenDoc.user.refCode, questionsAnswered: tokenDoc.user.questionsAnswered, totalViews: tokenDoc.user.totalViews};
+                    req.user = {
+                        _id: tokenDoc.user._id, 
+                        admin: tokenDoc.user.admin, 
+                        uid: tokenDoc.user.uid, 
+                        name: tokenDoc.user.name, 
+                        picture: tokenDoc.user.picture, 
+                        absPoints: tokenDoc.user.absPoints, 
+                        comPoints: tokenDoc.user.comPoints, 
+                        refCode: tokenDoc.user.refCode, 
+                        questionsAnswered: tokenDoc.user.questionsAnswered, 
+                        totalViews: tokenDoc.user.totalViews,
+                        blockedFromReviews: tokenDoc.user.blockedFromReviews,
+                        blockedFromQuestions: tokenDoc.user.blockedFromQuestions,
+                        blockedFromComment: tokenDoc.user.blockedFromComment,
+                        blockedFromAnswer: tokenDoc.user.blockedFromAnswer,
+                        blockedFromReplyComment: tokenDoc.user.blockedFromReplyComment,
+                        blockedFromReplyAnswer: tokenDoc.user.blockedFromReplyAnswer,
+                    };
                     return next();
                 }
                 else{

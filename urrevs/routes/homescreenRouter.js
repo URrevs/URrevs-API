@@ -66,10 +66,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
             let totalIds = resp.total;
             
             let proms = [];
-            proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CREVS.find({_id: {$in: cRevs}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(PQUES.find({_id: {$in: pQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CQUES.find({_id: {$in: cQues}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PREVS.find({_id: {$in: pRevs}, hidden: false}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CREVS.find({_id: {$in: cRevs}, hidden: false}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PQUES.find({_id: {$in: pQues}, hidden: false}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CQUES.find({_id: {$in: cQues}, hidden: false}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
 
             Promise.all(proms)
             .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -165,13 +165,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         pAcceptedAnsIds.push(ques.acceptedAns);
                         pAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                        let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
-              
+                            if(reply.hidden){
+                              continue;
+                            }
                             pRepliesIds.push(reply._id);
                             pRepliesObj[reply._id] = {answer: index, reply: i};
                             
@@ -242,13 +244,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         cAcceptedAnsIds.push(ques.acceptedAns);
                         cAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                        let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
-              
+                            if(reply.hidden){
+                              continue;
+                            }
                             cRepliesIds.push(reply._id);
                             cRepliesObj[reply._id] = {answer: index, reply: i};
                             
@@ -413,10 +417,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
             let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
             
             let proms = [];
-            proms.push(PREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(PQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
           
             Promise.all(proms)
             .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -512,13 +516,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         pAcceptedAnsIds.push(ques.acceptedAns);
                         pAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                        let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
-              
+                            if(reply.hidden){
+                              continue;
+                            }
                             pRepliesIds.push(reply._id);
                             pRepliesObj[reply._id] = {answer: index, reply: i};
                             
@@ -589,13 +595,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         cAcceptedAnsIds.push(ques.acceptedAns);
                         cAcceptedAnsObj[ques.acceptedAns] = index;
                       try{
-                        let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                        let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
                         if(ans.replies.length > 0){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
-              
+                            if(reply.hidden){
+                              continue;
+                            }
                             cRepliesIds.push(reply._id);
                             cRepliesObj[reply._id] = {answer: index, reply: i};
                             
@@ -777,10 +785,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           let totalIds = resp.total;
           
           let proms = [];
-          proms.push(PREVS.find({_id: {$in: pRevs}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CREVS.find({_id: {$in: cRevs}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(PQUES.find({_id: {$in: pQues}}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CQUES.find({_id: {$in: cQues}}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PREVS.find({_id: {$in: pRevs}, hidden: false}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CREVS.find({_id: {$in: cRevs}, hidden: false}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PQUES.find({_id: {$in: pQues}, hidden: false}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CQUES.find({_id: {$in: cQues}, hidden: false}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
 
           Promise.all(proms)
           .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -876,13 +884,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       pAcceptedAnsIds.push(ques.acceptedAns);
                       pAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                      let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
-            
+                          if(reply.hidden){
+                            continue;
+                          }
                           pRepliesIds.push(reply._id);
                           pRepliesObj[reply._id] = {answer: index, reply: i};
                           
@@ -953,13 +963,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       cAcceptedAnsIds.push(ques.acceptedAns);
                       cAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                      let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
-            
+                          if(reply.hidden){
+                            continue;
+                          }
                           cRepliesIds.push(reply._id);
                           cRepliesObj[reply._id] = {answer: index, reply: i};
                           
@@ -1046,10 +1058,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
           
           let proms = [];
-          proms.push(PREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CREVS.find({}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(PQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CQUES.find({}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
         
           Promise.all(proms)
           .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -1145,13 +1157,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       pAcceptedAnsIds.push(ques.acceptedAns);
                       pAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await PANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                      let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
-            
+                          if(reply.hidden){
+                            continue;
+                          }
                           pRepliesIds.push(reply._id);
                           pRepliesObj[reply._id] = {answer: index, reply: i};
                           
@@ -1222,13 +1236,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       cAcceptedAnsIds.push(ques.acceptedAns);
                       cAcceptedAnsObj[ques.acceptedAns] = index;
                     try{
-                      let ans = await CANS.findOne({_id: ques.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                      let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
                       if(ans.replies.length > 0){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
-            
+                          if(reply.hidden){
+                            continue;
+                          }
                           cRepliesIds.push(reply._id);
                           cRepliesObj[reply._id] = {answer: index, reply: i};
                           

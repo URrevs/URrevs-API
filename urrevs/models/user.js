@@ -50,6 +50,30 @@ const userSchema = new schema({
     totalViews: {
         type: Number,
         default: 0
+    },
+    blockedFromReviews: {
+        type: Boolean,
+        default: false
+    },
+    blockedFromQuestions: {
+        type: Boolean,
+        default: false
+    },
+    blockedFromComment: {
+        type: Boolean,
+        default: false
+    },
+    blockedFromAnswer: {
+        type: Boolean,
+        default: false
+    },
+    blockedFromReplyComment: {
+        type: Boolean,
+        default: false
+    },
+    blockedFromReplyAnswer: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true});
 

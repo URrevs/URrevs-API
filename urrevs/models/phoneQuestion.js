@@ -36,6 +36,10 @@ const phoneQuestionSchema = new schema({
     shares: {
         type: Number,
         default: 0
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 },
 {

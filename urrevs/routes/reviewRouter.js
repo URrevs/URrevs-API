@@ -65,6 +65,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 // Add a phone review (with embedded company review)
 /*
   steps:
+  check if the user is not blocked from posting reviews
                 PRE-CREATION
   1- extract data from request body
   2- checking if the required fields are provided and in correct data type
@@ -97,6 +98,14 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 */
 
 reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReviews){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract data from request body  
   let {
     phoneId,
@@ -489,7 +498,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
 // Get a certain phone review
 reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
-  PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
+  PHONEREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
   .then(async (rev)=>{
@@ -576,7 +585,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexi
 
 // Get a certain company review
 reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
-  COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
+  COMPANYREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("company", {name: 1})
   .then(async (rev)=>{
@@ -666,7 +675,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
       });
   }
 
-  PHONEREV.find({user: req.user._id})
+  PHONEREV.find({user: req.user._id, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -767,7 +776,7 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyU
       });
   }
 
-  PHONEREV.find({user: req.params.userId})
+  PHONEREV.find({user: req.params.userId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -870,7 +879,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
       });
   }
 
-  COMPANYREV.find({user: req.user._id})
+  COMPANYREV.find({user: req.user._id, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -965,7 +974,7 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verif
       });
   }
 
-  COMPANYREV.find({user: req.params.userId})
+  COMPANYREV.find({user: req.params.userId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -1060,7 +1069,7 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verify
       });
   }
 
-  PHONEREV.find({phone: req.params.phoneId})
+  PHONEREV.find({phone: req.params.phoneId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -1165,7 +1174,7 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.ve
       });
   }
 
-  COMPANYREV.find({company: req.params.companyId})
+  COMPANYREV.find({company: req.params.companyId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -1305,7 +1314,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}));
+      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1432,7 +1441,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
+  proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -1588,7 +1597,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}));
+      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1715,7 +1724,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
+  proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -1839,6 +1848,14 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
 
 // add a comment to a phone review
 reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1894,6 +1911,14 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
 
 // add a comment to a company review
 reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1948,6 +1973,14 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate
 
 // add a reply to a phone review comment
 reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReplyComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -2002,6 +2035,14 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
 
 // add a reply to a company review comment
 reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReplyComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -2067,7 +2108,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
       return;
   }
 
-  PHONE_REVS_COMMENTS.find({review: req.params.revId})
+  PHONE_REVS_COMMENTS.find({review: req.params.revId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2101,6 +2142,9 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
 
       for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
+        if(reply.hidden){
+          continue;
+        }
         comentRepliesIds.push(reply._id);
         commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
@@ -2181,7 +2225,7 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
       return;
   }
 
-  COMPANY_REVS_COMMENTS.find({review: req.params.revId})
+  COMPANY_REVS_COMMENTS.find({review: req.params.revId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2215,6 +2259,9 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
 
       for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
+        if(reply.hidden){
+          continue;
+        }
         comentRepliesIds.push(reply._id);
         commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
