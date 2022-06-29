@@ -1314,7 +1314,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}));
+      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1441,7 +1441,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
+  proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -1597,7 +1597,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}}));
+      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1724,7 +1724,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}));
+  proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
