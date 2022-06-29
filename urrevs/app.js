@@ -30,6 +30,7 @@ const aIRouter = require('./routes/aiRouter');
 const leaderBoardRouter = require('./routes/leaderBoardRouter');
 const homeScreenRouter = require('./routes/homescreenRouter');
 const miscRouter = require('./routes/miscRouter');
+const reportsRouter = require('./routes/reportsRouter');
 
 
 // Importing Zone Ends Here
@@ -55,6 +56,7 @@ app.use("/competitions", leaderBoardRouter);
 app.use("/home", homeScreenRouter);
 app.use('/ai', aIRouter);
 app.use('/misc', miscRouter);
+app.use('/reports', reportsRouter);
 
 
 module.exports = app;
