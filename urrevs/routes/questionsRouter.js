@@ -1697,7 +1697,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
 // get a certain phone question
 questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  PQUES.findById(req.params.quesId).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1})
+  PQUES.findOne({_id: req.params.quesId, hidden: false}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1})
   .then(async(question)=>{
 
     if(!question){
@@ -1842,7 +1842,7 @@ questionRouter.get("/phone/:quesId", cors.cors, rateLimit, authenticate.verifyFl
 // get a certain company question
 questionRouter.get("/company/:quesId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
-  CQUES.findById(req.params.quesId).populate("company", {name: 1}).populate("user", {name: 1, picture: 1})
+  CQUES.findOne({_id: req.params.quesId, hidden: false}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1})
   .then(async(question)=>{
 
     if(!question){
@@ -1994,7 +1994,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
       });
   }
 
-  PQUES.find({user: req.user._id})
+  PQUES.find({user: req.user._id, hidden: false})
   .sort({upvotes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2159,7 +2159,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
       });
   }
 
-  CQUES.find({user: req.user._id})
+  CQUES.find({user: req.user._id, hidden: false})
   .sort({upvotes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2324,7 +2324,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
       });
   }
 
-  PQUES.find({user: req.params.userId})
+  PQUES.find({user: req.params.userId, hidden: false})
   .sort({upvotes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2489,7 +2489,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
       });
   }
 
-  CQUES.find({user: req.params.userId})
+  CQUES.find({user: req.params.userId, hidden: false})
   .sort({upvotes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2642,7 +2642,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
 
 
 
-// get questions about a certain phone
+// get questions on a certain phone
 questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.PHONE_QUES_PER_ROUND|| config.PHONE_QUES_PER_ROUND));
   let roundNum = req.query.round;
@@ -2653,7 +2653,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
       });
   }
 
-  PQUES.find({phone: req.params.phoneId})
+  PQUES.find({phone: req.params.phoneId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2828,7 +2828,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
       });
   }
 
-  CQUES.find({company: req.params.companyId})
+  CQUES.find({company: req.params.companyId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -3026,7 +3026,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
     }
 
     // get questions about those phones
-    PQUES.find({user: {$ne: req.user._id}, phone: {$in: phoneIds}, acceptedAns: null})
+    PQUES.find({user: {$ne: req.user._id}, phone: {$in: phoneIds}, acceptedAns: null, hidden: false})
     .sort({upvotes: -1, createdAt: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
