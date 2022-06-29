@@ -20,6 +20,10 @@ const repliesSchema = new schema({
     content: {
         type: String,
         required: true
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 },
 {
@@ -46,7 +50,11 @@ const commentsSchema = new schema({
         type: String,
         required: true
     },
-    replies: [repliesSchema]
+    replies: [repliesSchema],
+    hidden: {
+        type: Boolean,
+        default: false
+    }
 },
 {
     timestamps: true
