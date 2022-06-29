@@ -603,10 +603,19 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             
             // get the model name
             let parsedUa = useragentParser(uA);
-            let modelName = parsedUa.device.model.trim();
+            let modelName = parsedUa.device.model;
+
+            if(modelName == null || modelName == ""){
+                return res.status(200).json({success: true, phones: []});
+            }
+
+            modelName = modelName.trim();
+            let vendor = parsedUa.device.vendor;
+            vendor = (vendor == null)? "": vendor.trim();
+            let regex = `,(${vendor})?\\s*${modelName},`;
 
             let proms = [];
-            proms.push(PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
+            proms.push(PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
             if(req.user){
                 proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, _id: 0}));
             }
@@ -722,32 +731,39 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         }
         else{
             let parsedUa = useragentParser(uA);
-            let modelName = parsedUa.device.model.trim();
+            let modelName = parsedUa.device.model;
 
-            let phones;
-            try{
-                phones = await PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1});
-                
-                if(phones.length == 0){
-                    try{
-                      let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
-                      phones = newPhones;
+            if(!(modelName == null || modelName == "")){
+                modelName = modelName.trim();
+                let vendor = parsedUa.device.vendor;
+                vendor = (vendor == null)? "": vendor.trim();
+                let regex = `,(${vendor})?\\s*${modelName},`;
+    
+                let phones;
+                try{
+                    phones = await PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1});
+                    
+                    if(phones.length == 0){
+                        try{
+                          let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
+                          phones = newPhones;
+                        }
+                        catch(err){
+                          // DO NOTHING
+                        }
                     }
-                    catch(err){
-                      // DO NOTHING
+                    
+                    for(let phone of phones){
+                        if(phone.name == rev.phone.name){
+                            verificationRatio = (1 / phones.length) * 100;
+                            break;
+                          }
                     }
                 }
-                
-                for(let phone of phones){
-                    if(phone.name == rev.phone.name){
-                        verificationRatio = (1 / phones.length) * 100;
-                        break;
-                      }
+                catch(err){
+                    console.log("Error from /phones/:phoneId/verify: ", err);
+                    return res.status(500).json({success: false, status: "error finding the matched phones"});
                 }
-            }
-            catch(err){
-                console.log("Error from /phones/:phoneId/verify: ", err);
-                return res.status(500).json({success: false, status: "error finding the matched phones"});
             }
         }
 

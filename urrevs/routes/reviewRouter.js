@@ -2940,32 +2940,38 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
         }
         else{
             let parsedUa = useragentParser(uA);
-            let modelName = parsedUa.device.model.trim();
+            let modelName = parsedUa.device.model;
 
-            let phones;
-            try{
-                phones = await PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1});
-                
-                if(phones.length == 0){
-                    try{
-                      let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
-                      phones = newPhones;
-                    }
-                    catch(err){
-                      // DO NOTHING
-                    }
-                }
-                
-                for(let phone of phones){
-                    if(phone.name == rev.phone.name){
-                        verificationRatio = (1 / phones.length) * 100;
-                        break;
+            if(!(modelName == null || modelName == "")){
+              modelName = modelName.trim();
+              let vendor = parsedUa.device.vendor;
+              vendor = (vendor == null)? "": vendor.trim();
+              let regex = `,(${vendor})?\\s*${modelName},`;
+              let phones;
+              try{
+                  phones = await PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1});
+                  
+                  if(phones.length == 0){
+                      try{
+                        let newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
+                        phones = newPhones;
                       }
-                }
-            }
-            catch(err){
-                console.log("Error from /reviews/phone/:revId/verify: ", err);
-                return res.status(500).json({success: false, status: "error finding the matched phones"});
+                      catch(err){
+                        // DO NOTHING
+                      }
+                  }
+                  
+                  for(let phone of phones){
+                      if(phone.name == rev.phone.name){
+                          verificationRatio = (1 / phones.length) * 100;
+                          break;
+                        }
+                  }
+              }
+              catch(err){
+                  console.log("Error from /reviews/phone/:revId/verify: ", err);
+                  return res.status(500).json({success: false, status: "error finding the matched phones"});
+              }
             }
         }
 
