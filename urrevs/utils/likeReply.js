@@ -29,6 +29,10 @@ module.exports = (parentResourceCollection, parentResourceId, resourceTypeInPare
                     return resolve(404);
                 }
 
+                if(reply.hidden){
+                    return resolve(404);
+                }
+
                 let proms = [];
                 proms.push(parentResourceCollection.findOneAndUpdate({_id: parentResourceId, [idInParent]: resourceId}, {$inc: {[resourceTypeInParent+".$.likes"]: 1}}));
                 // create the like
