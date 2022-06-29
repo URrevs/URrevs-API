@@ -65,6 +65,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 // Add a phone review (with embedded company review)
 /*
   steps:
+  check if the user is not blocked from posting reviews
                 PRE-CREATION
   1- extract data from request body
   2- checking if the required fields are provided and in correct data type
@@ -97,6 +98,14 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
 */
 
 reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReviews){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract data from request body  
   let {
     phoneId,
@@ -1839,6 +1848,14 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
 
 // add a comment to a phone review
 reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1894,6 +1911,14 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
 
 // add a comment to a company review
 reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -1948,6 +1973,14 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate
 
 // add a reply to a phone review comment
 reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReplyComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 
@@ -2002,6 +2035,14 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
 
 // add a reply to a company review comment
 reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromReplyComment){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   // extract the comment content from the request body
   let {content} = req.body;
 

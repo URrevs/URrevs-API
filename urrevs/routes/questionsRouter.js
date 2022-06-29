@@ -59,6 +59,7 @@ questionRouter.options("*", cors.cors, (req, res, next)=>{
 // add a phone question
 /*
   steps:
+    check if the user is blocked from posting questions
     1- extract body
     2- check if the content is not empty or only spaces
     3- check if the phone exists
@@ -66,6 +67,14 @@ questionRouter.options("*", cors.cors, (req, res, next)=>{
     5- return the question as a response
 */
 questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromQuestions){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   let {phone, content} = req.body;
 
   if(!phone || !content){
@@ -158,6 +167,14 @@ questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (re
     5- return the question as a response
 */
 questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  
+  if(req.user.blockedFromQuestions){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+  
   let {company, content} = req.body;
 
   if(!company || !content){
@@ -250,6 +267,13 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
 */
 questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
+  if(req.user.blockedFromAnswer){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   let {content, phoneId} = req.body;
 
   if(!content || !phoneId){
@@ -355,6 +379,13 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
 */
 questionRouter.post("/phone/answers/:ansId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
+  if(req.user.blockedFromReplyAnswer){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   let content = req.body.content;
 
   if(!content){
@@ -543,6 +574,13 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/unlike", cors.cors, 
 */
 questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
+  if(req.user.blockedFromAnswer){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   let {content, companyId} = req.body;
 
   if(!content || !companyId){
@@ -646,6 +684,13 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
 */
 questionRouter.post("/company/answers/:ansId/replies", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   
+  if(req.user.blockedFromReplyAnswer){
+    return res.status(403).json({
+      success: false,
+      status: "blocked"
+    });
+  }
+
   let content = req.body.content;
 
   if(!content){
