@@ -71,6 +71,10 @@ const cReviewSchema = new schema({
     totalGrade: {
         type: Number,
         default: 0
+    },
+    hidden: {
+        type: Boolean,
+        default: false
     }
 },
 {

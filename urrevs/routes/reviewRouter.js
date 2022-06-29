@@ -498,7 +498,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
 // Get a certain phone review
 reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
-  PHONEREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
+  PHONEREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("phone", {name: 1})
   .then(async (rev)=>{
@@ -585,7 +585,7 @@ reviewRouter.get("/phone/:revId", cors.cors, rateLimit, authenticate.verifyFlexi
 
 // Get a certain company review
 reviewRouter.get("/company/:revId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
-  COMPANYREV.findByIdAndUpdate(req.params.revId, {$inc: {views: 1}})
+  COMPANYREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$inc: {views: 1}})
   .populate("user", {name: 1, picture: 1})
   .populate("company", {name: 1})
   .then(async (rev)=>{
@@ -675,7 +675,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
       });
   }
 
-  PHONEREV.find({user: req.user._id})
+  PHONEREV.find({user: req.user._id, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -776,7 +776,7 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyU
       });
   }
 
-  PHONEREV.find({user: req.params.userId})
+  PHONEREV.find({user: req.params.userId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -879,7 +879,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
       });
   }
 
-  COMPANYREV.find({user: req.user._id})
+  COMPANYREV.find({user: req.user._id, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -974,7 +974,7 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verif
       });
   }
 
-  COMPANYREV.find({user: req.params.userId})
+  COMPANYREV.find({user: req.params.userId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -1069,7 +1069,7 @@ reviewRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.verify
       });
   }
 
-  PHONEREV.find({phone: req.params.phoneId})
+  PHONEREV.find({phone: req.params.phoneId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -1174,7 +1174,7 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.ve
       });
   }
 
-  COMPANYREV.find({company: req.params.companyId})
+  COMPANYREV.find({company: req.params.companyId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
