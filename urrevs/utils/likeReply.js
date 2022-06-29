@@ -17,7 +17,7 @@ module.exports = (parentResourceCollection, parentResourceId, resourceTypeInPare
             }
 
             // check resource existence + increment the likes by 1
-            parentResourceCollection.findOne({_id: parentResourceId, [idInParent]: resourceId})
+            parentResourceCollection.findOne({_id: parentResourceId, [idInParent]: resourceId, hidden: false})
             .then((resource)=>{
                 if(!resource){
                     return resolve(404);

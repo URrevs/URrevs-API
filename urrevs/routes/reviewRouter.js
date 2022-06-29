@@ -2108,7 +2108,7 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
       return;
   }
 
-  PHONE_REVS_COMMENTS.find({review: req.params.revId})
+  PHONE_REVS_COMMENTS.find({review: req.params.revId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2142,6 +2142,9 @@ reviewRouter.get("/phone/:revId/comments", cors.cors, rateLimit, authenticate.ve
 
       for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
+        if(reply.hidden){
+          continue;
+        }
         comentRepliesIds.push(reply._id);
         commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
@@ -2222,7 +2225,7 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
       return;
   }
 
-  COMPANY_REVS_COMMENTS.find({review: req.params.revId})
+  COMPANY_REVS_COMMENTS.find({review: req.params.revId, hidden: false})
   .sort({likes: -1, createdAt: -1})
   .skip((roundNum - 1) * itemsPerRound)
   .limit(itemsPerRound)
@@ -2256,6 +2259,9 @@ reviewRouter.get("/company/:revId/comments", cors.cors, rateLimit, authenticate.
 
       for(let i=0; i<comment.replies.length; i++){
         let reply = comment.replies[i];
+        if(reply.hidden){
+          continue;
+        }
         comentRepliesIds.push(reply._id);
         commentRepliesObj[reply._id] = {comment: index, reply: i};
         resultComment.replies.push({
