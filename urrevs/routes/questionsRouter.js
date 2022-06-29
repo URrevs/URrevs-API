@@ -3437,7 +3437,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}}));
+      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3568,7 +3568,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -3726,7 +3726,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}}));
+      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3857,7 +3857,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
