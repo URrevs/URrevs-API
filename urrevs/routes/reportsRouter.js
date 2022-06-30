@@ -1572,6 +1572,7 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
 
         for(let rep of reports){
             result.push({
+                _id: rep._id,
                 createdAt: rep.createdAt,
                 reason: rep.reason,
                 info: rep.info,
@@ -1623,6 +1624,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
 
         for(let rep of reports){
             result.push({
+                _id: rep._id,
                 createdAt: rep.createdAt,
                 reason: rep.reason,
                 info: rep.info,
