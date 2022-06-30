@@ -52,6 +52,8 @@ const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
 
 
 const config = require("../config");
+const phoneReviewComment = require("../models/phoneReviewComment");
+const companyReviewComment = require("../models/companyReviewComment");
 
 //--------------------------------------------------------------------
 
@@ -3098,6 +3100,93 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
 
 
 
+// hide a phone review comment
+reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  phoneReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/comments/:commentId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the phone comment"});
+  })
+});
+
+
+// hide a company review comment
+reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  companyReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/comments/:commentId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the company comment"});
+  })
+});
+
+
+
+// unhide a phone review comment
+reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  phoneReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/comments/:commentId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone comment"});
+  })
+});
+
+
+// unhide a company review comment
+reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  companyReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/comments/:commentId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the company comment"});
+  })
+});
 
 
 

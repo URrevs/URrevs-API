@@ -4101,8 +4101,96 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
 
 
 
+// hide a phone question answer
+reviewRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/answers/:ansId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the phone answer"});
+  })
+});
 
 
+
+// hide a company question answer
+reviewRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/answers/:ansId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the company answer"});
+  })
+});
+
+
+
+
+// unhide a phone question answer
+reviewRouter.put("/phone/answers/:ansId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/answers/:ansId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone answer"});
+  })
+});
+
+
+
+// unhide a company question answer
+reviewRouter.put("/company/answers/:ansId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/answers/:ansId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the company answer"});
+  })
+});
 
 
 
