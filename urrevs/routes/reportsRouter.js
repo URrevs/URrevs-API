@@ -1573,6 +1573,7 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
         for(let rep of reports){
             result.push({
                 _id: rep._id,
+                type: rep.type,
                 createdAt: rep.createdAt,
                 reason: rep.reason,
                 info: rep.info,
@@ -1582,7 +1583,10 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
                 reporteeName: rep.reportee.name,
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
-                contentHidden: rep.hideContent
+                contentHidden: rep.hideContent,
+                obj: rep.obj,
+                parentObj: rep.parObj,
+                grandParentObj: rep.par2Obj
             })
         }
 
@@ -1625,6 +1629,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
         for(let rep of reports){
             result.push({
                 _id: rep._id,
+                type: rep.type,
                 createdAt: rep.createdAt,
                 reason: rep.reason,
                 info: rep.info,
@@ -1634,7 +1639,10 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
                 reporteeName: rep.reportee.name,
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
-                contentHidden: rep.hideContent
+                contentHidden: rep.hideContent,
+                obj: rep.obj,
+                parentObj: rep.parObj,
+                grandParentObj: rep.par2Obj
             })
         }
 
@@ -1678,6 +1686,97 @@ reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser,
         });
     });
 });
+
+
+
+
+
+
+// show content for a phone review report
+// reportRouter.get("/:repId/content/review/phone", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+//     REPORT.findOne({_id: req.params.repId, type: "phoneReview"})
+//     .then((report)=>{
+//         if(!report){
+//             return res.status(404).json({
+//                 success: false,
+//                 status: "not found"
+//             });
+//         }
+
+//         let revId = report.obj;
+//         PHONEREV.findById(revId)
+//         .populate("user", {name: 1, picture: 1})
+//         .populate("phone", {name: 1})
+//         .then((rev)=>{
+//             if(!rev){
+//                 return res.status(404).json({
+//                     success: false,
+//                     status: "not found"
+//                 });
+//             }
+
+//             let resultRev = {
+//                 _id: rev._id,
+//                 type: "phone",
+//                 targetId: rev.phone._id,
+//                 targetName: rev.phone.name,
+//                 userId: rev.user._id,
+//                 userName: rev.user.name,
+//                 picture: rev.user.picture,
+//                 createdAt: rev.createdAt,
+//                 views: rev.views,
+//                 likes: rev.likes,
+//                 commentsCount: rev.commentsCount,
+//                 shares: rev.shares,
+//                 ownedAt: rev.ownedDate,
+//                 generalRating: rev.generalRating,
+//                 uiRating: rev.uiRating,
+//                 manufacturingQuality: rev.manQuality,
+//                 valueForMoney: rev.valFMon,
+//                 camera: rev.camera,
+//                 callQuality: rev.callQuality,
+//                 battery: rev.batteryRating,
+//                 pros: rev.pros,
+//                 cons: rev.cons,
+//                 liked: false,
+//                 verificationRatio: rev.verificationRatio
+//             };
+
+//             return res.status(200).json({
+//                 success: true,
+//                 review: resultRev
+//             });
+//         })
+//         .catch((err)=>{
+//             console.log("Error from /reports/:repId/content/review/phone: ", err);
+//             return res.status(500).json({
+//                 success: false,
+//                 status: "error finding the review"
+//             });
+//         });
+//     })
+//     .catch((err)=>{
+//         console.log("Error from /reports/:repId/content: ", err);
+//         return res.status(500).json({
+//             success: false,
+//             status: "error finding the report"
+//         });
+//     });
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 module.exports = reportRouter;
