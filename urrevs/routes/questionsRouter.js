@@ -2332,7 +2332,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
 
 
 // get phone questions of another user
-questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
+questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_QUES_PER_ROUND|| config.ANOTHER_USER_PHONE_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
@@ -2443,45 +2443,47 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>
     }
 
 
-    // check liked state
-    let proms = [];
-    proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
-    proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
-    proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+    if(req.user){
+      // check liked state
+      let proms = [];
+      proms.push(PHONE_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
+      proms.push(PQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
+      proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
-    Promise.all(proms)
-    .then((likes)=>{
-      let quesLike = likes[0];
-      let ansLike = likes[1];
-      let replyLikes = likes[2];
+      try{
+        let likes = await Promise.all(proms);
+        let quesLike = likes[0];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
 
-      for(let like of quesLike){
-        let id = like.question;
-        resultQuess[quesObj[id]].upvoted = true;
+        for(let like of quesLike){
+          let id = like.question;
+          resultQuess[quesObj[id]].upvoted = true;
+        }
+
+        for(let like of ansLike){
+          let id = like.answer;
+          resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+        }
+
+        for(let like of replyLikes){
+          let id = like.reply;
+          resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
+        }
       }
-
-      for(let like of ansLike){
-        let id = like.answer;
-        resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+      catch(err){
+        console.log("Error from GET /questions/phone/by/:userId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the likes failed"
+        });
       }
+    }
 
-      for(let like of replyLikes){
-        let id = like.reply;
-        resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
-      }
-
-      return res.status(200).json({
-        success: true,
-        questions: resultQuess
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from GET /questions/phone/by/:userId: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "finding the likes failed"
-      });
+    return res.status(200).json({
+      success: true,
+      questions: resultQuess
     });
 
   })
@@ -2499,7 +2501,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>
 
 
 // get company questions of another user
-questionRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
+questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_QUES_PER_ROUND|| config.ANOTHER_USER_COMPANY_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
@@ -2610,47 +2612,48 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)
     }
 
 
-    // check liked state
-    let proms = [];
-    proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
-    proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
-    proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+    if(req.user){
+      // check liked state
+      let proms = [];
+      proms.push(COMPANY_QUES_LIKES.find({user: req.user._id, question: {$in: quesIds}, unliked: false}));
+      proms.push(CQUES_ANSWERS_LIKES.find({user: req.user._id, answer: {$in: acceptedAnsIds}}));
+      proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
 
-    Promise.all(proms)
-    .then((likes)=>{
-      let quesLike = likes[0];
-      let ansLike = likes[1];
-      let replyLikes = likes[2];
+      try{
+        let likes = await Promise.all(proms);
+        let quesLike = likes[0];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
 
-      for(let like of quesLike){
-        let id = like.question;
-        resultQuess[quesObj[id]].upvoted = true;
+        for(let like of quesLike){
+          let id = like.question;
+          resultQuess[quesObj[id]].upvoted = true;
+        }
+
+        for(let like of ansLike){
+          let id = like.answer;
+          resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+        }
+
+        for(let like of replyLikes){
+          let id = like.reply;
+          resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
+        }
       }
-
-      for(let like of ansLike){
-        let id = like.answer;
-        resultQuess[acceptedAnsObj[id]].acceptedAns.upvoted = true;
+      catch(err){
+        console.log("Error from GET /questions/company/by/:userId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "finding the likes failed"
+        });
       }
+    }
 
-      for(let like of replyLikes){
-        let id = like.reply;
-        resultQuess[repliesObj[id].answer].acceptedAns.replies[repliesObj[id].reply].liked = true;
-      }
-
-      return res.status(200).json({
-        success: true,
-        questions: resultQuess
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from GET /questions/company/by/:userId: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "finding the likes failed"
-      });
+    return res.status(200).json({
+      success: true,
+      questions: resultQuess
     });
-
   })
   .catch((err)=>{
     console.log("Error from GET /questions/company/by/:userId: ", err);
