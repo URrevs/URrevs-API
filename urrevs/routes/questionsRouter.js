@@ -4420,7 +4420,7 @@ questionRouter.put("/phone/answers/:ansId/replies/:replyId/unhide", cors.cors, r
 
 
 
-// hide a company question reply
+// unhide a company question reply
 questionRouter.put("/company/answers/:ansId/replies/:replyId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   
   const index = req.body.index;
