@@ -278,5 +278,66 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, authenticate.verifyUser,
 
 
 
+// block a user from all activities
+userRouter.put("/:userId/block/all", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    USER.findByIdAndUpdate(req.params.userId, {$set: {
+        blockedFromReviews: true,
+        blockedFromQuestions: true,
+        blockedFromComment: true,
+        blockedFromAnswer: true,
+        blockedFromReplyComment: true,
+        blockedFromReplyAnswer: true
+    }})
+    .then((user)=>{
+        if(!user){
+            return res.status(404).json({success: false, status: "not found"});
+        }
+
+        return res.status(200).json({success: true});
+    })
+    .catch((err)=>{
+        console.log("Error from /users/:userId/block/all: ", err);
+        return res.status(500).json({
+            success: false, 
+            status: "process failed"
+        });
+    });
+});
+
+
+
+
+
+
+
+// unblock a user from all activities
+userRouter.put("/:userId/unblock/all", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    USER.findByIdAndUpdate(req.params.userId, {$set: {
+        blockedFromReviews: false,
+        blockedFromQuestions: false,
+        blockedFromComment: false,
+        blockedFromAnswer: false,
+        blockedFromReplyComment: false,
+        blockedFromReplyAnswer: false
+    }})
+    .then((user)=>{
+        if(!user){
+            return res.status(404).json({success: false, status: "not found"});
+        }
+
+        return res.status(200).json({success: true});
+    })
+    .catch((err)=>{
+        console.log("Error from /users/:userId/block/all: ", err);
+        return res.status(500).json({
+            success: false, 
+            status: "process failed"
+        });
+    });
+});
+
+
+
+
 
 module.exports = userRouter;
