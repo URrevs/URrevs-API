@@ -97,7 +97,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
     }
     
     let proms = [];
-    proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.revId, type: "phoneReview"}));
 
     Promise.all(proms)
@@ -208,7 +208,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
     }
     
     let proms = [];
-    proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.revId, type: "companyReview"}));
 
     Promise.all(proms)
@@ -318,7 +318,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
     }
     
     let proms = [];
-    proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.quesId, type: "phoneQuestion"}));
 
     Promise.all(proms)
@@ -428,7 +428,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
     }
     
     let proms = [];
-    proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.quesId, type: "companyQuestion"}));
 
     Promise.all(proms)
@@ -540,8 +540,8 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
 
     let proms = [];
 
-    proms.push(PHONEREV.findOne({_id: req.params.revId}));
-    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "phoneComment"}));
 
     Promise.all(proms)
@@ -667,8 +667,8 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
 
     let proms = [];
 
-    proms.push(COMPANYREV.findOne({_id: req.params.revId}));
-    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "companyComment"}));
 
     Promise.all(proms)
@@ -795,8 +795,8 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
 
     let proms = [];
 
-    proms.push(PQUES.findOne({_id: req.params.quesId}));
-    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId}, {user: 1}));
+    proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
+    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "phoneAnswer"}));
 
     Promise.all(proms)
@@ -923,8 +923,8 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
 
     let proms = [];
 
-    proms.push(CQUES.findOne({_id: req.params.quesId}));
-    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId}, {user: 1}));
+    proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
+    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "companyAnswer"}));
 
     Promise.all(proms)
@@ -1048,8 +1048,8 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
 
 
     let proms = [];
-    proms.push(PHONEREV.findOne({_id: req.params.revId}));
-    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, "replies._id": req.params.replyId}));
+    proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, "replies._id": req.params.replyId, hidden: false}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "phoneCommentReply"}));
 
     Promise.all(proms)
