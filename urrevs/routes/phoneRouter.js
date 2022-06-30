@@ -768,6 +768,9 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         }
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
+        if(verificationRatio == 0){
+            return res.status(200).json({success: true, verificationRatio: verificationRatio});
+        }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
         proms2.push(rev.save());
