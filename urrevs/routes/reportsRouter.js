@@ -29,6 +29,7 @@ const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
 
 
 const config = require("../config");
+const companyQuestion = require("../models/companyQuestion");
 
 
 //--------------------------------------------------------------------
@@ -1683,7 +1684,82 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
     .then((reports)=>{
         let result = [];
 
+        let phoneRev;
+        let companyRev;
+        let phoneQues;
+        let companyQues;
+        let phoneComment;
+        let companyComment;
+        let phoneAnswer;
+        let companyAnswer;
+        let phoneCommentReply;
+        let companyCommentReply;
+        let phoneAnswerReply;
+        let companyAnswerReply;
+
         for(let rep of reports){
+            phoneRev = null;
+            companyRev = null;
+            phoneQues = null;
+            companyQues = null;
+            phoneComment = null;
+            companyComment = null;
+            phoneAnswer = null;
+            companyAnswer = null;
+            phoneCommentReply = null;
+            companyCommentReply = null;
+            phoneAnswerReply = null;
+            companyAnswerReply = null;
+            
+            if(rep.type == "phoneReview"){
+                phoneRev = rep.obj;
+            }
+            else if(rep.type == "companyReview"){
+                companyRev = rep.obj;
+            }
+            else if(rep.type == "phoneQuestion"){
+                phoneQues = rep.obj;
+            }
+            else if(rep.type == "companyQuestion"){
+                companyQues = rep.obj;
+            }
+            else if(rep.type == "phoneComment"){
+                phoneComment = rep.obj;
+                phoneRev = rep.parObj;
+            }
+            else if(rep.type == "companyComment"){
+                companyComment = rep.obj;
+                companyRev = rep.parObj;
+            }
+            else if(rep.type == "phoneAnswer"){
+                phoneAnswer = rep.obj;
+                phoneQues = rep.parObj;
+            }
+            else if(rep.type == "companyAnswer"){
+                companyAnswer = rep.obj;
+                companyQues = rep.parObj;
+            }
+            else if(rep.type == "phoneCommentReply"){
+                phoneCommentReply = rep.obj;
+                phoneComment = rep.parObj;
+                phoneRev = rep.par2Obj;
+            }
+            else if(rep.type == "companyCommentReply"){
+                companyCommentReply = rep.obj;
+                companyComment = rep.parObj;
+                companyRev = rep.par2Obj;
+            }
+            else if(rep.type == "phoneAnswerReply"){
+                phoneAnswerReply = rep.obj;
+                phoneAnswer = rep.parObj;
+                phoneQues = rep.par2Obj;
+            }
+            else if(rep.type == "companyAnswerReply"){
+                companyAnswerReply = rep.obj;
+                companyAnswer = rep.parObj;
+                companyQues = rep.par2Obj;
+            }
+
             result.push({
                 _id: rep._id,
                 type: rep.type,
@@ -1697,10 +1773,19 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
                 contentHidden: rep.hideContent,
-                obj: rep.obj,
-                parentObj: rep.parObj,
-                grandParentObj: rep.par2Obj
-            })
+                phoneRev: phoneRev,
+                companyRev: companyRev,
+                phoneQues: phoneQues,
+                companyQues: companyQues,
+                phoneComment: phoneComment,
+                companyComment: companyComment,
+                phoneAnswer: phoneAnswer,
+                companyAnswer: companyAnswer,
+                phoneCommentReply: phoneCommentReply,
+                companyCommentReply: companyCommentReply,
+                phoneAnswerReply: phoneAnswerReply,
+                companyAnswerReply: companyAnswerReply,
+            });
         }
 
         return res.status(200).json({
@@ -1739,7 +1824,82 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
     .then((reports)=>{
         let result = [];
 
+        let phoneRev;
+        let companyRev;
+        let phoneQues;
+        let companyQues;
+        let phoneComment;
+        let companyComment;
+        let phoneAnswer;
+        let companyAnswer;
+        let phoneCommentReply;
+        let companyCommentReply;
+        let phoneAnswerReply;
+        let companyAnswerReply;
+
         for(let rep of reports){
+            phoneRev = null;
+            companyRev = null;
+            phoneQues = null;
+            companyQues = null;
+            phoneComment = null;
+            companyComment = null;
+            phoneAnswer = null;
+            companyAnswer = null;
+            phoneCommentReply = null;
+            companyCommentReply = null;
+            phoneAnswerReply = null;
+            companyAnswerReply = null;
+            
+            if(rep.type == "phoneReview"){
+                phoneRev = rep.obj;
+            }
+            else if(rep.type == "companyReview"){
+                companyRev = rep.obj;
+            }
+            else if(rep.type == "phoneQuestion"){
+                phoneQues = rep.obj;
+            }
+            else if(rep.type == "companyQuestion"){
+                companyQues = rep.obj;
+            }
+            else if(rep.type == "phoneComment"){
+                phoneComment = rep.obj;
+                phoneRev = rep.parObj;
+            }
+            else if(rep.type == "companyComment"){
+                companyComment = rep.obj;
+                companyRev = rep.parObj;
+            }
+            else if(rep.type == "phoneAnswer"){
+                phoneAnswer = rep.obj;
+                phoneQues = rep.parObj;
+            }
+            else if(rep.type == "companyAnswer"){
+                companyAnswer = rep.obj;
+                companyQues = rep.parObj;
+            }
+            else if(rep.type == "phoneCommentReply"){
+                phoneCommentReply = rep.obj;
+                phoneComment = rep.parObj;
+                phoneRev = rep.par2Obj;
+            }
+            else if(rep.type == "companyCommentReply"){
+                companyCommentReply = rep.obj;
+                companyComment = rep.parObj;
+                companyRev = rep.par2Obj;
+            }
+            else if(rep.type == "phoneAnswerReply"){
+                phoneAnswerReply = rep.obj;
+                phoneAnswer = rep.parObj;
+                phoneQues = rep.par2Obj;
+            }
+            else if(rep.type == "companyAnswerReply"){
+                companyAnswerReply = rep.obj;
+                companyAnswer = rep.parObj;
+                companyQues = rep.par2Obj;
+            }
+
             result.push({
                 _id: rep._id,
                 type: rep.type,
@@ -1753,10 +1913,19 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
                 contentHidden: rep.hideContent,
-                obj: rep.obj,
-                parentObj: rep.parObj,
-                grandParentObj: rep.par2Obj
-            })
+                phoneRev: phoneRev,
+                companyRev: companyRev,
+                phoneQues: phoneQues,
+                companyQues: companyQues,
+                phoneComment: phoneComment,
+                companyComment: companyComment,
+                phoneAnswer: phoneAnswer,
+                companyAnswer: companyAnswer,
+                phoneCommentReply: phoneCommentReply,
+                companyCommentReply: companyCommentReply,
+                phoneAnswerReply: phoneAnswerReply,
+                companyAnswerReply: companyAnswerReply,
+            });
         }
 
         return res.status(200).json({
