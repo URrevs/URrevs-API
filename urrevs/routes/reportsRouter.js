@@ -21,7 +21,8 @@ const PANS = require("../models/phoneAnswer");
 const CQUES = require("../models/companyQuestion");
 const CANS = require("../models/companyAnswer");
 const REPORT = require("../models/report");
-
+const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
+const COMPANY_REVS_LIKES = require("../models/companyRevsLikes");
 
 
 const config = require("../config");
@@ -1690,79 +1691,136 @@ reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser,
 
 
 
-
-
 // show content for a phone review report
-// reportRouter.get("/:repId/content/review/phone", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-//     REPORT.findOne({_id: req.params.repId, type: "phoneReview"})
-//     .then((report)=>{
-//         if(!report){
-//             return res.status(404).json({
-//                 success: false,
-//                 status: "not found"
-//             });
-//         }
+reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONEREV.findById(req.params.revId).then(async(rev)=>{
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
 
-//         let revId = report.obj;
-//         PHONEREV.findById(revId)
-//         .populate("user", {name: 1, picture: 1})
-//         .populate("phone", {name: 1})
-//         .then((rev)=>{
-//             if(!rev){
-//                 return res.status(404).json({
-//                     success: false,
-//                     status: "not found"
-//                 });
-//             }
+        let resultRev = {
+            _id: rev._id,
+            type: "phone",
+            targetId: rev.phone._id,
+            targetName: rev.phone.name,
+            userId: rev.user._id,
+            userName: rev.user.name,
+            picture: rev.user.picture,
+            createdAt: rev.createdAt,
+            views: rev.views,
+            likes: rev.likes,
+            commentsCount: rev.commentsCount,
+            shares: rev.shares,
+            ownedAt: rev.ownedDate,
+            generalRating: rev.generalRating,
+            uiRating: rev.uiRating,
+            manufacturingQuality: rev.manQuality,
+            valueForMoney: rev.valFMon,
+            camera: rev.camera,
+            callQuality: rev.callQuality,
+            battery: rev.batteryRating,
+            pros: rev.pros,
+            cons: rev.cons,
+            liked: false,
+            verificationRatio: rev.verificationRatio
+        };
 
-//             let resultRev = {
-//                 _id: rev._id,
-//                 type: "phone",
-//                 targetId: rev.phone._id,
-//                 targetName: rev.phone.name,
-//                 userId: rev.user._id,
-//                 userName: rev.user.name,
-//                 picture: rev.user.picture,
-//                 createdAt: rev.createdAt,
-//                 views: rev.views,
-//                 likes: rev.likes,
-//                 commentsCount: rev.commentsCount,
-//                 shares: rev.shares,
-//                 ownedAt: rev.ownedDate,
-//                 generalRating: rev.generalRating,
-//                 uiRating: rev.uiRating,
-//                 manufacturingQuality: rev.manQuality,
-//                 valueForMoney: rev.valFMon,
-//                 camera: rev.camera,
-//                 callQuality: rev.callQuality,
-//                 battery: rev.batteryRating,
-//                 pros: rev.pros,
-//                 cons: rev.cons,
-//                 liked: false,
-//                 verificationRatio: rev.verificationRatio
-//             };
+        let like;
+        try{
+            like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/:revId: ", err);
+            return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Finding the liked state failed"
+            });
+        }
+        if(like){
+            resultRev.liked = true;
+        }
 
-//             return res.status(200).json({
-//                 success: true,
-//                 review: resultRev
-//             });
-//         })
-//         .catch((err)=>{
-//             console.log("Error from /reports/:repId/content/review/phone: ", err);
-//             return res.status(500).json({
-//                 success: false,
-//                 status: "error finding the review"
-//             });
-//         });
-//     })
-//     .catch((err)=>{
-//         console.log("Error from /reports/:repId/content: ", err);
-//         return res.status(500).json({
-//             success: false,
-//             status: "error finding the report"
-//         });
-//     });
-// });
+        return res.status(200).json({
+            success: true,
+            review: resultRev
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/phone/:revId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review"
+        });
+    });
+});
+
+
+
+
+// show content for a company review report
+reportRouter.get("/content/review/company/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPANYREV.findById(req.params.revId).then(async(rev)=>{
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let resultRev = {
+            _id: rev._id,
+            type: "company",
+            targetId: rev.company._id,
+            targetName: rev.company.name,
+            userId: rev.user._id,
+            userName: rev.user.name,
+            picture: rev.user.picture,
+            createdAt: rev.createdAt,
+            views: rev.views,
+            likes: rev.likes,
+            commentsCount: rev.commentsCount,
+            shares: rev.shares,
+            corresPhoneRev: rev.corresPrev,
+            generalRating: rev.generalRating,
+            pros: rev.pros,
+            cons: rev.cons,
+            liked: false,
+            verificationRatio: rev.verificationRatio
+        };
+
+        let like;
+        try{
+            like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/:revId: ", err);
+            return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Finding the liked state failed"
+            });
+        }
+        if(like){
+            resultRev.liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            review: resultRev
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/company/:revId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review"
+        });
+    });
+});
 
 
 
