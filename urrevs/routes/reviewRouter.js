@@ -3003,4 +3003,103 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 
 
 
+
+
+// hide a phone review
+reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/:revId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the phone review"});
+  })
+});
+
+
+// hide a company review
+reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/:revId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the company review"});
+  })
+});
+
+
+
+
+// unhide a phone review
+reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/phone/:revId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone review"});
+  })
+});
+
+
+// unhide a company review
+reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /reviews/company/:revId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the company review"});
+  })
+});
+
+
+
+
+
+
+
+
+
 module.exports = reviewRouter;

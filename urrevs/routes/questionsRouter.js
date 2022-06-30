@@ -4008,7 +4008,96 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 
 
 
+// hide a phone question
+questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
 
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /questions/phone/:quesId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the phone question"});
+  })
+});
+
+
+
+// hide a company question
+questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: true}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /questions/company/:quesId/hide: ", err);
+    return res.status(500).json({success: false, status: "error hiding the company question"});
+  });
+});
+
+
+
+
+// unhide a phone question
+questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /questions/phone/:quesId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone question"});
+  })
+});
+
+
+
+// unhide a company question
+questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
+  .then((r)=>{
+    if(!r){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from /questions/company/:quesId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the company question"});
+  });
+});
 
 
 
