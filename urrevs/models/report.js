@@ -56,7 +56,9 @@ const reportSchema = new schema({
             "pRev", "cRev", 
             "pQues", "cQues", 
             "pRevsComment", "cRevsComment",
-            "pQuesAnswer", "cQuesAnswer"
+            "pQuesAnswer", "cQuesAnswer",
+            "pRevsComment.replies", "cRevsComment.replies",
+            "pQuesAnswer.replies", "cQuesAnswer.replies"
         ]
     },
     onModelParObj: {
