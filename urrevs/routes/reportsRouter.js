@@ -2234,6 +2234,121 @@ reportRouter.get("/content/review/company/comments/:commentId", cors.cors, rateL
 
 
 
+// show content for a phone review comment reply report
+reportRouter.get("/content/review/phone/comments/:commentId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId}, {replies: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let reply = comment.replies.id(req.params.replyId);
+        let resultReply = {
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            userPicture: reply.user.picture,
+            userQuestionsAnswered: reply.user.questionsAnswered,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+        };
+
+        let replyLikes;
+        try{
+            replyLikes = await PHONE_REV_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId});
+        }
+        catch(err){
+            console.log("Error from /reports/content/review/phone/comments/:commentId/replies/:replyId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error finding the reply"
+            });
+        }
+
+        if(replyLikes){
+            resultReply.liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            reply: resultReply
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/phone/comments/:commentId/replies/:replyId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
+
+
+
+
+
+// show content for a company review comment reply report
+reportRouter.get("/content/review/company/comments/:commentId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId}, {replies: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let reply = comment.replies.id(req.params.replyId);
+        let resultReply = {
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            userPicture: reply.user.picture,
+            userQuestionsAnswered: reply.user.questionsAnswered,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+        };
+
+        let replyLikes;
+        try{
+            replyLikes = await COMPANY_REV_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId});
+        }
+        catch(err){
+            console.log("Error from /reports/content/review/company/comments/:commentId/replies/:replyId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error finding the reply"
+            });
+        }
+
+        if(replyLikes){
+            resultReply.liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            reply: resultReply
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/company/comments/:commentId/replies/:replyId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
 
 
 
