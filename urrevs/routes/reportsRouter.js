@@ -1644,7 +1644,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
         });
     })
     .catch((err)=>{
-        console.log("Error from /reports/open: ", err);
+        console.log("Error from /reports/closed: ", err);
         return res.status(500).json({
             success: false,
             status: "error finding the reports"
@@ -1653,6 +1653,31 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
 });
 
 
+
+
+// close a report
+reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    REPORT.findByIdAndUpdate(req.params.repId, {closed: true})
+    .then((r)=>{
+        if(!r){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/:repId/close: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error closing the report"
+        });
+    });
+});
 
 
 module.exports = reportRouter;
