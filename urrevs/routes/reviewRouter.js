@@ -145,6 +145,13 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
+  if(Date.parse(ownedDate) > Date.now()){
+    return res.status(400).json({
+      success: false,
+      status: "bad request"
+    });
+  }
+
   if(typeof(generalRating) !== "number" || typeof(uiRating) !== "number" || 
   typeof(manQuality) !== "number" || typeof(valFMon) !== "number" || typeof(camera) !== "number" || 
   typeof(callQuality) !== "number" || typeof(battery) !== "number" || typeof(companyRating) !== "number"){
