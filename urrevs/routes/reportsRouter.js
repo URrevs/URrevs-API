@@ -11,7 +11,6 @@ const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
 
-const USER = require("../models/user");
 const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
 const PHONE_REVS_COMMENTS = require("../models/phoneReviewComment");
@@ -23,9 +22,14 @@ const CANS = require("../models/companyAnswer");
 const REPORT = require("../models/report");
 const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
 const COMPANY_REVS_LIKES = require("../models/companyRevsLikes");
+const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
+const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
+const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
+const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
 
 
 const config = require("../config");
+
 
 //--------------------------------------------------------------------
 
@@ -1825,7 +1829,223 @@ reportRouter.get("/content/review/company/:revId", cors.cors, rateLimit, authent
 
 
 
+// show content for a phone review comment report
+reportRouter.get("/content/review/phone/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONE_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
 
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+        };
+
+
+        let commentsLikes;
+        let proms = [];
+        proms.push(PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "Finding the liked state failed"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/phone/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
+
+
+
+
+// show content for a company review comment report
+reportRouter.get("/content/review/company/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPANY_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+        };
+
+
+        let commentsLikes;
+        let proms = [];
+        proms.push(COMPANY_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+        }
+        catch(err){
+            console.log("Error from /reports/content/review/company/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error finding the comment"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/company/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
+/*
+// show content for a phone review comment report
+reportRouter.get("/content/review/phone/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONE_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let comentRepliesIds = [];
+        let commentRepliesObj = {};
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+            replies: []
+        };
+
+        for(let i=0; i<comment.replies.length; i++){
+            let reply = comment.replies[i];
+            comentRepliesIds.push(reply._id);
+            commentRepliesObj[reply._id] = i;
+            resultComment.replies.push({
+              _id: reply._id,
+              userId: reply.user._id,
+              userName: reply.user.name,
+              userPicture: reply.user.picture,
+              userQuestionsAnswered: reply.user.questionsAnswered,
+              content: reply.content,
+              createdAt: reply.createdAt,
+              likes: reply.likes,
+              liked: false
+            });
+        }
+
+        let commentsLikes;
+        let repliesLikes;
+        let proms = [];
+        proms.push(PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        proms.push(PHONE_REV_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+            repliesLikes = results[1];
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "Finding the liked state failed"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        // liked state for replies
+        for(let replyLike of repliesLikes){
+            let location = commentRepliesObj[replyLike.reply];
+            resultComment.replies[location].liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    });
+});
+*/
 
 
 
