@@ -108,14 +108,14 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         if(!rev){
             return res.status(404).json({
                 success: false,
-                message: "not found or you own it"
+                status: "not found or you own it"
             });
         }
 
         if(rep){
             return res.status(403).json({
                 success: false,
-                message: "already reported"
+                status: "already reported"
             });
         }
 
@@ -219,14 +219,14 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         if(!rev){
             return res.status(404).json({
                 success: false,
-                message: "not found or you own it"
+                status: "not found or you own it"
             });
         }
 
         if(rep){
             return res.status(403).json({
                 success: false,
-                message: "already reported"
+                status: "already reported"
             });
         }
 
@@ -329,14 +329,14 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         if(!ques){
             return res.status(404).json({
                 success: false,
-                message: "not found or you own it"
+                status: "not found or you own it"
             });
         }
 
         if(rep){
             return res.status(403).json({
                 success: false,
-                message: "already reported"
+                status: "already reported"
             });
         }
 
@@ -439,14 +439,14 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         if(!ques){
             return res.status(404).json({
                 success: false,
-                message: "not found or you own it"
+                status: "not found or you own it"
             });
         }
 
         if(rep){
             return res.status(403).json({
                 success: false,
-                message: "already reported"
+                status: "already reported"
             });
         }
 
