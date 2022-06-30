@@ -610,8 +610,6 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
 
 
 
-
-
 // report a company review comment
 reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     const reason = req.body.reason;
@@ -737,9 +735,6 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
 
 
 
-
-
-
 // report a phone question answer
 reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     const reason = req.body.reason;
@@ -860,9 +855,6 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
         });
     });
 });
-
-
-
 
 
 
@@ -1136,10 +1128,6 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
 
 
 
-
-
-
-
 // report a company review comment reply
 reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     const reason = req.body.reason;
@@ -1276,9 +1264,6 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         });
     });
 });
-
-
-
 
 
 
@@ -1425,11 +1410,6 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
 
 
 
-
-
-
-
-
 // report a company question answer reply
 reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
     const reason = req.body.reason;
@@ -1567,6 +1547,9 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
     });
 });
 
+
+
+// ----------------------------------------------------------------------------------------------------
 
 
 
