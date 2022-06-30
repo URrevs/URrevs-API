@@ -9,8 +9,7 @@ const schema = mongoose.Schema;
 const reportSchema = new schema({
     closed:{
         type:Boolean,
-        default: false,
-        index: true
+        default: false
     },
     reporter: {
         type: schema.Types.ObjectId,
@@ -91,7 +90,7 @@ const reportSchema = new schema({
 {timestamps: true}
 );
 
+reportSchema.index({closed: 1, createdAt: -1});
 reportSchema.index({reporter: 1, obj: 1});
-reportSchema.index({createdAt: -1});
 
 module.exports = mongoose.model("Report", reportSchema);
