@@ -836,7 +836,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
                 info: req.body.info,
                 obj: req.params.ansId,
                 onModelObj: "pQuesAnswer",
-                parObj: req.params.revId,
+                parObj: req.params.quesId,
                 onModelParObj: "pQues"
             })
             .then((r)=>{
@@ -964,7 +964,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
                 info: req.body.info,
                 obj: req.params.ansId,
                 onModelObj: "cQuesAnswer",
-                parObj: req.params.revId,
+                parObj: req.params.quesId,
                 onModelParObj: "cQues"
             })
             .then((r)=>{
