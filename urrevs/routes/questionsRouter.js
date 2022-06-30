@@ -2332,7 +2332,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
 
 
 // get phone questions of another user
-questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_QUES_PER_ROUND|| config.ANOTHER_USER_PHONE_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){
@@ -2499,7 +2499,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
 
 
 // get company questions of another user
-questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+questionRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_QUES_PER_ROUND|| config.ANOTHER_USER_COMPANY_QUES_PER_ROUND));
   let roundNum = req.query.round;
   if(!roundNum || isNaN(roundNum)){

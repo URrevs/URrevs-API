@@ -167,7 +167,7 @@ userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, 
 
 
 // get user profile
-userRouter.get("/:userId/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/profile", cors.cors, rateLimit, (req, res, next)=>{
     USER.findById(req.params.userId).then((user)=>{
         if(!user){
             res.statusCode = 404;
@@ -239,7 +239,7 @@ userRouter.get("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, r
 
 
 // get user's owned phones
-userRouter.get("/:userId/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
     let itemsPerRound = parseInt((process.env.OWNED_PHONES_PER_ROUND || config.OWNED_PHONES_PER_ROUND));
     let roundNum = req.query.round;
 
