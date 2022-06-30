@@ -541,7 +541,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
     let proms = [];
 
     proms.push(PHONEREV.findOne({_id: req.params.revId}));
-    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "phoneComment"}));
 
     Promise.all(proms)
@@ -668,7 +668,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
     let proms = [];
 
     proms.push(COMPANYREV.findOne({_id: req.params.revId}));
-    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "companyComment"}));
 
     Promise.all(proms)
@@ -796,7 +796,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
     let proms = [];
 
     proms.push(PQUES.findOne({_id: req.params.quesId}));
-    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "phoneAnswer"}));
 
     Promise.all(proms)
@@ -924,7 +924,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
     let proms = [];
 
     proms.push(CQUES.findOne({_id: req.params.quesId}));
-    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId}, {user: 1}));
     proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "companyAnswer"}));
 
     Promise.all(proms)
