@@ -310,7 +310,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
     // }
 
 
-    if(req.user.blockedFromReviews){
+    if(req.user.blockedFromQuestions){
         return res.status(403).json({
             success: false,
             status: "blocked"
@@ -420,7 +420,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
     // }
 
 
-    if(req.user.blockedFromReviews){
+    if(req.user.blockedFromQuestions){
         return res.status(403).json({
             success: false,
             status: "blocked"
@@ -481,6 +481,266 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         });
     });
 });
+
+
+
+
+// report a phone review comment
+reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    const reason = req.body.reason;
+
+    if(!reason){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(typeof reason !== "number"){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(!(reason == 1 || reason == 2 || reason == 3 || reason == 4 || reason == 5 || reason == 6)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(req.body.info){
+        if(typeof req.body.info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
+    // let stringReason = "";
+    // switch(reason){
+    //     case 1: stringReason = "disturbance"; break;
+    //     case 2: stringReason = "violence"; break;
+    //     case 3: stringReason = "harassment"; break;
+    //     case 4: stringReason = "hate"; break;
+    //     case 5: stringReason = "porn"; break;
+    //     case 6: stringReason = "other"; break;
+    // }
+
+
+    if(req.user.blockedFromComment){
+        return res.status(403).json({
+            success: false,
+            status: "blocked"
+        });
+    }
+
+
+    let proms = [];
+
+    proms.push(PHONEREV.findOne({_id: req.params.revId}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "phoneComment"}));
+
+    Promise.all(proms)
+    .then((results)=>{
+        let rev = results[0];
+        let comment = results[1];
+        let rep = results[2];
+
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "parent not found"
+            });
+        }
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found or you own it"
+            });
+        }
+
+        if(rep){
+            return res.status(403).json({
+                success: false,
+                status: "already reported"
+            });
+        }
+
+        // create the report document
+            // create the report document
+            REPORT.create({
+                reporter: req.user._id,
+                reportee: comment.user,
+                type: "phoneComment",
+                reason: reason,
+                info: req.body.info,
+                obj: req.params.commentId,
+                onModelObj: "pRevsComment",
+                parObj: req.params.revId,
+                onModelParObj: "pRev"
+            })
+            .then((r)=>{
+                return res.status(200).json({
+                    success: true
+                });
+            })
+            .catch((err)=>{
+                console.log("Error from /reports/review/phone/:revId/comments/:commentId: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "error creating the report"
+                });
+            });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/review/phone/:revId/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review or the comment"
+        });
+    });
+});
+
+
+
+
+
+
+
+// report a phone review comment
+reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    const reason = req.body.reason;
+
+    if(!reason){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(typeof reason !== "number"){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(!(reason == 1 || reason == 2 || reason == 3 || reason == 4 || reason == 5 || reason == 6)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(req.body.info){
+        if(typeof req.body.info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
+    // let stringReason = "";
+    // switch(reason){
+    //     case 1: stringReason = "disturbance"; break;
+    //     case 2: stringReason = "violence"; break;
+    //     case 3: stringReason = "harassment"; break;
+    //     case 4: stringReason = "hate"; break;
+    //     case 5: stringReason = "porn"; break;
+    //     case 6: stringReason = "other"; break;
+    // }
+
+
+    if(req.user.blockedFromComment){
+        return res.status(403).json({
+            success: false,
+            status: "blocked"
+        });
+    }
+
+
+    let proms = [];
+
+    proms.push(COMPANYREV.findOne({_id: req.params.revId}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, user: {$ne: req.user._id}}, {user: 1}));
+    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "companyComment"}));
+
+    Promise.all(proms)
+    .then((results)=>{
+        let rev = results[0];
+        let comment = results[1];
+        let rep = results[2];
+
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "parent not found"
+            });
+        }
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found or you own it"
+            });
+        }
+
+        if(rep){
+            return res.status(403).json({
+                success: false,
+                status: "already reported"
+            });
+        }
+
+        // create the report document
+            // create the report document
+            REPORT.create({
+                reporter: req.user._id,
+                reportee: comment.user,
+                type: "companyComment",
+                reason: reason,
+                info: req.body.info,
+                obj: req.params.commentId,
+                onModelObj: "cRevsComment",
+                parObj: req.params.revId,
+                onModelParObj: "cRev"
+            })
+            .then((r)=>{
+                return res.status(200).json({
+                    success: true
+                });
+            })
+            .catch((err)=>{
+                console.log("Error from /reports/review/company/:revId/comments/:commentId: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "error creating the report"
+                });
+            });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/review/company/:revId/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review or the comment"
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
 
 
 
