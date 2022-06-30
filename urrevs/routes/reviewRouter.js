@@ -774,7 +774,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
 
 
 // get phone reviews of another user
-reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_REVS_PER_ROUND|| config.ANOTHER_USER_PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -972,7 +972,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
 
 
 // get company reviews of another user
-reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_REVS_PER_ROUND|| config.ANOTHER_USER_COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
