@@ -74,6 +74,15 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -183,6 +192,15 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -295,6 +313,15 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -405,6 +432,15 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -513,6 +549,15 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -640,6 +685,15 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -763,6 +817,15 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -890,6 +953,15 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1014,6 +1086,15 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -1158,6 +1239,15 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1299,6 +1389,15 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1438,6 +1537,15 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
