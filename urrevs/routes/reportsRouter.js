@@ -1135,4 +1135,153 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
 
 
 
+
+
+
+
+
+// report a company review comment reply
+reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+    const reason = req.body.reason;
+
+    if(!reason){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(typeof reason !== "number"){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(!(reason == 1 || reason == 2 || reason == 3 || reason == 4 || reason == 5 || reason == 6)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    if(req.body.info){
+        if(typeof req.body.info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
+    // let stringReason = "";
+    // switch(reason){
+    //     case 1: stringReason = "disturbance"; break;
+    //     case 2: stringReason = "violence"; break;
+    //     case 3: stringReason = "harassment"; break;
+    //     case 4: stringReason = "hate"; break;
+    //     case 5: stringReason = "porn"; break;
+    //     case 6: stringReason = "other"; break;
+    // }
+
+
+    if(req.user.blockedFromReplyComment){
+        return res.status(403).json({
+            success: false,
+            status: "blocked"
+        });
+    }
+
+
+    let proms = [];
+    proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, "replies._id": req.params.replyId, hidden: false}));
+    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "companyCommentReply"}));
+
+    Promise.all(proms)
+    .then((results)=>{
+        let rev = results[0];
+        let comment = results[1];
+        let rep = results[2];
+
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "parent not found"
+            });
+        }
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "parent not found"
+            });
+        }
+
+        if(rep){
+            return res.status(403).json({
+                success: false,
+                status: "already reported"
+            });
+        }
+
+        let reply = comment.replies.id(req.params.replyId);
+
+        if(reply.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "you own it"
+            });
+        }
+
+        if(reply.hidden){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        // create the report document
+        REPORT.create({
+            reporter: req.user._id,
+            reportee: reply.user,
+            type: "companyCommentReply",
+            reason: reason,
+            info: req.body.info,
+            obj: req.params.replyId,
+            onModelObj: "cRevsComment.replies",
+            parObj: req.params.commentId,
+            onModelParObj: "cRevsComment",
+            par2Obj: req.params.revId,
+            onModelPar2Obj: "cRev"
+        })
+        .then((r)=>{
+            return res.status(200).json({
+                success: true
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from /reports/review/company/:revId/comments/:commentId/replies/:replyId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error creating the report"
+            });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/review/company/:revId/comments/:commentId/replies/:replyId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review or the comment or the reply ot the report"
+        });
+    });
+});
+
+
+
+
+
+
+
+
 module.exports = reportRouter;
