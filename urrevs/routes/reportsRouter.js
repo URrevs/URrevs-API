@@ -24,7 +24,7 @@ const REPORT = require("../models/report");
 
 
 
-//const config = require("../config");
+const config = require("../config");
 
 //--------------------------------------------------------------------
 
@@ -1552,6 +1552,103 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
 // ----------------------------------------------------------------------------------------------------
 
 
+// get all opened reports
+reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    let itemsPerRound = parseInt((process.env.REPORTS_PER_ROUND|| config.REPORTS_PER_ROUND));
+    let roundNum = req.query.round;
+    if(!roundNum || isNaN(roundNum)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request",
+        });
+    }
+    REPORT.find({closed: false})
+    .sort({createdAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("reporter", {name: 1, picture: 1}).populate("reportee", {name: 1})
+    .then((reports)=>{
+        let result = [];
+
+        for(let rep of reports){
+            result.push({
+                createdAt: rep.createdAt,
+                reason: rep.reason,
+                info: rep.info,
+                reporterId: rep.reporter._id,
+                reporteeId: rep.reportee._id,
+                reporterName: rep.reporter.name,
+                reporteeName: rep.reportee.name,
+                reporterPicture: rep.reporter.picture,
+                reporteeBlocked: rep.blockUser,
+                contentHidden: rep.hideContent
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            reports: result
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/open: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the reports"
+        });
+    });
+});
+
+
+
+
+
+// get all closed reports
+reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    let itemsPerRound = parseInt((process.env.REPORTS_PER_ROUND|| config.REPORTS_PER_ROUND));
+    let roundNum = req.query.round;
+    if(!roundNum || isNaN(roundNum)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request",
+        });
+    }
+    REPORT.find({closed: true})
+    .sort({createdAt: -1})
+    .skip((roundNum - 1) * itemsPerRound)
+    .limit(itemsPerRound)
+    .populate("reporter", {name: 1, picture: 1}).populate("reportee", {name: 1})
+    .then((reports)=>{
+        let result = [];
+
+        for(let rep of reports){
+            result.push({
+                createdAt: rep.createdAt,
+                reason: rep.reason,
+                info: rep.info,
+                reporterId: rep.reporter._id,
+                reporteeId: rep.reportee._id,
+                reporterName: rep.reporter.name,
+                reporteeName: rep.reportee.name,
+                reporterPicture: rep.reporter.picture,
+                reporteeBlocked: rep.blockUser,
+                contentHidden: rep.hideContent
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            reports: result
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/open: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the reports"
+        });
+    });
+});
 
 
 

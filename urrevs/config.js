@@ -54,5 +54,6 @@ module.exports = {
     APPROX_PHONES_PER_ROUND: 10,
     COMPANIES_SEARCH_LIMIT: 5,
     URREVS_BUCKET: "urrevs2",
-    BRAND_LOGOS_DESTINATION: "brandsLogos"
+    BRAND_LOGOS_DESTINATION: "brandsLogos",
+    REPORTS_PER_ROUND: 10
 };
