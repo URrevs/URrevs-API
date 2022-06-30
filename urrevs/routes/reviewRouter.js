@@ -774,7 +774,7 @@ reviewRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser, 
 
 
 // get phone reviews of another user
-reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
+reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_PHONE_REVS_PER_ROUND|| config.ANOTHER_USER_PHONE_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -838,21 +838,23 @@ reviewRouter.get("/phone/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
       });
     }
 
-    // checking liked state
-    let likes;
-    try{
-      likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
-    }
-    catch(err){
-      console.log("Error from /reviews/phone/by/me: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the liked state failed"
-      });
-    }
-    for(let like of likes){
-      resultRevs[ids[like.review]].liked = true;
+    if(req.user){
+      // checking liked state
+      let likes;
+      try{
+        likes = await PHONE_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/phone/by/me: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
+      for(let like of likes){
+        resultRevs[ids[like.review]].liked = true;
+      }
     }
 
     res.status(200).json({
@@ -972,7 +974,7 @@ reviewRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUser
 
 
 // get company reviews of another user
-reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)=>{
+reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
   
   let itemsPerRound = parseInt((process.env.ANOTHER_USER_COMPANY_REVS_PER_ROUND|| config.ANOTHER_USER_COMPANY_REVS_PER_ROUND));
   let roundNum = req.query.round;
@@ -1030,21 +1032,23 @@ reviewRouter.get("/company/by/:userId", cors.cors, rateLimit, (req, res, next)=>
       });
     }
 
-    // checking liked state
-    let likes;
-    try{
-      likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
-    }
-    catch(err){
-      console.log("Error from /reviews/company/by/:userId: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "internal server error",
-        err: "Finding the liked state failed"
-      });
-    }
-    for(let like of likes){
-      resultRevs[ids[like.review]].liked = true;
+    if(req.user){
+      // checking liked state
+      let likes;
+      try{
+        likes = await COMPANY_REVS_LIKES.find({user: req.user._id, review: {$in: idsList}, unliked: false});
+      }
+      catch(err){
+        console.log("Error from /reviews/company/by/:userId: ", err);
+        return res.status(500).json({
+          success: false,
+          status: "internal server error",
+          err: "Finding the liked state failed"
+        });
+      }
+      for(let like of likes){
+        resultRevs[ids[like.review]].liked = true;
+      }
     }
 
     res.status(200).json({
