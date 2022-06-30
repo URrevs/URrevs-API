@@ -11,7 +11,6 @@ const cors = require("../utils/cors");
 const rateLimit = require("../utils/rateLimit/regular");
 const authenticate = require("../utils/authenticate");
 
-const USER = require("../models/user");
 const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
 const PHONE_REVS_COMMENTS = require("../models/phoneReviewComment");
@@ -21,10 +20,17 @@ const PANS = require("../models/phoneAnswer");
 const CQUES = require("../models/companyQuestion");
 const CANS = require("../models/companyAnswer");
 const REPORT = require("../models/report");
-
+const PHONE_REVS_LIKES = require("../models/phoneRevsLikes");
+const COMPANY_REVS_LIKES = require("../models/companyRevsLikes");
+const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
+const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
+const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
+const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
 
 
 const config = require("../config");
+const companyQuestion = require("../models/companyQuestion");
+
 
 //--------------------------------------------------------------------
 
@@ -67,6 +73,15 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -180,6 +195,15 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -288,6 +312,15 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -400,6 +433,15 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -508,6 +550,15 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -635,6 +686,15 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -758,6 +818,15 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -885,6 +954,15 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1009,6 +1087,15 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -1153,6 +1240,15 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1292,6 +1388,15 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
             success: false,
             status: "bad request"
         });
+    }
+
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
     }
 
     if(req.body.info){
@@ -1435,6 +1540,15 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
         });
     }
 
+    if(reason == 6){
+        if(!(req.body.info)){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+    }
+
     if(req.body.info){
         if(typeof req.body.info !== "string"){
             return res.status(400).json({
@@ -1570,7 +1684,82 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
     .then((reports)=>{
         let result = [];
 
+        let phoneRev;
+        let companyRev;
+        let phoneQues;
+        let companyQues;
+        let phoneComment;
+        let companyComment;
+        let phoneAnswer;
+        let companyAnswer;
+        let phoneCommentReply;
+        let companyCommentReply;
+        let phoneAnswerReply;
+        let companyAnswerReply;
+
         for(let rep of reports){
+            phoneRev = null;
+            companyRev = null;
+            phoneQues = null;
+            companyQues = null;
+            phoneComment = null;
+            companyComment = null;
+            phoneAnswer = null;
+            companyAnswer = null;
+            phoneCommentReply = null;
+            companyCommentReply = null;
+            phoneAnswerReply = null;
+            companyAnswerReply = null;
+            
+            if(rep.type == "phoneReview"){
+                phoneRev = rep.obj;
+            }
+            else if(rep.type == "companyReview"){
+                companyRev = rep.obj;
+            }
+            else if(rep.type == "phoneQuestion"){
+                phoneQues = rep.obj;
+            }
+            else if(rep.type == "companyQuestion"){
+                companyQues = rep.obj;
+            }
+            else if(rep.type == "phoneComment"){
+                phoneComment = rep.obj;
+                phoneRev = rep.parObj;
+            }
+            else if(rep.type == "companyComment"){
+                companyComment = rep.obj;
+                companyRev = rep.parObj;
+            }
+            else if(rep.type == "phoneAnswer"){
+                phoneAnswer = rep.obj;
+                phoneQues = rep.parObj;
+            }
+            else if(rep.type == "companyAnswer"){
+                companyAnswer = rep.obj;
+                companyQues = rep.parObj;
+            }
+            else if(rep.type == "phoneCommentReply"){
+                phoneCommentReply = rep.obj;
+                phoneComment = rep.parObj;
+                phoneRev = rep.par2Obj;
+            }
+            else if(rep.type == "companyCommentReply"){
+                companyCommentReply = rep.obj;
+                companyComment = rep.parObj;
+                companyRev = rep.par2Obj;
+            }
+            else if(rep.type == "phoneAnswerReply"){
+                phoneAnswerReply = rep.obj;
+                phoneAnswer = rep.parObj;
+                phoneQues = rep.par2Obj;
+            }
+            else if(rep.type == "companyAnswerReply"){
+                companyAnswerReply = rep.obj;
+                companyAnswer = rep.parObj;
+                companyQues = rep.par2Obj;
+            }
+
             result.push({
                 _id: rep._id,
                 type: rep.type,
@@ -1584,10 +1773,19 @@ reportRouter.get("/open", cors.cors, rateLimit, authenticate.verifyUser, authent
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
                 contentHidden: rep.hideContent,
-                obj: rep.obj,
-                parentObj: rep.parObj,
-                grandParentObj: rep.par2Obj
-            })
+                phoneRev: phoneRev,
+                companyRev: companyRev,
+                phoneQues: phoneQues,
+                companyQues: companyQues,
+                phoneComment: phoneComment,
+                companyComment: companyComment,
+                phoneAnswer: phoneAnswer,
+                companyAnswer: companyAnswer,
+                phoneCommentReply: phoneCommentReply,
+                companyCommentReply: companyCommentReply,
+                phoneAnswerReply: phoneAnswerReply,
+                companyAnswerReply: companyAnswerReply,
+            });
         }
 
         return res.status(200).json({
@@ -1626,7 +1824,82 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
     .then((reports)=>{
         let result = [];
 
+        let phoneRev;
+        let companyRev;
+        let phoneQues;
+        let companyQues;
+        let phoneComment;
+        let companyComment;
+        let phoneAnswer;
+        let companyAnswer;
+        let phoneCommentReply;
+        let companyCommentReply;
+        let phoneAnswerReply;
+        let companyAnswerReply;
+
         for(let rep of reports){
+            phoneRev = null;
+            companyRev = null;
+            phoneQues = null;
+            companyQues = null;
+            phoneComment = null;
+            companyComment = null;
+            phoneAnswer = null;
+            companyAnswer = null;
+            phoneCommentReply = null;
+            companyCommentReply = null;
+            phoneAnswerReply = null;
+            companyAnswerReply = null;
+            
+            if(rep.type == "phoneReview"){
+                phoneRev = rep.obj;
+            }
+            else if(rep.type == "companyReview"){
+                companyRev = rep.obj;
+            }
+            else if(rep.type == "phoneQuestion"){
+                phoneQues = rep.obj;
+            }
+            else if(rep.type == "companyQuestion"){
+                companyQues = rep.obj;
+            }
+            else if(rep.type == "phoneComment"){
+                phoneComment = rep.obj;
+                phoneRev = rep.parObj;
+            }
+            else if(rep.type == "companyComment"){
+                companyComment = rep.obj;
+                companyRev = rep.parObj;
+            }
+            else if(rep.type == "phoneAnswer"){
+                phoneAnswer = rep.obj;
+                phoneQues = rep.parObj;
+            }
+            else if(rep.type == "companyAnswer"){
+                companyAnswer = rep.obj;
+                companyQues = rep.parObj;
+            }
+            else if(rep.type == "phoneCommentReply"){
+                phoneCommentReply = rep.obj;
+                phoneComment = rep.parObj;
+                phoneRev = rep.par2Obj;
+            }
+            else if(rep.type == "companyCommentReply"){
+                companyCommentReply = rep.obj;
+                companyComment = rep.parObj;
+                companyRev = rep.par2Obj;
+            }
+            else if(rep.type == "phoneAnswerReply"){
+                phoneAnswerReply = rep.obj;
+                phoneAnswer = rep.parObj;
+                phoneQues = rep.par2Obj;
+            }
+            else if(rep.type == "companyAnswerReply"){
+                companyAnswerReply = rep.obj;
+                companyAnswer = rep.parObj;
+                companyQues = rep.par2Obj;
+            }
+
             result.push({
                 _id: rep._id,
                 type: rep.type,
@@ -1640,10 +1913,19 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
                 reporterPicture: rep.reporter.picture,
                 reporteeBlocked: rep.blockUser,
                 contentHidden: rep.hideContent,
-                obj: rep.obj,
-                parentObj: rep.parObj,
-                grandParentObj: rep.par2Obj
-            })
+                phoneRev: phoneRev,
+                companyRev: companyRev,
+                phoneQues: phoneQues,
+                companyQues: companyQues,
+                phoneComment: phoneComment,
+                companyComment: companyComment,
+                phoneAnswer: phoneAnswer,
+                companyAnswer: companyAnswer,
+                phoneCommentReply: phoneCommentReply,
+                companyCommentReply: companyCommentReply,
+                phoneAnswerReply: phoneAnswerReply,
+                companyAnswerReply: companyAnswerReply,
+            });
         }
 
         return res.status(200).json({
@@ -1690,84 +1972,357 @@ reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser,
 
 
 
-
-
 // show content for a phone review report
-// reportRouter.get("/:repId/content/review/phone", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-//     REPORT.findOne({_id: req.params.repId, type: "phoneReview"})
-//     .then((report)=>{
-//         if(!report){
-//             return res.status(404).json({
-//                 success: false,
-//                 status: "not found"
-//             });
-//         }
+reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONEREV.findById(req.params.revId).then(async(rev)=>{
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
 
-//         let revId = report.obj;
-//         PHONEREV.findById(revId)
-//         .populate("user", {name: 1, picture: 1})
-//         .populate("phone", {name: 1})
-//         .then((rev)=>{
-//             if(!rev){
-//                 return res.status(404).json({
-//                     success: false,
-//                     status: "not found"
-//                 });
-//             }
+        let resultRev = {
+            _id: rev._id,
+            type: "phone",
+            targetId: rev.phone._id,
+            targetName: rev.phone.name,
+            userId: rev.user._id,
+            userName: rev.user.name,
+            picture: rev.user.picture,
+            createdAt: rev.createdAt,
+            views: rev.views,
+            likes: rev.likes,
+            commentsCount: rev.commentsCount,
+            shares: rev.shares,
+            ownedAt: rev.ownedDate,
+            generalRating: rev.generalRating,
+            uiRating: rev.uiRating,
+            manufacturingQuality: rev.manQuality,
+            valueForMoney: rev.valFMon,
+            camera: rev.camera,
+            callQuality: rev.callQuality,
+            battery: rev.batteryRating,
+            pros: rev.pros,
+            cons: rev.cons,
+            liked: false,
+            verificationRatio: rev.verificationRatio
+        };
 
-//             let resultRev = {
-//                 _id: rev._id,
-//                 type: "phone",
-//                 targetId: rev.phone._id,
-//                 targetName: rev.phone.name,
-//                 userId: rev.user._id,
-//                 userName: rev.user.name,
-//                 picture: rev.user.picture,
-//                 createdAt: rev.createdAt,
-//                 views: rev.views,
-//                 likes: rev.likes,
-//                 commentsCount: rev.commentsCount,
-//                 shares: rev.shares,
-//                 ownedAt: rev.ownedDate,
-//                 generalRating: rev.generalRating,
-//                 uiRating: rev.uiRating,
-//                 manufacturingQuality: rev.manQuality,
-//                 valueForMoney: rev.valFMon,
-//                 camera: rev.camera,
-//                 callQuality: rev.callQuality,
-//                 battery: rev.batteryRating,
-//                 pros: rev.pros,
-//                 cons: rev.cons,
-//                 liked: false,
-//                 verificationRatio: rev.verificationRatio
-//             };
+        let like;
+        try{
+            like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/:revId: ", err);
+            return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Finding the liked state failed"
+            });
+        }
+        if(like){
+            resultRev.liked = true;
+        }
 
-//             return res.status(200).json({
-//                 success: true,
-//                 review: resultRev
-//             });
-//         })
-//         .catch((err)=>{
-//             console.log("Error from /reports/:repId/content/review/phone: ", err);
-//             return res.status(500).json({
-//                 success: false,
-//                 status: "error finding the review"
-//             });
-//         });
-//     })
-//     .catch((err)=>{
-//         console.log("Error from /reports/:repId/content: ", err);
-//         return res.status(500).json({
-//             success: false,
-//             status: "error finding the report"
-//         });
-//     });
-// });
+        return res.status(200).json({
+            success: true,
+            review: resultRev
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/phone/:revId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review"
+        });
+    });
+});
 
 
 
 
+// show content for a company review report
+reportRouter.get("/content/review/company/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPANYREV.findById(req.params.revId).then(async(rev)=>{
+        if(!rev){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
 
+        let resultRev = {
+            _id: rev._id,
+            type: "company",
+            targetId: rev.company._id,
+            targetName: rev.company.name,
+            userId: rev.user._id,
+            userName: rev.user.name,
+            picture: rev.user.picture,
+            createdAt: rev.createdAt,
+            views: rev.views,
+            likes: rev.likes,
+            commentsCount: rev.commentsCount,
+            shares: rev.shares,
+            corresPhoneRev: rev.corresPrev,
+            generalRating: rev.generalRating,
+            pros: rev.pros,
+            cons: rev.cons,
+            liked: false,
+            verificationRatio: rev.verificationRatio
+        };
+
+        let like;
+        try{
+            like = await COMPANY_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/:revId: ", err);
+            return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Finding the liked state failed"
+            });
+        }
+        if(like){
+            resultRev.liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            review: resultRev
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/company/:revId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the review"
+        });
+    });
+});
+
+
+
+
+// show content for a phone review comment report
+reportRouter.get("/content/review/phone/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONE_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+        };
+
+
+        let commentsLikes;
+        let proms = [];
+        proms.push(PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "Finding the liked state failed"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/phone/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
+
+
+
+
+// show content for a company review comment report
+reportRouter.get("/content/review/company/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPANY_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+        };
+
+
+        let commentsLikes;
+        let proms = [];
+        proms.push(COMPANY_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+        }
+        catch(err){
+            console.log("Error from /reports/content/review/company/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error finding the comment"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/review/company/comments/:commentId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the comment"
+        });
+    });
+});
+
+
+
+
+
+
+
+
+
+/*
+// show content for a phone review comment report
+reportRouter.get("/content/review/phone/comments/:commentId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PHONE_REVS_COMMENTS.findById(req.params.commentId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(comment)=>{
+
+        if(!comment){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        let comentRepliesIds = [];
+        let commentRepliesObj = {};
+
+        let resultComment = {
+            _id: comment._id,
+            userId: comment.user._id,
+            userName: comment.user.name,
+            userPicture: comment.user.picture,
+            userQuestionsAnswered: comment.user.questionsAnswered,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            liked: false,
+            replies: []
+        };
+
+        for(let i=0; i<comment.replies.length; i++){
+            let reply = comment.replies[i];
+            comentRepliesIds.push(reply._id);
+            commentRepliesObj[reply._id] = i;
+            resultComment.replies.push({
+              _id: reply._id,
+              userId: reply.user._id,
+              userName: reply.user.name,
+              userPicture: reply.user.picture,
+              userQuestionsAnswered: reply.user.questionsAnswered,
+              content: reply.content,
+              createdAt: reply.createdAt,
+              likes: reply.likes,
+              liked: false
+            });
+        }
+
+        let commentsLikes;
+        let repliesLikes;
+        let proms = [];
+        proms.push(PHONE_REV_COMMENTS_LIKES.findOne({user: req.user._id, comment: req.params.commentId}));
+        proms.push(PHONE_REV_REPLIES_LIKES.find({user: req.user._id, reply: {$in: comentRepliesIds}}));
+        try{
+            let results = await Promise.all(proms);
+            commentsLikes = results[0];
+            repliesLikes = results[1];
+        }
+        catch(err){
+            console.log("Error from /reviews/phone/comments/:commentId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "Finding the liked state failed"
+            });
+        }
+        
+        if(commentsLikes){
+            resultComment.liked = true;
+        }
+        
+        // liked state for replies
+        for(let replyLike of repliesLikes){
+            let location = commentRepliesObj[replyLike.reply];
+            resultComment.replies[location].liked = true;
+        }
+
+        return res.status(200).json({
+            success: true,
+            comment: resultComment
+        });
+    });
+});
+*/
 
 
 
