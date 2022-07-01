@@ -2806,6 +2806,120 @@ reportRouter.get("/content/question/company/answers/:ansId", cors.cors, rateLimi
 
 
 
+// show content for a phone answer reply
+reportRouter.get("/content/question/phone/answers/:ansId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId}, {replies: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then((answer)=>{
+        if(!answer){
+            return res.status(404).json({
+              success: false,
+              status: "not found"
+            });
+        }
+
+        let reply = answer.replies.id(req.params.replyId);
+        let resultReply = {
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            userPicture: reply.user.picture,
+            userQuestionsAnswered: reply.user.questionsAnswered,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+        };
+
+        PQUES_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId}, {_id: 1})
+        .then((like)=>{
+            if(like){
+                resultReply.liked = true;
+            }
+            return res.status(200).json({
+                success: true,
+                reply: resultReply
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from GET /reports/content/question/phone/answers/:ansId/replies/:replyId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the likes failed"
+            });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/phone/answers/:ansId/replies/:replyId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the answer"
+        });
+    });
+});
+
+
+
+
+
+
+// show content for a company answer reply
+reportRouter.get("/content/question/company/answers/:ansId/replies/:replyId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    CANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId}, {replies: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then((answer)=>{
+        if(!answer){
+            return res.status(404).json({
+              success: false,
+              status: "not found"
+            });
+        }
+
+        let reply = answer.replies.id(req.params.replyId);
+        let resultReply = {
+            _id: reply._id,
+            userId: reply.user._id,
+            userName: reply.user.name,
+            userPicture: reply.user.picture,
+            userQuestionsAnswered: reply.user.questionsAnswered,
+            content: reply.content,
+            createdAt: reply.createdAt,
+            likes: reply.likes,
+            liked: false
+        };
+
+        CQUES_REPLIES_LIKES.findOne({user: req.user._id, reply: req.params.replyId}, {_id: 1})
+        .then((like)=>{
+            if(like){
+                resultReply.liked = true;
+            }
+            return res.status(200).json({
+                success: true,
+                reply: resultReply
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from GET /reports/content/question/company/answers/:ansId/replies/:replyId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the likes failed"
+            });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/company/answers/:ansId/replies/:replyId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the answer"
+        });
+    });
+});
+
+
+
+
 
 
 
