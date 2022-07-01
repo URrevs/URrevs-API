@@ -78,6 +78,9 @@ searchRouter.get("/products/phones", cors.cors, rateLimitSearch, (req, res, next
   searchWord = searchWord.replace(/\{/g, "{*");
   searchWord = searchWord.replace(/\}/g, "}*");
 
+  // allow missing words from the middle of the phone name
+  searchWord = searchWord.replace(/[a-zA-Z](?!\*)/g, "$&.*");
+
   // SEARCHWORD PROCESSING ENDS HERE
 
   PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(phonesSearchLimit).then((phones)=>{
@@ -145,7 +148,10 @@ searchRouter.get("/products", cors.cors, rateLimitSearch, (req, res, next)=>{
     // allowing any number of curly brackets
     searchWord = searchWord.replace(/\{/g, "{*");
     searchWord = searchWord.replace(/\}/g, "}*");
-  
+
+    // allow missing words from the middle of the phone name
+    searchWord = searchWord.replace(/[a-zA-Z](?!\*)/g, "$&.*");
+
     // SEARCHWORD PROCESSING ENDS HERE 
 
   let promises = [];
@@ -221,6 +227,9 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
     searchWord = searchWord.replace(/\{/g, "{*");
     searchWord = searchWord.replace(/\}/g, "}*");
   
+    // allow missing words from the middle of the phone name
+    searchWord = searchWord.replace(/[a-zA-Z](?!\*)/g, "$&.*");
+
     // SEARCHWORD PROCESSING ENDS HERE
 
   let promises = [];
@@ -320,6 +329,9 @@ searchRouter.get("/companies", cors.cors, rateLimitSearch, (req, res, next)=>{
     searchWord = searchWord.replace(/\{/g, "{*");
     searchWord = searchWord.replace(/\}/g, "}*");
   
+    // allow missing words from the middle of the phone name
+    searchWord = searchWord.replace(/[a-zA-Z](?!\*)/g, "$&.*");
+
     // SEARCHWORD PROCESSING ENDS HERE
 
   let promises = [];
