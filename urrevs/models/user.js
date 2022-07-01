@@ -14,7 +14,8 @@ const userSchema = new schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        index: true
     },
     picture: {
         type: String

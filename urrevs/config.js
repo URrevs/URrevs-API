@@ -55,5 +55,6 @@ module.exports = {
     COMPANIES_SEARCH_LIMIT: 5,
     URREVS_BUCKET: "urrevs2",
     BRAND_LOGOS_DESTINATION: "brandsLogos",
-    REPORTS_PER_ROUND: 10
+    REPORTS_PER_ROUND: 10,
+    GLOBAL_SEARCH_LIMIT_USERS: 5
 };
