@@ -2634,6 +2634,108 @@ reportRouter.get("/content/question/company/:quesId", cors.cors, rateLimit, auth
 
 
 
+// show content for a phone answer report
+reportRouter.get("/content/question/phone/answers/:ansId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PANS.findById(req.params.ansId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(answer)=>{
+        let resultAnswer = {
+            _id: answer._id,
+            userId: answer.user._id,
+            userName: answer.user.name,
+            picture: answer.user.picture,
+            userQuestionsAnswered: answer.user.questionsAnswered,
+            content: answer.content,
+            createdAt: answer.createdAt,
+            upvotes: answer.likes,
+            ownedAt: answer.ownedAt,
+            upvoted: false
+        };
+
+        PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId})
+        .then((like)=>{
+            if(like){
+                resultAnswer.upvoted = true;
+            }
+            return res.status(200).json({
+                success: true,
+                answer: resultAnswer
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from GET /reports/content/question/phone/answers/:ansId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the likes failed"
+            });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/phone/answers/:ansId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the answer"
+        });
+    });
+});
+
+
+
+
+
+
+// show content for a company answer report
+reportRouter.get("/content/question/company/answers/:ansId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    CANS.findById(req.params.ansId)
+    .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
+    .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
+    .then(async(answer)=>{
+        let resultAnswer = {
+            _id: answer._id,
+            userId: answer.user._id,
+            userName: answer.user.name,
+            picture: answer.user.picture,
+            userQuestionsAnswered: answer.user.questionsAnswered,
+            content: answer.content,
+            createdAt: answer.createdAt,
+            upvotes: answer.likes,
+            ownedAt: answer.ownedAt,
+            upvoted: false
+        };
+
+        CQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId})
+        .then((like)=>{
+            if(like){
+                resultAnswer.upvoted = true;
+            }
+            return res.status(200).json({
+                success: true,
+                answer: resultAnswer
+            });
+        })
+        .catch((err)=>{
+            console.log("Error from GET /reports/content/question/company/answers/:ansId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the likes failed"
+            });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/company/answers/:ansId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the answer"
+        });
+    });
+});
+
+
+
+
 
 
 
