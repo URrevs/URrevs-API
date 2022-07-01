@@ -148,7 +148,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   if(Date.parse(ownedDate) > Date.now()){
     return res.status(400).json({
       success: false,
-      status: "bad request"
+      status: "invalid date"
     });
   }
 
@@ -233,6 +233,13 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       });
     }
     
+    if(Date.parse(ownedDate) <= phone.releaseDate){
+      return res.status(400).json({
+        success: false,
+        status: "invalid date"
+      });
+    }
+
     if(pprev){
       return res.status(403).json({
         success: false,

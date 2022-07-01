@@ -70,6 +70,9 @@ const phoneSchema = new schema({
         type: String,
         default: "",
         index: true
+    },
+    releaseDate: {
+        type: Date
     }
 }, 
 {
