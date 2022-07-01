@@ -3127,8 +3127,24 @@ reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authen
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // decrease the number of comments in the phone review
+    let revId = r.review;
+    PHONEREV.findByIdAndUpdate(revId, {$inc: {commentsCount: -1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/comments/:commentId/hide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
@@ -3149,13 +3165,29 @@ reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, auth
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // decrease the number of comments in the phone review
+    let revId = r.review;
+    COMPANYREV.findByIdAndUpdate(revId, {$inc: {commentsCount: -1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/comments/:commentId/hide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/comments/:commentId/hide: ", err);
-    return res.status(500).json({success: false, status: "error hiding the company comment"});
+    return res.status(500).json({success: false, status: "error hiding the phone comment"});
   })
 });
 
@@ -3172,14 +3204,30 @@ reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, auth
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // increase the number of comments in the phone review
+    let revId = r.review;
+    PHONEREV.findByIdAndUpdate(revId, {$inc: {commentsCount: 1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/comments/:commentId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/comments/:commentId/unhide: ", err);
     return res.status(500).json({success: false, status: "error unhiding the phone comment"});
-  })
+  });
 });
 
 
@@ -3194,14 +3242,30 @@ reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, au
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // increase the number of comments in the phone review
+    let revId = r.review;
+    COMPANYREV.findByIdAndUpdate(revId, {$inc: {commentsCount: 1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/comments/:commentId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/comments/:commentId/unhide: ", err);
-    return res.status(500).json({success: false, status: "error unhiding the company comment"});
-  })
+    return res.status(500).json({success: false, status: "error unhiding the phone comment"});
+  });
 });
 
 

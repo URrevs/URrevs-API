@@ -4115,9 +4115,24 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
       });
     }
 
-    return res.status(200).json({
-      success: true
-    });
+    let quesId = r.question;
+    PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}})
+    .then((ques)=>{
+      if(!ques){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
+      return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+    });   
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/answers/:ansId/hide: ", err);
@@ -4138,9 +4153,24 @@ questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authent
       });
     }
 
-    return res.status(200).json({
-      success: true
-    });
+    let quesId = r.question;
+    CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}})
+    .then((ques)=>{
+      if(!ques){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/company/answers/:ansId/hide: ", err);
+      return res.status(500).json({success: false, status: "error hiding the company question answer"});
+    });   
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/answers/:ansId/hide: ", err);
@@ -4162,9 +4192,24 @@ questionRouter.put("/phone/answers/:ansId/unhide", cors.cors, rateLimit, authent
       });
     }
 
-    return res.status(200).json({
-      success: true
-    });
+    PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: 1}})
+    .then((ques)=>{
+      if(!ques){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/answers/:ansId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error unhiding the phone question answer"});
+    });   
+
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/answers/:ansId/unhide: ", err);
@@ -4185,13 +4230,27 @@ questionRouter.put("/company/answers/:ansId/unhide", cors.cors, rateLimit, authe
       });
     }
 
-    return res.status(200).json({
-      success: true
-    });
+    CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: 1}})
+    .then((ques)=>{
+      if(!ques){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/company/answers/:ansId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error unhiding the company question answer"});
+    });   
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/answers/:ansId/unhide: ", err);
-    return res.status(500).json({success: false, status: "error unhiding the company answer"});
+    return res.status(500).json({success: false, status: "error unhiding the phone answer"});
   })
 });
 
