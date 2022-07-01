@@ -1978,6 +1978,59 @@ reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser,
 
 
 
+// update report actions state
+reportRouter.put("/:repId/actions", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    if(!(req.body.blockUser != null || req.body.hideContent != null)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request"
+        });
+    }
+
+    let updateQuery = {};
+    if(req.body.blockUser != null){
+        if(typeof(req.body.blockUser) != "boolean"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+        updateQuery.blockUser = req.body.blockUser;
+    }
+    if(req.body.hideContent != null){
+        if(typeof(req.body.hideContent) != "boolean"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+        updateQuery.hideContent = req.body.hideContent;
+    }
+
+    REPORT.findByIdAndUpdate(req.params.repId, {$set: updateQuery})
+    .then((r)=>{
+        if(!r){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/:repId/actions: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error updating the report"
+        });
+    })
+});
+
+
+
 // show content for a phone review report
 reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
     PHONEREV.findById(req.params.revId).then(async(rev)=>{
