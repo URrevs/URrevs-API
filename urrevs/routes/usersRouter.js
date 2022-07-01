@@ -280,7 +280,12 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
 
 // block a user from all activities
 userRouter.put("/:userId/block/all", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    USER.findByIdAndUpdate(req.params.userId, {$set: {
+    
+    if(req.user._id.equals(req.params.userId)){
+        return res.status(400).json({success: false, status: "bad request"});
+    }
+
+    USER.findOneAndUpdate({_id: req.params.userId, admin: false}, {$set: {
         blockedFromReviews: true,
         blockedFromQuestions: true,
         blockedFromComment: true,
