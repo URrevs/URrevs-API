@@ -233,7 +233,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       });
     }
     
-    if(Date.parse(ownedDate) < phone.releaseDate){
+    if(Date.parse(ownedDate) < Date.parse(phone.releaseDate)){
       return res.status(400).json({
         success: false,
         status: "invalid date"

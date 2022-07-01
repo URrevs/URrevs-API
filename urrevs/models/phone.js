@@ -72,7 +72,7 @@ const phoneSchema = new schema({
         index: true
     },
     releaseDate: {
-        type: Date
+        type: String
     }
 }, 
 {

@@ -1211,7 +1211,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               name: brand.name + ' ' + newPhones[i].name,
               company: brand._id,
               picture: newPhones[i].img,
-              releaseDate: Date.parse(launchReleaseDate)
+              releaseDate: launchReleaseDate
             });
 
             // creating a document for the specs of the phone
