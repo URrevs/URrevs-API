@@ -226,7 +226,7 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
   let promises = [];
   promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitPhones));
   promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitCompanies));
-  promises.push(USER.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitUsers));
+  promises.push(USER.find({name: {$regex: searchWord, $options: "i"}}, {name: 1, picture: 1}).limit(globalSearchLimitUsers));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
@@ -257,6 +257,7 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
       users.push({
         _id: u._id,
         name: u.name,
+        picture: u.picture,
         type: "user"
       });
     }
