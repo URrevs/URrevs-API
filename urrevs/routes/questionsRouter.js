@@ -4192,6 +4192,7 @@ questionRouter.put("/phone/answers/:ansId/unhide", cors.cors, rateLimit, authent
       });
     }
 
+    let quesId = r.question;
     PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: 1}})
     .then((ques)=>{
       if(!ques){
@@ -4230,6 +4231,7 @@ questionRouter.put("/company/answers/:ansId/unhide", cors.cors, rateLimit, authe
       });
     }
 
+    let quesId = r.question;
     CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: 1}})
     .then((ques)=>{
       if(!ques){
