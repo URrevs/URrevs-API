@@ -4201,60 +4201,19 @@ questionRouter.put("/company/answers/:ansId/unhide", cors.cors, rateLimit, authe
 
 // hide a phone question reply
 questionRouter.put("/phone/answers/:ansId/replies/:replyId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
   PANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = true;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = true;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -4275,60 +4234,19 @@ questionRouter.put("/phone/answers/:ansId/replies/:replyId/hide", cors.cors, rat
 
 // hide a company question reply
 questionRouter.put("/company/answers/:ansId/replies/:replyId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
   CANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = true;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = true;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -4351,60 +4269,19 @@ questionRouter.put("/company/answers/:ansId/replies/:replyId/hide", cors.cors, r
 
 // unhide a phone question reply
 questionRouter.put("/phone/answers/:ansId/replies/:replyId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
   PANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = false;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = false;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -4425,60 +4302,19 @@ questionRouter.put("/phone/answers/:ansId/replies/:replyId/unhide", cors.cors, r
 
 // unhide a company question reply
 questionRouter.put("/company/answers/:ansId/replies/:replyId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
   CANS.findOne({_id: req.params.ansId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = false;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = false;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
