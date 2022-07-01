@@ -2639,7 +2639,15 @@ reportRouter.get("/content/question/phone/answers/:ansId", cors.cors, rateLimit,
     PANS.findById(req.params.ansId)
     .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
     .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
-    .then(async(answer)=>{
+    .then((answer)=>{
+
+        if(!answer){
+            return res.status(404).json({
+              success: false,
+              status: "not found"
+            });
+        }
+
         let resultAnswer = {
             _id: answer._id,
             userId: answer.user._id,
@@ -2691,7 +2699,15 @@ reportRouter.get("/content/question/company/answers/:ansId", cors.cors, rateLimi
     CANS.findById(req.params.ansId)
     .populate("user", {name: 1, picture: 1, questionsAnswered: 1})
     .populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1})
-    .then(async(answer)=>{
+    .then((answer)=>{
+
+        if(!answer){
+            return res.status(404).json({
+              success: false,
+              status: "not found"
+            });
+        }
+
         let resultAnswer = {
             _id: answer._id,
             userId: answer.user._id,
