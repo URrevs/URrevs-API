@@ -252,7 +252,7 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
 
     USER.findById(req.params.userId, {ownedLock: 1, _id: 0})
     .then((user)=>{
-        if(!user.ownedLock){
+        if(user.ownedLock){
             return res.status(403).json({success: false, status: "locked"});
         }
 
