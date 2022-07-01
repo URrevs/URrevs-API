@@ -360,7 +360,7 @@ userRouter.put("/:userId/unblock/all", cors.cors, rateLimit, authenticate.verify
 // lock/unlock owned phones list
 userRouter.put("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
-    let action = req.body.action;
+    let action = req.query.action;
     if(!action){
         return res.status(400).json({success: false, status: "bad request"});
     }
