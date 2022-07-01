@@ -75,6 +75,10 @@ const userSchema = new schema({
     blockedFromReplyAnswer: {
         type: Boolean,
         default: false
+    },
+    ownedLock: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true});
 
