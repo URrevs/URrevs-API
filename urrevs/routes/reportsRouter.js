@@ -26,6 +26,12 @@ const PHONE_REV_COMMENTS_LIKES = require("../models/phoneReviewCommentLike");
 const COMPANY_REV_COMMENTS_LIKES = require("../models/companyReviewCommentLike");
 const PHONE_REV_REPLIES_LIKES = require("../models/phoneReviewReplyLike");
 const COMPANY_REV_REPLIES_LIKES = require("../models/companyReviewReplyLike");
+const PHONE_QUES_LIKES = require("../models/phoneQuesLike");
+const COMPANY_QUES_LIKES = require("../models/companyQuesLike");
+const PQUES_ANSWERS_LIKES = require("../models/phoneQuesAnswersLikes");
+const CQUES_ANSWERS_LIKES = require("../models/companyQuesAnsLikes");
+const PQUES_REPLIES_LIKES = require("../models/phoneQuestionRepliesLike");
+const CQUES_REPLIES_LIKES = require("../models/companyQuestionRepliesLike");
 
 
 const config = require("../config");
@@ -2348,6 +2354,284 @@ reportRouter.get("/content/review/company/comments/:commentId/replies/:replyId",
         });
     });
 });
+
+
+
+
+
+
+
+
+// show report content for a phone question report
+reportRouter.get("/content/question/phone/:quesId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    PQUES.findOne({_id: req.params.quesId}).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1})
+    .then(async(question)=>{
+        if(!question){
+            return res.status(404).json({
+              success: false,
+              status: "question not found"
+            });
+        }
+
+        let acceptedAns_ = null
+        let repliesObj = {};
+        let repliesIds = [];
+
+        if(question.acceptedAns){
+            try{
+                let acceptedAnsDoc_ = await PANS.findOne({_id: question.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                if(acceptedAnsDoc_){
+                  let answer_replies = [];
+                  
+                  for(let [index, reply] of acceptedAnsDoc_.replies.entries()){
+
+                    repliesObj[reply._id] = index;
+        
+                    repliesIds.push(reply._id);
+        
+                    answer_replies.push({
+                      _id: reply._id,
+                      userId: reply.user._id,
+                      userName: reply.user.name,
+                      userPicture: reply.user.picture,
+                      userQuestionsAnswered: reply.user.questionsAnswered,
+                      content: reply.content,
+                      likes: reply.likes,
+                      liked: false,
+                      createdAt: reply.createdAt
+                    });
+                  }
+        
+                  acceptedAns_ = {
+                    _id: acceptedAnsDoc_.id,
+                    userId: acceptedAnsDoc_.user._id,
+                    userName: acceptedAnsDoc_.user.name,
+                    picture: acceptedAnsDoc_.user.picture,
+                    userQuestionsAnswered: acceptedAnsDoc_.user.questionsAnswered,
+                    content: acceptedAnsDoc_.content,
+                    upvotes: acceptedAnsDoc_.likes,
+                    createdAt: acceptedAnsDoc_.createdAt,
+                    ownedAt: acceptedAnsDoc_.ownedAt,
+                    upvoted: false,
+                    replies: answer_replies
+                  }
+                }
+            }
+            catch(err){
+            console.log("Error from GET /reports/content/question/phone/:quesId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the acceptedAnswer failed"
+            });
+            }
+        }
+
+        let result = {
+            _id: question._id,
+            type: "phone",
+            userId: question.user._id,
+            userName: question.user.name,
+            picture: question.user.picture,
+            createdAt: question.createdAt,
+            targetId: question.phone._id,
+            targetName: question.phone.name,
+            content: question.content,
+            upvotes: question.upvotes,
+            ansCount: question.ansCount,
+            shares: question.shares,
+            upvoted: false,
+            acceptedAns: acceptedAns_
+        };
+
+        let proms = [];
+        proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: question._id, unliked: false}));
+        proms.push(PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
+        proms.push(PQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+
+
+        Promise.all(proms)
+        .then((likes)=>{
+          let quesLike = likes[0];
+          let ansLike = likes[1];
+          let replyLikes = likes[2];
+  
+          if(quesLike){
+            result.upvoted = true;
+          }
+  
+          if(ansLike){
+            result.acceptedAns.upvoted = true;
+          }
+  
+          for(let like of replyLikes){
+            let id = like.reply;
+            result.acceptedAns.replies[repliesObj[id]].liked = true;
+          }
+  
+          return res.status(200).json({
+            success: true,
+            question: result
+          });
+        })
+        .catch((err)=>{
+          console.log("Error from GET /reports/content/question/phone/:quesId: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "finding the likes failed"
+          });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/phone/:quesId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the question"
+        });
+    });
+});
+
+
+
+
+
+
+
+
+// show report content for a company question report
+reportRouter.get("/content/question/company/:quesId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    CQUES.findOne({_id: req.params.quesId}).populate("company", {name: 1}).populate("user", {name: 1, picture: 1})
+    .then(async(question)=>{
+        if(!question){
+            return res.status(404).json({
+              success: false,
+              status: "question not found"
+            });
+        }
+
+        let acceptedAns_ = null
+        let repliesObj = {};
+        let repliesIds = [];
+
+        if(question.acceptedAns){
+            try{
+                let acceptedAnsDoc_ = await CANS.findOne({_id: question.acceptedAns}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+                if(acceptedAnsDoc_){
+                  let answer_replies = [];
+                  
+                  for(let [index, reply] of acceptedAnsDoc_.replies.entries()){
+
+                    repliesObj[reply._id] = index;
+        
+                    repliesIds.push(reply._id);
+        
+                    answer_replies.push({
+                      _id: reply._id,
+                      userId: reply.user._id,
+                      userName: reply.user.name,
+                      userPicture: reply.user.picture,
+                      userQuestionsAnswered: reply.user.questionsAnswered,
+                      content: reply.content,
+                      likes: reply.likes,
+                      liked: false,
+                      createdAt: reply.createdAt
+                    });
+                  }
+        
+                  acceptedAns_ = {
+                    _id: acceptedAnsDoc_.id,
+                    userId: acceptedAnsDoc_.user._id,
+                    userName: acceptedAnsDoc_.user.name,
+                    picture: acceptedAnsDoc_.user.picture,
+                    userQuestionsAnswered: acceptedAnsDoc_.user.questionsAnswered,
+                    content: acceptedAnsDoc_.content,
+                    upvotes: acceptedAnsDoc_.likes,
+                    createdAt: acceptedAnsDoc_.createdAt,
+                    ownedAt: acceptedAnsDoc_.ownedAt,
+                    upvoted: false,
+                    replies: answer_replies
+                  }
+                }
+            }
+            catch(err){
+            console.log("Error from GET /reports/content/question/company/:quesId: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "internal server error",
+                err: "finding the acceptedAnswer failed"
+            });
+            }
+        }
+
+        let result = {
+            _id: question._id,
+            type: "company",
+            userId: question.user._id,
+            userName: question.user.name,
+            picture: question.user.picture,
+            createdAt: question.createdAt,
+            targetId: question.company._id,
+            targetName: question.company.name,
+            content: question.content,
+            upvotes: question.upvotes,
+            ansCount: question.ansCount,
+            shares: question.shares,
+            upvoted: false,
+            acceptedAns: acceptedAns_
+        };
+
+        let proms = [];
+        proms.push(COMPANY_QUES_LIKES.findOne({user: req.user._id, question: question._id, unliked: false}));
+        proms.push(CQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: question.acceptedAns}));
+        proms.push(CQUES_REPLIES_LIKES.find({user: req.user._id, reply: {$in: repliesIds}}));
+
+
+        Promise.all(proms)
+        .then((likes)=>{
+          let quesLike = likes[0];
+          let ansLike = likes[1];
+          let replyLikes = likes[2];
+  
+          if(quesLike){
+            result.upvoted = true;
+          }
+  
+          if(ansLike){
+            result.acceptedAns.upvoted = true;
+          }
+  
+          for(let like of replyLikes){
+            let id = like.reply;
+            result.acceptedAns.replies[repliesObj[id]].liked = true;
+          }
+  
+          return res.status(200).json({
+            success: true,
+            question: result
+          });
+        })
+        .catch((err)=>{
+          console.log("Error from GET /reports/content/question/company/:quesId: ", err);
+          return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "finding the likes failed"
+          });
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from /reports/content/question/company/:quesId: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "error finding the question"
+        });
+    });
+});
+
+
+
+
 
 
 
