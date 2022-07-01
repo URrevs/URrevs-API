@@ -19,7 +19,7 @@ module.exports = ()=>{
             console.log("End of scheduled AI training (SUCCESS)..........................");
         })
         .catch((err)=>{
-            console.log("End of triggering scheduled training (FAILURE)..........................", err.response.status, err.response.data);
+            console.log("End of triggering scheduled training (FAILURE)..........................", err);
         });
     });
 };
