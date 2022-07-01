@@ -136,7 +136,7 @@ leaderBoardRouter.delete("/:compId", cors.cors, rateLimit, authenticate.verifyUs
         if(!comp){
             return res.status(404).json({
                 success: false,
-                status: "Competition not found"
+                status: "not found"
             });
         }
 
@@ -148,7 +148,7 @@ leaderBoardRouter.delete("/:compId", cors.cors, rateLimit, authenticate.verifyUs
         console.log("Error from DELETE /competitions: ", err);
         res.status(500).json({
             success: false,
-            status: "Internal server error",
+            status: "internal server error",
             err: "Error deleting competition"
         });
     });
