@@ -2714,7 +2714,7 @@ reportRouter.get("/content/question/phone/answers/:ansId", cors.cors, rateLimit,
             upvoted: false
         };
 
-        PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId})
+        PQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId}, {_id: 1})
         .then((like)=>{
             if(like){
                 resultAnswer.upvoted = true;
@@ -2774,7 +2774,7 @@ reportRouter.get("/content/question/company/answers/:ansId", cors.cors, rateLimi
             upvoted: false
         };
 
-        CQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId})
+        CQUES_ANSWERS_LIKES.findOne({user: req.user._id, answer: req.params.ansId}, {_id: 1})
         .then((like)=>{
             if(like){
                 resultAnswer.upvoted = true;
