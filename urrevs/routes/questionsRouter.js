@@ -2886,7 +2886,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
         acceptedAnsIds.push(ques.acceptedAns);
         acceptedAnsObj[ques.acceptedAns] = index;
         try{
-          let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
+          let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
           if(ans.replies.length > 0){
