@@ -168,7 +168,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
-                        if(ans.replies.length > 0){
+                        if(ans){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
                             if(reply.hidden){
@@ -247,7 +247,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
-                        if(ans.replies.length > 0){
+                        if(ans){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
                             if(reply.hidden){
@@ -519,7 +519,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
-                        if(ans.replies.length > 0){
+                        if(ans){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
                             if(reply.hidden){
@@ -598,7 +598,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                         let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                         let repliesList = [];
               
-                        if(ans.replies.length > 0){
+                        if(ans){
                           for(let i=0; i<ans.replies.length; i++){
                             let reply = ans.replies[i];
                             if(reply.hidden){
@@ -887,7 +887,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
-                      if(ans.replies.length > 0){
+                      if(ans){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
                           if(reply.hidden){
@@ -966,7 +966,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
-                      if(ans.replies.length > 0){
+                      if(ans){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
                           if(reply.hidden){
@@ -1160,7 +1160,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
-                      if(ans.replies.length > 0){
+                      if(ans){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
                           if(reply.hidden){
@@ -1239,7 +1239,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
                       let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
                       let repliesList = [];
             
-                      if(ans.replies.length > 0){
+                      if(ans){
                         for(let i=0; i<ans.replies.length; i++){
                           let reply = ans.replies[i];
                           if(reply.hidden){

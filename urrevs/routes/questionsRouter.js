@@ -2041,7 +2041,7 @@ questionRouter.get("/phone/by/me", cors.cors, rateLimit, authenticate.verifyUser
           let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -2208,7 +2208,7 @@ questionRouter.get("/company/by/me", cors.cors, rateLimit, authenticate.verifyUs
           let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -2376,7 +2376,7 @@ questionRouter.get("/phone/by/:userId", cors.cors, rateLimit, authenticate.verif
           let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -2545,7 +2545,7 @@ questionRouter.get("/company/by/:userId", cors.cors, rateLimit, authenticate.ver
           let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -2712,7 +2712,7 @@ questionRouter.get("/phone/on/:phoneId", cors.cors, rateLimit, authenticate.veri
           let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -2889,7 +2889,7 @@ questionRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.
           let ans = await CANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1});
           let repliesList = [];
 
-          if(ans.replies.length > 0){
+          if(ans){
             for(let i=0; i<ans.replies.length; i++){
               let reply = ans.replies[i];
               if(reply.hidden){
@@ -3089,7 +3089,7 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
             let ans = await PANS.findOne({_id: ques.acceptedAns, hidden: false}).populate("user", {name: 1, picture: 1}).populate("replies.user", {name: 1, picture: 1});
             let repliesList = [];
   
-            if(ans.replies.length > 0){
+            if(ans){
               for(let i=0; i<ans.replies.length; i++){
                 let reply = ans.replies[i];
                 if(reply.hidden){
