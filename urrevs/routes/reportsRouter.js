@@ -2033,7 +2033,10 @@ reportRouter.put("/:repId/actions", cors.cors, rateLimit, authenticate.verifyUse
 
 // show content for a phone review report
 reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    PHONEREV.findById(req.params.revId).then(async(rev)=>{
+    PHONEREV.findById(req.params.revId)
+    .populate("user", {name: 1, picture: 1})
+    .populate("phone", {name: 1})
+    .then(async(rev)=>{
         if(!rev){
             return res.status(404).json({
                 success: false,
@@ -2070,7 +2073,7 @@ reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authentic
 
         let like;
         try{
-            like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false});
+            like = await PHONE_REVS_LIKES.findOne({user: req.user._id, review: rev._id, unliked: false}, {_id: 1});
         }
         catch(err){
             console.log("Error from /reviews/phone/:revId: ", err);
@@ -2103,7 +2106,10 @@ reportRouter.get("/content/review/phone/:revId", cors.cors, rateLimit, authentic
 
 // show content for a company review report
 reportRouter.get("/content/review/company/:revId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    COMPANYREV.findById(req.params.revId).then(async(rev)=>{
+    COMPANYREV.findById(req.params.revId)
+    .populate("user", {name: 1, picture: 1})
+    .populate("company", {name: 1})
+    .then(async(rev)=>{
         if(!rev){
             return res.status(404).json({
                 success: false,
