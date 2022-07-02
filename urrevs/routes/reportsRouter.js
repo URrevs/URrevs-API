@@ -3221,7 +3221,7 @@ reportRouter.get("/context/review/company/:revId/comments/:commentId", cors.cors
 
 
 // show context for a phone question answer (show question, answer and its replies)
-reportRouter.get("/context/question/phone/:quesId/answers/:answerId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+reportRouter.get("/context/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
     let proms = [];
     proms.push(PQUES.findById(req.params.quesId).populate("user", {name: 1, picture: 1}).populate("phone", {name: 1}));
     proms.push(PANS.findById(req.params.ansId).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1}));
@@ -3364,7 +3364,7 @@ reportRouter.get("/context/question/phone/:quesId/answers/:answerId", cors.cors,
 
 
 // show context for a company question answer (show question, answer and its replies)
-reportRouter.get("/context/question/company/:quesId/answers/:answerId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+reportRouter.get("/context/question/company/:quesId/answers/:ansId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
     let proms = [];
     proms.push(CQUES.findById(req.params.quesId).populate("user", {name: 1, picture: 1}).populate("company", {name: 1}));
     proms.push(CANS.findById(req.params.ansId).populate("user", {name: 1, picture: 1, questionsAnswered: 1}).populate("replies.user", {name: 1, picture: 1, questionsAnswered: 1}));
