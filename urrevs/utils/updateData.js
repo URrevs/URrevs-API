@@ -299,8 +299,8 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         brands = await getBrandsInfo();
         
         // brands = [{
-        //   "name": "Sony",
-        //   "url": "sony-phones-7.php"
+        //   "name": "Realme",
+        //   "url": "realme-phones-118.php"
         // }];
 
         // initialize an update log (isUpdating: true)
@@ -1157,6 +1157,11 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                     let dollarPrice = miscPriceAll.filter((item)=>{
                       return item[0] == "€";
                     })[0];
+
+                    if(!dollarPrice){
+                      throw new Error();
+                    }
+
                     miscPrice = parseFloat(dollarPrice.substring(1)); // in EUR
                   }
                   catch(e){
@@ -1164,6 +1169,10 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                       let euroPrice = miscPriceAll.filter((item)=>{
                         return item[0] == "$";
                       })[0];
+
+                      if(!euroPrice){
+                        throw new Error();
+                      }
 
                       conversionFromUSDtoEur = await convertFromUSDtoEUR(conversionFromUSDtoEur, USD_TO_EUR);
                       miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromUSDtoEur;
@@ -1173,7 +1182,11 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                         let euroPrice = miscPriceAll.filter((item)=>{
                           return item[0] == "₹";
                         })[0];
-  
+                        
+                        if(!euroPrice){
+                          throw new Error();
+                        }
+
                         conversionFromINRtoEur = await convertFromINRtoEUR(conversionFromINRtoEur, INR_TO_EUR);
                         miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromINRtoEur;
                       }
@@ -1183,6 +1196,10 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                             return item[0] == "£";
                           })[0];
     
+                          if(!euroPrice){
+                            throw new Error();
+                          }
+
                           conversionFromGBPtoEur = await convertFromGBPtoEUR(conversionFromGBPtoEur, GBP_TO_EUR);
                           miscPrice = parseFloat(euroPrice.substring(1)) * conversionFromGBPtoEur;
                         }
