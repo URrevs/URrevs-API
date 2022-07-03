@@ -119,7 +119,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
     
     let proms = [];
     proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.revId, type: "phoneReview"}));
+    proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "phoneReview"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -239,7 +239,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
     
     let proms = [];
     proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.revId, type: "companyReview"}));
+    proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "companyReview"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -358,7 +358,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
     
     let proms = [];
     proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.quesId, type: "phoneQuestion"}));
+    proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "phoneQuestion"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -477,7 +477,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
     
     let proms = [];
     proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.quesId, type: "companyQuestion"}));
+    proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "companyQuestion"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -599,7 +599,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
 
     proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
     proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "phoneComment"}));
+    proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "phoneComment"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -733,7 +733,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
 
     proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
     proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.commentId, type: "companyComment"}));
+    proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "companyComment"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -867,7 +867,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
 
     proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
     proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "phoneAnswer"}));
+    proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "phoneAnswer"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -1001,7 +1001,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
 
     proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
     proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.ansId, type: "companyAnswer"}));
+    proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "companyAnswer"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -1135,7 +1135,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
     let proms = [];
     proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
     proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, "replies._id": req.params.replyId, hidden: false}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "phoneCommentReply"}));
+    proms.push(REPORT.findOne({obj: req.params.replyId, reporter: req.user._id, type: "phoneCommentReply"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -1286,7 +1286,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
     let proms = [];
     proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
     proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, "replies._id": req.params.replyId, hidden: false}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "companyCommentReply"}));
+    proms.push(REPORT.findOne({obj: req.params.replyId, reporter: req.user._id, type: "companyCommentReply"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -1436,7 +1436,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
     let proms = [];
     proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
     proms.push(PANS.findOne({_id: req.params.ansId, question: req.params.quesId, "replies._id": req.params.replyId, hidden: false}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "phoneAnswerReply"}));
+    proms.push(REPORT.findOne({obj: req.params.replyId, reporter: req.user._id, type: "phoneAnswerReply"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -1586,7 +1586,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
     let proms = [];
     proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
     proms.push(CANS.findOne({_id: req.params.ansId, question: req.params.quesId, "replies._id": req.params.replyId, hidden: false}));
-    proms.push(REPORT.findOne({reporter: req.user._id, obj: req.params.replyId, type: "companyAnswerReply"}));
+    proms.push(REPORT.findOne({obj: req.params.replyId, reporter: req.user._id, type: "companyAnswerReply"}));
 
     Promise.all(proms)
     .then((results)=>{
@@ -2020,6 +2020,21 @@ reportRouter.put("/:repId/actions", cors.cors, rateLimit, authenticate.verifyUse
             let reportedUser = r.reportee;
             try{
                 await REPORT.updateMany({reportee: reportedUser}, {$set: {blockUser: req.body.blockUser}})
+            }
+            catch(err){
+                console.log("Error from /reports/:repId/actions: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "error updating the reports"
+                });
+            }
+        }
+
+        if(req.body.hideContent != null){
+            let type = r.type;
+            let obj = r.obj;
+            try{
+                await REPORT.updateMany({obj: obj, type: type}, {$set: {hideContent: req.body.hideContent}})
             }
             catch(err){
                 console.log("Error from /reports/:repId/actions: ", err);
