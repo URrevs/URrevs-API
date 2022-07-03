@@ -2008,12 +2008,26 @@ reportRouter.put("/:repId/actions", cors.cors, rateLimit, authenticate.verifyUse
     }
 
     REPORT.findByIdAndUpdate(req.params.repId, {$set: updateQuery})
-    .then((r)=>{
+    .then(async(r)=>{
         if(!r){
             return res.status(404).json({
                 success: false,
                 status: "not found"
             });
+        }
+
+        if(req.body.blockUser != null){
+            let reportedUser = r.reportee;
+            try{
+                await REPORT.updateMany({reportee: reportedUser}, {$set: {blockUser: req.body.blockUser}})
+            }
+            catch(err){
+                console.log("Error from /reports/:repId/actions: ", err);
+                return res.status(500).json({
+                    success: false,
+                    status: "error updating the reports"
+                });
+            }
         }
 
         return res.status(200).json({

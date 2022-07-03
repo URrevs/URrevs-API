@@ -18,6 +18,7 @@ const reportSchema = new schema({
     reportee: {
         type: schema.Types.ObjectId,
         ref: "User",
+        index: true
     },
     type: {
         type: String,
