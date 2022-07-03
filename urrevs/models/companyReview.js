@@ -20,7 +20,7 @@ const cReviewSchema = new schema({
     },
     corresPrev: {
         type: schema.Types.ObjectId,
-        ref: "pReview",
+        ref: "pRev",
         required: true,
         index: true
     },
