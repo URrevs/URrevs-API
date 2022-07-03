@@ -2016,50 +2016,25 @@ reportRouter.put("/:repId/actions", cors.cors, rateLimit, authenticate.verifyUse
             });
         }
 
-        if(req.body.blockUser != null && req.body.hideContent == null){
+        let proms = [];
+        if(req.body.blockUser != null){
             let reportedUser = r.reportee;
-            try{
-                await REPORT.updateMany({reportee: reportedUser}, {$set: {blockUser: req.body.blockUser}});
-            }
-            catch(err){
-                console.log("Error from /reports/:repId/actions: ", err);
-                return res.status(500).json({
-                    success: false,
-                    status: "error updating the reports"
-                });
-            }
-        }
-        else if(req.body.hideContent != null && req.body.blockUser == null){
-            let type = r.type;
-            let obj = r.obj;
-            try{
-                await REPORT.updateMany({obj: obj, type: type}, {$set: {hideContent: req.body.hideContent}});
-            }
-            catch(err){
-                console.log("Error from /reports/:repId/actions: ", err);
-                return res.status(500).json({
-                    success: false,
-                    status: "error updating the reports"
-                });
-            }
-        }
-        else{
-            let reportedUser = r.reportee;
-            let type = r.type;
-            let obj = r.obj;
-            let proms = [];
             proms.push(REPORT.updateMany({reportee: reportedUser}, {$set: {blockUser: req.body.blockUser}}));
+        }
+        if(req.body.hideContent != null){
+            let type = r.type;
+            let obj = r.obj;
             proms.push(REPORT.updateMany({obj: obj, type: type}, {$set: {hideContent: req.body.hideContent}}));
-            try{
-                await Promise.all(proms);
-            }
-            catch(err){
-                console.log("Error from /reports/:repId/actions: ", err);
-                return res.status(500).json({
-                    success: false,
-                    status: "error updating the reports"
-                });
-            }
+        }
+        try{
+            await Promise.all(proms);
+        }
+        catch(err){
+            console.log("Error from /reports/:repId/actions: ", err);
+            return res.status(500).json({
+                success: false,
+                status: "error updating the report"
+            });
         }
 
         return res.status(200).json({
