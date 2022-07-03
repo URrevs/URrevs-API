@@ -250,23 +250,36 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
         return;
     }
 
-    OWNED_PHONE.find({user: req.params.userId})
-    .sort({ownedAt: -1})
-    .skip((roundNum - 1) * itemsPerRound)
-    .limit(itemsPerRound)
-    .populate("phone", {name: 1})
-    .then((phones)=>{
-        let result = [];
-        for(let phone of phones){
-            result.push({
-                _id: phone.phone._id,
-                name: phone.phone.name,
-                type: "phone"
-            });
+    USER.findById(req.params.userId, {ownedLock: 1, _id: 0})
+    .then((user)=>{
+        if(user.ownedLock){
+            return res.status(403).json({success: false, status: "locked"});
         }
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json({success: true, phones: result});
+
+        OWNED_PHONE.find({user: req.params.userId})
+        .sort({ownedAt: -1})
+        .skip((roundNum - 1) * itemsPerRound)
+        .limit(itemsPerRound)
+        .populate("phone", {name: 1})
+        .then((phones)=>{
+            let result = [];
+            for(let phone of phones){
+                result.push({
+                    _id: phone.phone._id,
+                    name: phone.phone.name,
+                    type: "phone"
+                });
+            }
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: true, phones: result});
+        })
+        .catch((err)=>{
+            console.log("Error from /users/:userId/profile: ", err);
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.json({success: false, status: "process failed"});
+        });
     })
     .catch((err)=>{
         console.log("Error from /users/:userId/profile: ", err);
@@ -280,7 +293,12 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
 
 // block a user from all activities
 userRouter.put("/:userId/block/all", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    USER.findByIdAndUpdate(req.params.userId, {$set: {
+    
+    if(req.user._id.equals(req.params.userId)){
+        return res.status(400).json({success: false, status: "bad request"});
+    }
+
+    USER.findOneAndUpdate({_id: req.params.userId, admin: false}, {$set: {
         blockedFromReviews: true,
         blockedFromQuestions: true,
         blockedFromComment: true,
@@ -337,6 +355,42 @@ userRouter.put("/:userId/unblock/all", cors.cors, rateLimit, authenticate.verify
 });
 
 
+
+
+// lock/unlock owned phones list
+userRouter.put("/phones", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+
+    let action = req.query.action;
+    if(!action){
+        return res.status(400).json({success: false, status: "bad request"});
+    }
+
+    if(typeof(action) != "string"){
+        return res.status(400).json({success: false, status: "bad request"});
+    }
+
+    if(action != "lock" && action != "unlock"){
+        return res.status(400).json({success: false, status: "bad request"});
+    }
+
+    let value = (action == "lock")? true: false;
+
+    USER.findByIdAndUpdate(req.user._id, {$set: {ownedLock: value}})
+    .then((user)=>{
+        if(!user){
+            return res.status(404).json({success: false, status: "not found"});
+        }
+
+        return res.status(200).json({success: true});
+    })
+    .catch((err)=>{
+        console.log("Error from /users/phones/lock: ", err);
+        return res.status(500).json({
+            success: false, 
+            status: "process failed"
+        });
+    });
+});
 
 
 

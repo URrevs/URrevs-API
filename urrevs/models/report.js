@@ -18,6 +18,7 @@ const reportSchema = new schema({
     reportee: {
         type: schema.Types.ObjectId,
         ref: "User",
+        index: true
     },
     type: {
         type: String,
@@ -91,6 +92,6 @@ const reportSchema = new schema({
 );
 
 reportSchema.index({closed: 1, createdAt: -1});
-reportSchema.index({reporter: 1, obj: 1});
+reportSchema.index({obj: 1, reporter: 1, type: 1});
 
 module.exports = mongoose.model("Report", reportSchema);

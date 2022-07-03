@@ -14,6 +14,8 @@ const addToRecentSearches = require("../utils/addToRecentSearches");
 const PHONE = require("../models/phone");
 const COMPANY = require("../models/company");
 const UPRODUCT = require("../models/uproducts");
+const USER = require("../models/user");
+
 const config = require("../config");
 
 const searchRouter = express.Router();
@@ -23,6 +25,7 @@ const productsSearchLimitPhones = parseInt(process.env.PRODUCTS_SEARCH_LIMIT_PHO
 const globalSearchLimitPhones = parseInt(process.env.GLOBAL_SEARCH_LIMIT_PHONES || config.GLOBAL_SEARCH_LIMIT_PHONES);
 const globalSearchLimitCompanies = parseInt(process.env.GLOBAL_SEARCH_LIMIT_COMPANIES || config.GLOBAL_SEARCH_LIMIT_COMPANIES);
 const companiesSearchLimit = parseInt(process.env.COMPANIES_SEARCH_LIMIT || config.COMPANIES_SEARCH_LIMIT);
+const globalSearchLimitUsers = parseInt(process.env.GLOBAL_SEARCH_LIMIT_USERS || config.GLOBAL_SEARCH_LIMIT_USERS);
 
 //--------------------------------------------------------------------
 
@@ -223,12 +226,16 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
   let promises = [];
   promises.push(PHONE.find({name: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitPhones));
   promises.push(COMPANY.find({nameLower: {$regex: searchWord, $options: "i"}}, {name: 1}).limit(globalSearchLimitCompanies));
+  promises.push(USER.find({name: {$regex: searchWord, $options: "i"}}, {name: 1, picture: 1}).limit(globalSearchLimitUsers));
 
   Promise.all(promises).then((results)=>{
     let phonesRes = results[0];
     let companiesRes = results[1];
+    let usersRes = results[2];
+
     let phones = [];
     let companies = [];
+    let users = [];
     
     for(p of phonesRes){
       phones.push({
@@ -246,9 +253,18 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
       });
     }
 
+    for(u of usersRes){
+      users.push({
+        _id: u._id,
+        name: u.name,
+        picture: u.picture,
+        type: "user"
+      });
+    }
+    
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
-    res.json({success: true, phones: phones, companies: companies});
+    res.json({success: true, phones: phones, companies: companies, users: users});
   })
   .catch((err)=>{
     console.log("Error from /search/all: ", err);
@@ -261,7 +277,7 @@ searchRouter.get("/all", cors.cors, rateLimitSearch, (req, res, next)=>{
 
 
 
-// search all products and companies
+// search companies only
 searchRouter.get("/companies", cors.cors, rateLimitSearch, (req, res, next)=>{
   let searchWord = req.query.q;
   if(!searchWord){

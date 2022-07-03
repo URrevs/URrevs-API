@@ -129,6 +129,31 @@ leaderBoardRouter.post("/", cors.cors, rateLimit, authenticate.verifyUser, authe
 
 
 
+// delete a competition
+leaderBoardRouter.delete("/:compId", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+    COMPETITION.findByIdAndDelete(req.params.compId)
+    .then((comp)=>{
+        if(!comp){
+            return res.status(404).json({
+                success: false,
+                status: "not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from DELETE /competitions: ", err);
+        res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "Error deleting competition"
+        });
+    });
+});
+
 
 
 // get the info of the latest competition

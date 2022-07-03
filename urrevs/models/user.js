@@ -14,7 +14,8 @@ const userSchema = new schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        index: true
     },
     picture: {
         type: String
@@ -72,6 +73,10 @@ const userSchema = new schema({
         default: false
     },
     blockedFromReplyAnswer: {
+        type: Boolean,
+        default: false
+    },
+    ownedLock: {
         type: Boolean,
         default: false
     }

@@ -52,8 +52,6 @@ const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
 
 
 const config = require("../config");
-const phoneReviewComment = require("../models/phoneReviewComment");
-const companyReviewComment = require("../models/companyReviewComment");
 
 //--------------------------------------------------------------------
 
@@ -148,7 +146,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   if(Date.parse(ownedDate) > Date.now()){
     return res.status(400).json({
       success: false,
-      status: "bad request"
+      status: "invalid date"
     });
   }
 
@@ -233,6 +231,13 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       });
     }
     
+    if(Date.parse(ownedDate) < Date.parse(phone.releaseDate)){
+      return res.status(400).json({
+        success: false,
+        status: "past date"
+      });
+    }
+
     if(pprev){
       return res.status(403).json({
         success: false,
@@ -3113,7 +3118,7 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
 
 // hide a phone review comment
 reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  phoneReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3122,8 +3127,24 @@ reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authen
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // decrease the number of comments in the phone review
+    let revId = r.review;
+    PHONEREV.findByIdAndUpdate(revId, {$inc: {commentsCount: -1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/comments/:commentId/hide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
@@ -3135,7 +3156,7 @@ reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authen
 
 // hide a company review comment
 reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  companyReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3144,13 +3165,29 @@ reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, auth
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // decrease the number of comments in the phone review
+    let revId = r.review;
+    COMPANYREV.findByIdAndUpdate(revId, {$inc: {commentsCount: -1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/comments/:commentId/hide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/comments/:commentId/hide: ", err);
-    return res.status(500).json({success: false, status: "error hiding the company comment"});
+    return res.status(500).json({success: false, status: "error hiding the phone comment"});
   })
 });
 
@@ -3158,7 +3195,7 @@ reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, auth
 
 // unhide a phone review comment
 reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  phoneReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3167,20 +3204,36 @@ reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, auth
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // increase the number of comments in the phone review
+    let revId = r.review;
+    PHONEREV.findByIdAndUpdate(revId, {$inc: {commentsCount: 1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/comments/:commentId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/comments/:commentId/unhide: ", err);
     return res.status(500).json({success: false, status: "error unhiding the phone comment"});
-  })
+  });
 });
 
 
 // unhide a company review comment
 reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  companyReviewComment.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3189,14 +3242,30 @@ reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, au
       });
     }
 
-    return res.status(200).json({
-      success: true
+    // increase the number of comments in the phone review
+    let revId = r.review;
+    COMPANYREV.findByIdAndUpdate(revId, {$inc: {commentsCount: 1}})
+    .then((rev)=>{
+      if(!rev){
+        return res.status(404).json({
+          success: false,
+          status: "not found"
+        });
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/comments/:commentId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error decreasing the number of comments in the phone review"});
     });
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/comments/:commentId/unhide: ", err);
-    return res.status(500).json({success: false, status: "error unhiding the company comment"});
-  })
+    return res.status(500).json({success: false, status: "error unhiding the phone comment"});
+  });
 });
 
 
@@ -3205,60 +3274,19 @@ reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, au
 
 // hide a phone review reply
 reviewRouter.put("/phone/comments/:commentId/replies/:replyId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  phoneReviewComment.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
+  PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = true;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = true;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -3281,60 +3309,19 @@ reviewRouter.put("/phone/comments/:commentId/replies/:replyId/hide", cors.cors, 
 
 // hide a company review reply
 reviewRouter.put("/company/comments/:commentId/replies/:replyId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  companyReviewComment.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
+  COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = true;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = true;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -3356,60 +3343,19 @@ reviewRouter.put("/company/comments/:commentId/replies/:replyId/hide", cors.cors
 
 // unhide a phone review reply
 reviewRouter.put("/phone/comments/:commentId/replies/:replyId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  phoneReviewComment.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
+  PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = false;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = false;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
@@ -3432,60 +3378,19 @@ reviewRouter.put("/phone/comments/:commentId/replies/:replyId/unhide", cors.cors
 
 // unhide a company review reply
 reviewRouter.put("/company/comments/:commentId/replies/:replyId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  
-  const index = req.body.index;
-
-  if(index == null){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(typeof(index) !== "number"){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-  
-
-  if(Number.isInteger(index) === false){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  if(index < 0){
-    return res.status(400).json({
-      success: false,
-      status: "bad request"
-    });
-  }
-
-  companyReviewComment.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
+  COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, "replies._id": req.params.replyId})
   .then((comment)=>{
     if(!comment){
       return res.status(404).json({success: false, status: "not found"});
     }
 
-    // for(let i = 0; i < comment.replies.length; i++){
-    //   if(comment.replies[i]._id.equals(req.params.replyId)){
-    //     comment.replies[i].hidden = true;
-    //     break;
-    //   }
-    // }
-
-    if(index >= comment.replies.length){
-      return res.status(400).json({success: false, status: "bad request"});
+    for(let i = 0; i < comment.replies.length; i++){
+      if(comment.replies[i]._id.equals(req.params.replyId)){
+        comment.replies[i].hidden = false;
+        break;
+      }
     }
 
-    if(comment.replies[index]._id.equals(req.params.replyId) === false){
-      return res.status(400).json({success: false, status: "unmatched"});
-    }
-
-    comment.replies[index].hidden = false;
     comment.save()
     .then((r)=>{
       return res.status(200).json({success: true});
