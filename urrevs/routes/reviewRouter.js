@@ -187,7 +187,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     refCode = refCode.toUpperCase();
   }
 
-  if(pros.trim() == "" || cons.trim() == "" || compPros.trim() == "" || compCons.trim() == ""){
+  pros = pros.trim();
+  cons = cons.trim();
+  compPros = compPros.trim();
+  compCons = compCons.trim();
+
+  if(pros == "" || cons == "" || compPros == "" || compCons == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1892,7 +1897,8 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1955,7 +1961,8 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -2017,7 +2024,8 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -2079,7 +2087,8 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, 
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"

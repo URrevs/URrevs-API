@@ -91,7 +91,8 @@ questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (re
     })
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -191,7 +192,8 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
     })
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -290,7 +292,8 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -402,7 +405,8 @@ questionRouter.post("/phone/answers/:ansId/replies", cors.cors, rateLimit, authe
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -597,7 +601,8 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -707,7 +712,8 @@ questionRouter.post("/company/answers/:ansId/replies", cors.cors, rateLimit, aut
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
