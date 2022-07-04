@@ -712,7 +712,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
     }
 
     let proms1 = [];
-    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1}).populate("phone", {name: 1}));
+    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1}).populate("phone", {name: 1, company: 1}));
 
     Promise.all(proms1)
     .then(async(results)=>{
@@ -725,7 +725,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
-            if(rev.phone.name.match(/^Apple/gi)){
+            if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
                 verificationRatio = -1;
             }
         }

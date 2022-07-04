@@ -269,7 +269,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     }
 
     if(uAObj.isiPhone){
-      if(phone.name.match(/^Apple/gi)){
+      if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
         verificationRatio = -1;
       }
     }
@@ -2948,7 +2948,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
   }
 
   let proms1 = [];
-  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1, user: 1}).populate("phone", {name: 1}));
+  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1, user: 1}).populate("phone", {name: 1, company: 1}));
 
   Promise.all(proms1)
     .then(async(results)=>{
@@ -2961,7 +2961,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
-            if(rev.phone.name.match(/^Apple/gi)){
+            if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
                 verificationRatio = -1;
             }
         }
