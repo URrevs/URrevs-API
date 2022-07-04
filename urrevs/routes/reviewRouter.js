@@ -269,7 +269,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     }
 
     if(uAObj.isiPhone){
-      if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
+      if(phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
         verificationRatio = -1;
       }
     }
