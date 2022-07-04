@@ -90,8 +90,17 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -146,7 +155,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
             reportee: rev.user,
             type: "phoneReview",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.revId,
             onModelObj: "pRev"
         })
@@ -210,8 +219,17 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -266,7 +284,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
             reportee: rev.user,
             type: "companyReview",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.revId,
             onModelObj: "cRev"
         })
@@ -329,8 +347,17 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -385,7 +412,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
             reportee: ques.user,
             type: "phoneQuestion",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.quesId,
             onModelObj: "pQues"
         })
@@ -448,8 +475,17 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -504,7 +540,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
             reportee: ques.user,
             type: "companyQuestion",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.quesId,
             onModelObj: "cQues"
         })
@@ -567,8 +603,17 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -635,7 +680,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
                 reportee: comment.user,
                 type: "phoneComment",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.commentId,
                 onModelObj: "pRevsComment",
                 parObj: req.params.revId,
@@ -701,8 +746,17 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -769,7 +823,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
                 reportee: comment.user,
                 type: "companyComment",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.commentId,
                 onModelObj: "cRevsComment",
                 parObj: req.params.revId,
@@ -835,8 +889,17 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -903,7 +966,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
                 reportee: answer.user,
                 type: "phoneAnswer",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.ansId,
                 onModelObj: "pQuesAnswer",
                 parObj: req.params.quesId,
@@ -969,8 +1032,17 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1037,7 +1109,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
                 reportee: answer.user,
                 type: "companyAnswer",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.ansId,
                 onModelObj: "cQuesAnswer",
                 parObj: req.params.quesId,
@@ -1104,8 +1176,17 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1186,7 +1267,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
             reportee: reply.user,
             type: "phoneCommentReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "pRevsComment.replies",
             parObj: req.params.commentId,
@@ -1255,8 +1336,17 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1337,7 +1427,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
             reportee: reply.user,
             type: "companyCommentReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "cRevsComment.replies",
             parObj: req.params.commentId,
@@ -1405,8 +1495,17 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1487,7 +1586,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
             reportee: reply.user,
             type: "phoneAnswerReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "pQuesAnswer.replies",
             parObj: req.params.ansId,
@@ -1555,8 +1654,17 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1637,7 +1745,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
             reportee: reply.user,
             type: "companyAnswerReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "cQuesAnswer.replies",
             parObj: req.params.ansId,
