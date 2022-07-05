@@ -3169,8 +3169,8 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
       Promise.all(proms)
       .then((likes)=>{
         let quesLike = likes[0];
-        let ansLike = likes[0];
-        let replyLikes = likes[1];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
   
         for(let like of quesLike){
           let id = like.question;
