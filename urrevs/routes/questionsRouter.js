@@ -1150,8 +1150,8 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
 questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(PQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(PANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1291,8 +1291,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(CQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(CANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1455,8 +1455,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
 questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(PQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
-  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1, acceptedAns: 1}));
+  proms.push(PANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1586,8 +1586,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
 questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(CQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
-  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1, acceptedAns: 1}));
+  proms.push(CANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
