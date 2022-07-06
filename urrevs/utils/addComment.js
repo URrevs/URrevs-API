@@ -7,7 +7,7 @@ module.exports = (parentResourceCollection, parentResourceId, resourceCollection
     return new Promise((resolve, reject)=>{
         
         // check if the parent resource exists
-        parentResourceCollection.findOne({_id: parentResourceId, hidden: false}, {$inc: {[`${resourceTypeS}Count`]: 1}})
+        parentResourceCollection.findOneAndUpdate({_id: parentResourceId, hidden: false}, {$inc: {[`${resourceTypeS}Count`]: 1}})
         .then((parentResource)=>{
             if(!parentResource){
                 return resolve(404);
