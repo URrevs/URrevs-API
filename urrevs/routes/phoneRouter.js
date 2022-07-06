@@ -409,7 +409,7 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit, authentica
 
 // get similar phones to the given phone
 phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
-    PHONE.findById(req.params.phoneId, {_id: 1}).then(async (phone)=>{
+    PHONE.findById(req.params.phoneId, {_id: 1, company: 1}).then(async (phone)=>{
 
         // if the phone doesn't exist, abort
         if(!phone){
@@ -463,11 +463,13 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
         }
         catch(err){
             console.log("--------------------Similar phones AI failed--------------------");
-            console.log(err.response.status, err.response.data);
+            if(err.response){
+                console.log(err.response.status, err.response.data);
+            }
             // Now, let's do it my way
 
             // get the release date of the phone
-            PSPECS.findOne({_id: phone._id}, {releaseDate: 1, price: 1, _id: 0}).then((currentPhone)=>{
+            PSPECS.findOne({_id: phone._id}, {releaseDate: 1, price: 1, _id: 0}).then(async(currentPhone)=>{
 
                 // if the current phone doesn't exist in nphones, abort
                 if(!currentPhone){
@@ -480,10 +482,25 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
 
                 // make sure that the phones has a price and a release date
                 if(!currentPhone.price){
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json({success: true, phones: [], status: "the phone does not have price"});
-                    return;
+                    try{
+                        let phones = await PHONE.find({_id: {$ne: phone._id}, company: phone.company}, {name: 1, picture: 1}).sort({createdAt: -1}).limit(20);
+                        let result = [];
+                        for(phone of phones){
+                            result.push({
+                                _id: phone._id,
+                                name: phone.name,
+                                picture: phone.picture,
+                                type: "phone"
+                            });
+                        }
+                        return res.status(200).json({success: true, phones: result});
+                    }
+                    catch(err){
+                        console.log("Error from my way /phones/:phoneId/similar: ", err);
+                        res.statusCode = 500;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: false, status: "process failed"});
+                    }
                 }
 
                 if(!currentPhone.releaseDate){
