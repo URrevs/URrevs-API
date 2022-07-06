@@ -4126,7 +4126,7 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
 
     if(acceptedState){
       try{
-        let ques = await PQUES.findByIdAndUpdate(quesId, [{$inc: {ansCount: -1}}, {$set: {acceptedAns: null}}]);
+        let ques = await PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}, $set: {acceptedAns: null}});
         if(!ques){
           return res.status(404).json({
             success: false,
@@ -4187,7 +4187,7 @@ questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authent
     
     if(acceptedState){
       try{
-        let ques = await CQUES.findByIdAndUpdate(quesId, [{$inc: {ansCount: -1}}, {$set: {acceptedAns: null}}]);
+        let ques = await CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}, $set: {acceptedAns: null}});
         if(!ques){
           return res.status(404).json({
             success: false,
