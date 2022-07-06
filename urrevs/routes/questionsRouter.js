@@ -310,7 +310,7 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
     }
 
     let proms1 = [];
-    proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId}, {$inc: {ansCount: 1}}));
+    proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId, hidden: false}, {$inc: {ansCount: 1}}));
     proms1.push(PANS.findOne({user: req.user._id, question: req.params.quesId}));
     
     Promise.all(proms1)
@@ -619,7 +619,7 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
     }
 
     let proms1 = [];
-    proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId}, {$inc: {ansCount: 1}}))
+    proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId, hidden: false}, {$inc: {ansCount: 1}}))
     proms1.push(CANS.findOne({user: req.user._id, question: req.params.quesId}));
     
     Promise.all(proms1)
