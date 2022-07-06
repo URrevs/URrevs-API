@@ -712,7 +712,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
     }
 
     let proms1 = [];
-    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1}).populate("phone", {name: 1, company: 1}));
+    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1, verificationRatio: 1}).populate("phone", {name: 1, company: 1}));
 
     Promise.all(proms1)
     .then(async(results)=>{
@@ -769,7 +769,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
         if(verificationRatio == 0){
-            return res.status(200).json({success: true, verificationRatio: verificationRatio});
+            return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
