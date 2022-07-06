@@ -4112,7 +4112,7 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
 
 // hide a phone question answer
 questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true}})
+  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -4121,24 +4121,47 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
       });
     }
 
+    let acceptedState = r.accepted;
     let quesId = r.question;
-    PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}})
-    .then((ques)=>{
-      if(!ques){
-        return res.status(404).json({
-          success: false,
-          status: "not found"
+
+    if(acceptedState){
+      try{
+        let ques = await PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1, acceptedAns: null}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
+
+        return res.status(200).json({
+          success: true
         });
       }
+      catch(err){
+        console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
+    else{
+      try{
+        let ques = await PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
 
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
-      return res.status(500).json({success: false, status: "error hiding the phone question answer"});
-    });   
+        return res.status(200).json({
+          success: true
+        });
+      }
+      catch(err){
+        console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/answers/:ansId/hide: ", err);
