@@ -4113,7 +4113,7 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
 // hide a phone question answer
 questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
-  .then((r)=>{
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
@@ -4174,7 +4174,7 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
 // hide a company question answer
 questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
-  .then((r)=>{
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
