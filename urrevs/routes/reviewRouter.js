@@ -3046,8 +3046,12 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
     .then(async(results)=>{
         let rev = results[0];
 
-        if(rev == null || !(rev.user.equals(req.user._id))){
-            return res.status(403).json({success: false, status: "review not found or not owned"});
+        if(rev == null){
+            return res.status(404).json({success: false, status: "not found"});
+        }
+
+        if(!(rev.user.equals(req.user._id))){
+            return res.status(403).json({success: false, status: "not owned"});
         }
 
         let verificationRatio = 0;

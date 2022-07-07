@@ -736,7 +736,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         let rev = results[0];
 
         if(rev == null){
-            return res.status(403).json({success: false, status: "phone not found or not owned"});
+            return res.status(404).json({success: false, status: "not found"});
         }
 
         let verificationRatio = 0;
