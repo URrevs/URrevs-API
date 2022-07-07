@@ -3498,7 +3498,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, hidden: false}, {$inc: {upvotes: 1}}));
+      proms1.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
