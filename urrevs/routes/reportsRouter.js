@@ -1987,7 +1987,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
         });
     }
     REPORT.find({closed: true})
-    .sort({createdAt: -1})
+    .sort({closeDate: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
     .populate("reporter", {name: 1, picture: 1}).populate("reportee", {name: 1})
@@ -2117,7 +2117,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
 
 // close a report
 reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    REPORT.findByIdAndUpdate(req.params.repId, {closed: true})
+    REPORT.findByIdAndUpdate(req.params.repId, {$set:{closed: true, closeDate: Date.now()}})
     .then((r)=>{
         if(!r){
             return res.status(404).json({
