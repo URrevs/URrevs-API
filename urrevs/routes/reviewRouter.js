@@ -1685,7 +1685,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
         rev.likes = rev.likes + 1;
 
         let proms2 = [];
-        proms.push(rev.save());
+        proms2.push(rev.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(COMPANY_REVS_UNLIKES.findOneAndRemove({user: req.user._id, review: req.params.revId, createdAt: {$gte: lastQuery}}));
