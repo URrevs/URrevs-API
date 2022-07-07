@@ -17,15 +17,23 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
             }
 
             // check resource existence + increment the likes by 1
-            resourceCollection.findOneAndUpdate({_id: resourceId, user: {$ne: user}, hidden: false}, {$inc: {likes: 1}})
+            resourceCollection.findOne({_id: resourceId, hidden: false}, {user: 1, likes: 1})
             .then((resoruce)=>{
                 if(!resoruce){
                     return resolve(404);
                 }
 
+                if(resoruce.user.equals(user)){
+                    return reject(403);
+                }
+
+                resoruce.likes = resoruce.likes + 1;
+
                 let proms = [];
                 // create the like
-                proms.push(likeCollection.create({user: user, [resourceType]: resourceId}))
+                proms.push(likeCollection.create({user: user, [resourceType]: resourceId}));
+                proms.push(resoruce.save());
+                
                 if(resourceType == "answer"){
                     // if the resource is answer, give the answer author points
                     proms.push(USER.findByIdAndUpdate(resoruce.user, {$inc: {comPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS), absPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}}))

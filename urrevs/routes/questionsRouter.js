@@ -452,7 +452,7 @@ questionRouter.post("/phone/answers/:ansId/like", cors.cors, rateLimit, authenti
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "answer not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -463,6 +463,12 @@ questionRouter.post("/phone/answers/:ansId/like", cors.cors, rateLimit, authenti
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/phone/answers/:ansId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -514,7 +520,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, ra
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -525,6 +531,12 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, ra
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/phone/answers/:ansId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -759,7 +771,7 @@ questionRouter.post("/company/answers/:ansId/like", cors.cors, rateLimit, authen
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "answer not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -770,6 +782,12 @@ questionRouter.post("/company/answers/:ansId/like", cors.cors, rateLimit, authen
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/company/answers/:ansId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -821,7 +839,7 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/like", cors.cors, 
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -832,6 +850,12 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/like", cors.cors, 
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/company/answers/:ansId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -3474,7 +3498,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
+      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, hidden: false}, {$inc: {upvotes: 1}}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3484,7 +3508,14 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+        
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3495,7 +3526,10 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
           lastQuery = lastQueryDoc.date;
         }
 
+        ques.upvotes = ques.upvotes + 1;
+
         let proms2 = [];
+        proms2.push(ques.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(PHONE_QUES_UNLIKES.findOneAndRemove({user: req.user._id, question: req.params.quesId, createdAt: {$gte: lastQuery}}));
@@ -3531,16 +3565,26 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
     else{
       // creating the like
       // create the like document - give points to the question author
-      PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}})
+      PQUES.findOne({_id: req.params.quesId, hidden: false})
       .then((ques)=>{
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
           });
         }
 
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        ques.upvotes = ques.upvotes + 1;
+
         let proms = [];
+        proms.push(ques.save());
         proms.push(PHONE_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
         proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
@@ -3605,7 +3649,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -3614,7 +3658,14 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
     if(!ques){
       return res.status(404).json({
         success: false,
-        status: "question not found or you own it"
+        status: "not found"
+      });
+    }
+
+    if(ques.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
       });
     }
     
@@ -3635,7 +3686,7 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
 
       let proms1 = [];
       // decreasing number of likes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: -1}}, {new: true}));
+      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId}, {$inc: {upvotes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -3646,7 +3697,14 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3763,7 +3821,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
+      proms1.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3773,7 +3831,14 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+        
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3784,7 +3849,10 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
           lastQuery = lastQueryDoc.date;
         }
 
+        ques.upvotes = ques.upvotes + 1;
+
         let proms2 = [];
+        pros.push(ques.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(COMPANY_QUES_UNLIKES.findOneAndRemove({user: req.user._id, question: req.params.quesId, createdAt: {$gte: lastQuery}}));
@@ -3820,16 +3888,26 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
     else{
       // creating the like
       // create the like document - give points to the question author
-      CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}})
+      CQUES.findOne({_id: req.params.quesId, hidden: false})
       .then((ques)=>{
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
           });
         }
 
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        ques.upvotes = ques.upvotes + 1;
+
         let proms = [];
+        proms.push(ques.save());
         proms.push(COMPANY_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
         proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
@@ -3894,7 +3972,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -3903,7 +3981,14 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
     if(!ques){
       return res.status(404).json({
         success: false,
-        status: "question not found or you own it"
+        status: "not found"
+      });
+    }
+
+    if(ques.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
       });
     }
     
@@ -3924,7 +4009,7 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 
       let proms1 = [];
       // decreasing number of likes for the question - getting the date of the last query
-      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: -1}}, {new: true}));
+      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId}, {$inc: {upvotes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -3935,7 +4020,14 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
