@@ -3852,7 +3852,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         ques.upvotes = ques.upvotes + 1;
 
         let proms2 = [];
-        pros.push(ques.save());
+        proms2.push(ques.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(COMPANY_QUES_UNLIKES.findOneAndRemove({user: req.user._id, question: req.params.quesId, createdAt: {$gte: lastQuery}}));
