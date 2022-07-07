@@ -127,7 +127,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
     }
     
     let proms = [];
-    proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "phoneReview"}));
 
     Promise.all(proms)
@@ -138,7 +138,14 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         if(!rev){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(rev.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -256,7 +263,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
     }
     
     let proms = [];
-    proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "companyReview"}));
 
     Promise.all(proms)
@@ -267,7 +274,14 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         if(!rev){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(rev.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -384,7 +398,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
     }
     
     let proms = [];
-    proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "phoneQuestion"}));
 
     Promise.all(proms)
@@ -395,7 +409,14 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         if(!ques){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(ques.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -512,7 +533,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
     }
     
     let proms = [];
-    proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "companyQuestion"}));
 
     Promise.all(proms)
@@ -523,7 +544,14 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         if(!ques){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(ques.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -643,7 +671,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
     let proms = [];
 
     proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
-    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "phoneComment"}));
 
     Promise.all(proms)
@@ -662,7 +690,14 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
         if(!comment){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(comment.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -786,7 +821,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
     let proms = [];
 
     proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
-    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "companyComment"}));
 
     Promise.all(proms)
@@ -805,7 +840,14 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         if(!comment){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(comment.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -929,7 +971,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
     let proms = [];
 
     proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
-    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
+    proms.push(PANS.findOne({_id: req.params.ansId, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "phoneAnswer"}));
 
     Promise.all(proms)
@@ -948,7 +990,14 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
         if(!answer){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(answer.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -1072,7 +1121,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
     let proms = [];
 
     proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
-    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
+    proms.push(CANS.findOne({_id: req.params.ansId, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "companyAnswer"}));
 
     Promise.all(proms)
@@ -1091,7 +1140,14 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         if(!answer){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(answer.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -1250,7 +1306,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1410,7 +1466,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1569,7 +1625,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1728,7 +1784,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
