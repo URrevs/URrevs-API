@@ -219,7 +219,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     if(!uAObj.isiPhone){
       let parsedUa = useragentParser(uA);
       let modelName = parsedUa.device.model;
-      if(!(modelName == null || modelName == "")){
+      if(!(modelName == null || modelName.match(/^\s*$/))){
         modelName = modelName.trim();
         let vendor = parsedUa.device.vendor;
         vendor = (vendor == null)? "": vendor.trim();
@@ -3071,7 +3071,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(!(modelName == null || modelName == "")){
+            if(!(modelName == null || modelName.match(/^\s*$/))){
               modelName = modelName.trim();
               let vendor = parsedUa.device.vendor;
               vendor = (vendor == null)? "": vendor.trim();

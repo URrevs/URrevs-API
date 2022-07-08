@@ -622,7 +622,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(modelName == null || modelName == ""){
+            if(modelName == null || modelName.match(/^\s*$/)){
                 return res.status(200).json({success: true, phones: []});
             }
 
@@ -750,7 +750,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(!(modelName == null || modelName == "")){
+            if(!(modelName == null || modelName.match(/^\s*$/))){
                 modelName = modelName.trim();
                 let vendor = parsedUa.device.vendor;
                 vendor = (vendor == null)? "": vendor.trim();
