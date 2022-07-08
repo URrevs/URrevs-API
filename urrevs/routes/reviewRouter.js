@@ -218,8 +218,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   if(uAObj.isMobile){
     if(!uAObj.isiPhone){
       let parsedUa = useragentParser(uA);
-      let modelName = parsedUa.device.model.trim();
-      stage1Proms.push(PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1}));
+      let modelName = parsedUa.device.model;
+      modelName = modelName.trim();
+      let vendor = parsedUa.device.vendor;
+      vendor = (vendor == null)? "": vendor.trim();
+      let regex = `,(${vendor})?\\s*${modelName},`;
+      stage1Proms.push(PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1}));
     }
   }
 
