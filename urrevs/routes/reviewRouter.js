@@ -214,11 +214,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
   let uA = req.headers['user-agent'];
   let uAObj = useragent.parse(uA);
+  let modelName;
 
   if(uAObj.isMobile){
     if(!uAObj.isiPhone){
       let parsedUa = useragentParser(uA);
-      let modelName = parsedUa.device.model;
+      modelName = parsedUa.device.model;
       if(!(modelName == null || modelName.match(/^\s*$/))){
         modelName = modelName.trim();
         let vendor = parsedUa.device.vendor;
@@ -229,7 +230,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     }
   }
 
-  Promise.all(stage1Proms).then((stage1Results)=>{
+  Promise.all(stage1Proms).then(async(stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
     let pprev = stage1Results[2];
@@ -289,6 +290,24 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
             break;
           }
          }
+      }
+      else{
+        let newPhones = [];
+        try{
+          newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
+        }
+        catch(err){
+          console.log(err);
+        }
+        
+        if(newPhones.length > 0){
+          for(let possiblePhone of newPhones){
+            if(possiblePhone.name == phone.name){
+              verificationRatio = (1 / newPhones.length) * 100;
+              break;
+            }
+           }
+        }
       }
     }
 
@@ -3087,7 +3106,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
                         phones = newPhones;
                       }
                       catch(err){
-                        // DO NOTHING
+                        console.log(err);
                       }
                   }
                   

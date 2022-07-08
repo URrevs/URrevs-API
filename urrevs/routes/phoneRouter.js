@@ -766,7 +766,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
                           phones = newPhones;
                         }
                         catch(err){
-                          // DO NOTHING
+                            console.log(err);
                         }
                     }
                     
