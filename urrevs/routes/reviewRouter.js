@@ -233,7 +233,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     let phone = stage1Results[0];
     let company = stage1Results[1];
     let pprev = stage1Results[2];
-    let phonesWithTheSameModelName = (stage1Results[3]) ? stage1Results[3] : [];
+    let resultIndex = (refCode)? 4: 3;
+    let phonesWithTheSameModelName = (stage1Results[resultIndex]) ? stage1Results[resultIndex] : [];
     
     if(!phone || !company){
       return res.status(404).json({
