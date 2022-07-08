@@ -291,7 +291,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
           }
          }
       }
-      else{
+      else if(!(modelName == null || modelName.match(/^\s*$/))){
         let newPhones = [];
         try{
           newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
