@@ -1178,7 +1178,7 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
 questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}).populate("acceptedAns", {user: 1}));
   proms.push(PANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
@@ -1261,7 +1261,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
     }
     else{
       // there is already an accepted answer
-      if(question.acceptedAns.equals(answer._id)){
+      if(question.acceptedAns._id.equals(answer._id)){
         return res.status(400).json({
           success: false,
           status: "already accepted"
@@ -1269,9 +1269,9 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       }
 
       let oldAns = question.acceptedAns;
-      question.acceptedAns = answer._id;
+      //question.acceptedAns = answer._id;
       let proms2 = [];
-      proms2.push(question.save());
+      proms2.push(PQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
@@ -1319,7 +1319,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}).populate("acceptedAns", {user: 1}));
   proms.push(CANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
@@ -1402,7 +1402,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
     }
     else{
       // there is already an accepted answer
-      if(question.acceptedAns.equals(answer._id)){
+      if(question.acceptedAns._id.equals(answer._id)){
         return res.status(400).json({
           success: false,
           status: "already accepted"
@@ -1410,9 +1410,9 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       }
 
       let oldAns = question.acceptedAns;
-      question.acceptedAns = answer._id;
+      //question.acceptedAns = answer._id;
       let proms2 = [];
-      proms2.push(question.save());
+      proms2.push(CQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
