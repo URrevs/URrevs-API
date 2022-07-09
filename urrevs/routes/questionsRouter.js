@@ -4163,7 +4163,7 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     })
     .catch((err)=>{
-      console.log("Error from /questions/phone/:quesId/hide: ", err);
+      console.log("Error from /questions/company/:quesId/hide: ", err);
       return res.status(500).json({
         success: false,
         status: "error tracking the hidden question"
@@ -4191,8 +4191,18 @@ questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    return res.status(200).json({
-      success: true
+    PQUES_HIDDEN.findOneAndDelete({question: req.params.quesId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/:quesId/unhide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
   })
   .catch((err)=>{
@@ -4214,8 +4224,18 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
       });
     }
 
-    return res.status(200).json({
-      success: true
+    CQUES_HIDDEN.findOneAndDelete({question: req.params.quesId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/company/:quesId/unhide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
   })
   .catch((err)=>{

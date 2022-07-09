@@ -3233,8 +3233,18 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    return res.status(200).json({
-      success: true
+    PHONE_REVS_HIDDEN.findOneAndDelete({review: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/:revId/unhide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{
@@ -3255,8 +3265,18 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
       });
     }
 
-    return res.status(200).json({
-      success: true
+    COMPANY_REVS_HIDDEN.findOneAndDelete({review: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/:revId/unhide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{
