@@ -601,103 +601,103 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
             6.3- apply updateMany to the phones collection to the phones matching the brand and name
             6.4- return those phones
 */
-phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
-    let itemsPerRound = parseInt((process.env.APPROX_PHONES_PER_ROUND || config.APPROX_PHONES_PER_ROUND));
-    let roundNum = req.query.round;
+// phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible, (req, res, next)=>{
+//     let itemsPerRound = parseInt((process.env.APPROX_PHONES_PER_ROUND || config.APPROX_PHONES_PER_ROUND));
+//     let roundNum = req.query.round;
   
-    if(roundNum == null || isNaN(roundNum)){
-        res.statusCode = 400;
-        res.setHeader("Content-Type", "application/json");
-        res.json({success: false, status: "bad request"});
-        return;
-    }
+//     if(roundNum == null || isNaN(roundNum)){
+//         res.statusCode = 400;
+//         res.setHeader("Content-Type", "application/json");
+//         res.json({success: false, status: "bad request"});
+//         return;
+//     }
 
-    let uA = req.headers['user-agent'];
-    let uAObj = useragent.parse(uA);
+//     let uA = req.headers['user-agent'];
+//     let uAObj = useragent.parse(uA);
     
-    if(uAObj.isMobile && !uAObj.isiPhone){
-        try{
+//     if(uAObj.isMobile && !uAObj.isiPhone){
+//         try{
             
-            // get the model name
-            let parsedUa = useragentParser(uA);
-            let modelName = parsedUa.device.model;
+//             // get the model name
+//             let parsedUa = useragentParser(uA);
+//             let modelName = parsedUa.device.model;
 
-            if(modelName == null || modelName.match(/^\s*$/)){
-                return res.status(200).json({success: true, phones: []});
-            }
+//             if(modelName == null || modelName.match(/^\s*$/)){
+//                 return res.status(200).json({success: true, phones: []});
+//             }
 
-            modelName = modelName.trim();
-            let vendor = parsedUa.device.vendor;
-            vendor = (vendor == null)? "": vendor.trim();
-            let regex = `,(${vendor})?\\s*${modelName},`;
+//             modelName = modelName.trim();
+//             let vendor = parsedUa.device.vendor;
+//             vendor = (vendor == null)? "": vendor.trim();
+//             let regex = `,(${vendor})?\\s*${modelName},`;
 
-            let proms = [];
-            proms.push(PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
-            if(req.user){
-                proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, _id: 0}));
-            }
+//             let proms = [];
+//             proms.push(PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1, picture: 1, company: 1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}));
+//             if(req.user){
+//                 proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, _id: 0}));
+//             }
             
-            Promise.all(proms).then(async(results)=>{
-                let phonesDocs = results[0];
+//             Promise.all(proms).then(async(results)=>{
+//                 let phonesDocs = results[0];
 
-                let result = [];
-                for(let phone of phonesDocs){
-                    result.push({
-                        _id: phone._id,
-                        name: phone.name,
-                        picture: phone.picture,
-                        companyId: phone.company._id,
-                        companyName: phone.company.name,
-                        type: "phone"
-                    });
-                }
+//                 let result = [];
+//                 for(let phone of phonesDocs){
+//                     result.push({
+//                         _id: phone._id,
+//                         name: phone.name,
+//                         picture: phone.picture,
+//                         companyId: phone.company._id,
+//                         companyName: phone.company.name,
+//                         type: "phone"
+//                     });
+//                 }
 
-                // phone model name is not found in the phones collection
-                if(result.length == 0 && roundNum == 1){
-                    try{
-                        result = await mapUaToPhones(uA, "," + modelName + ",", itemsPerRound, roundNum);
-                    }
-                    catch(err){
-                        if(err != 404){
-                            console.log("Error from /phones/my/approx: ", err);
-                            return res.status(500).json({success: false, status: "internal server error"});
-                        }
+//                 // phone model name is not found in the phones collection
+//                 if(result.length == 0 && roundNum == 1){
+//                     try{
+//                         result = await mapUaToPhones(uA, "," + modelName + ",", itemsPerRound, roundNum);
+//                     }
+//                     catch(err){
+//                         if(err != 404){
+//                             console.log("Error from /phones/my/approx: ", err);
+//                             return res.status(500).json({success: false, status: "internal server error"});
+//                         }
                         
-                        return res.status(200).json({success: true, phones: []});
-                    }
-                }
+//                         return res.status(200).json({success: true, phones: []});
+//                     }
+//                 }
 
-                if(req.user){
-                    let ownedPhonesDocs = results[1];
+//                 if(req.user){
+//                     let ownedPhonesDocs = results[1];
 
-                    let ownedPhones = {};
-                    for(let phoneDoc of ownedPhonesDocs){
-                        ownedPhones[phoneDoc.phone] = true;
-                    }
-                    // remove the owned phones from the result
-                    for(let [index, phone] of result.entries()){
-                        if(ownedPhones[phone._id]){
-                            result.splice(index, 1);
-                        }
-                    }
-                }
+//                     let ownedPhones = {};
+//                     for(let phoneDoc of ownedPhonesDocs){
+//                         ownedPhones[phoneDoc.phone] = true;
+//                     }
+//                     // remove the owned phones from the result
+//                     for(let [index, phone] of result.entries()){
+//                         if(ownedPhones[phone._id]){
+//                             result.splice(index, 1);
+//                         }
+//                     }
+//                 }
 
-                return res.status(200).json({success: true, phones: result});
-            })
-            .catch((err)=>{
-                console.log("Error from /phones/my/approx: ", err);
-                return res.status(500).json({success: false, status: "internal server error"});
-            });
-        }
-        catch(err){
-            console.log("Error from /phones/my/approx: ", err);
-            return res.status(500).json({success: false, status: "internal server error"});
-        }
-    }
-    else{
-        return res.status(200).json({success: true, phones: []});
-    }
-});
+//                 return res.status(200).json({success: true, phones: result});
+//             })
+//             .catch((err)=>{
+//                 console.log("Error from /phones/my/approx: ", err);
+//                 return res.status(500).json({success: false, status: "internal server error"});
+//             });
+//         }
+//         catch(err){
+//             console.log("Error from /phones/my/approx: ", err);
+//             return res.status(500).json({success: false, status: "internal server error"});
+//         }
+//     }
+//     else{
+//         return res.status(200).json({success: true, phones: []});
+//     }
+// });
 
 
 
