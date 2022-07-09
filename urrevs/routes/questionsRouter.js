@@ -1369,7 +1369,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       // there is no accepted answer yet
       question.acceptedAns = answer._id;
       let proms1 = [];
-      proms1.push(CQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
+      proms1.push(question.save());
       proms1.push(CQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms1.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
@@ -1412,7 +1412,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       let oldAns = question.acceptedAns;
       //question.acceptedAns = answer._id;
       let proms2 = [];
-      proms2.push(question.save());
+      proms2.push(CQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
       proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
