@@ -4122,7 +4122,7 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
       });
     }
 
-    PQUES_HIDDEN.create({question: req.params.revId})
+    PQUES_HIDDEN.create({question: req.params.quesId})
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -4156,7 +4156,7 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    CQUES_HIDDEN.create({question: req.params.revId})
+    CQUES_HIDDEN.create({question: req.params.quesId})
     .then((h)=>{
       return res.status(200).json({
         success: true
