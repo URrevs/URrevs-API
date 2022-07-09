@@ -16,6 +16,7 @@ const PHONE = require("../models/phone");
 const PSPECS = require("../models/phoneSpecs");
 const NPHONE = require("../models/newPhone");
 const DELETE = require("../models/delete");
+const USER = require("../models/user");
 
 const mongoose = require("mongoose");
 const config = require('../config');
@@ -389,7 +390,11 @@ miscRouter.post("/mydata/delete", cors.cors, rateLimit, authenticate.verifyUser,
       });
     }
 
-    DELETE.create({user: req.user._id})
+    let proms = [];
+    proms.push(DELETE.create({user: req.user._id}))
+    proms.push(USER.findOneAndUpdate({_id: req.user._id}, {$set: {requestedDelete: true}}));
+    
+    Promise.all(proms)
     .then((delReq)=>{
       return res.status(200).json({
         success: true
@@ -409,6 +414,39 @@ miscRouter.post("/mydata/delete", cors.cors, rateLimit, authenticate.verifyUser,
     return res.status(500).json({
       success: false,
       status: "error finding the delete request"
+    });
+  });
+});
+
+
+
+
+
+// undo request deleting my data
+miscRouter.put("/mydata/delete/undo", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  let proms = [];
+  proms.push(DELETE.findOneAndRemove({user: req.user._id}));
+  proms.push(USER.findOneAndUpdate({_id: req.user._id}, {$set: {requestedDelete: false}}));
+
+  Promise.all(proms)
+  .then((results)=>{
+    let deleteReq = results[0];
+    if(!deleteReq){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from DELETE /misc/mydata/undo: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error deleting request"
     });
   });
 });

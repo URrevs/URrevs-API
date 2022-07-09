@@ -79,6 +79,10 @@ const userSchema = new schema({
     ownedLock: {
         type: Boolean,
         default: false
+    },
+    requestedDelete: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true});
 
