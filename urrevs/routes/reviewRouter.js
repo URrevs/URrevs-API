@@ -208,7 +208,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
   stage1Proms.push(COMPANY.findById(companyId));
-  stage1Proms.push(OWNED_PHONE.findOne({user: req.user._id, phone: phoneId}, {_id: 1}));
+  stage1Proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1}));
   if(refCode){
     stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
   }
@@ -237,7 +237,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   Promise.all(stage1Proms).then(async(stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
-    let pprev = stage1Results[2];
+    let owned = stage1Results[2];
     let resultIndex = (refCode)? 4: 3;
     let phonesWithTheSameModelName = (stage1Results[resultIndex]) ? stage1Results[resultIndex] : [];
     
@@ -255,11 +255,23 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       });
     }
 
-    if(pprev){
-      return res.status(403).json({
-        success: false,
-        status: "already reviewed"
-      });
+    // you can't review the same phone twice
+    // you can't have more than x unverified reviews
+    let x = parseInt(process.env.MAX_UNVERIFIED_REVIEWS || config.MAX_UNVERIFIED_REVIEWS);
+    let numUnverified = 0;
+
+    for(let p of owned){
+
+      if(p.phone.equals(phoneId)){
+        return res.status(403).json({
+          success: false,
+          status: "already reviewed"
+        });
+      }
+
+      if(p.verificationRatio == 0){
+        numUnverified += 1;
+      }
     }
 
     // checking if the phone and company are matched
@@ -315,6 +327,16 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       }
     }
 
+    if(verificationRatio == 0){
+      numUnverified += 1;
+    }
+
+    if(numUnverified > x){
+      return res.status(403).json({
+        success: false,
+        status: "too many unverified"
+      });
+    }
 
     // calculate the average company rating
     let oldAvgRating = company.avgRating;
