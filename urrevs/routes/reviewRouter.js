@@ -203,7 +203,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
-
+  let bonusPoints = 0; // if there is a valid referral code entered, the reviewer will get bonus points equal to the referral rev points
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
@@ -211,6 +211,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   stage1Proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1}));
   if(refCode){
     stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+    bonusPoints = parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS);
   }
   
   // checking verification
@@ -441,7 +442,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
       // give points to the user
       let staeg3Proms = [];
-      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade, absPoints: grade}}));
+      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade + bonusPoints, absPoints: grade + bonusPoints}}));
       staeg3Proms.push(PHONEREV.create({
         user: req.user._id,
         phone: phoneId,
