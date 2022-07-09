@@ -49,6 +49,10 @@ const PHONE_REV_FULL_SCREEN = require("../models/phoneRevsFullScreen");
 const COMPANY_REVS_HATED = require("../models/companyRevsHated");
 const COMPANY_REVS_SEE_MORE = require("../models/companyRevsSeeMore");
 const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
+const PHONE_REVS_HIDDEN = require("../models/phoneRevsHidden");
+const COMPANY_REVS_HIDDEN = require("../models/companyRevsHidden");
+const PHONE_REVS_UNHIDDEN = require("../models/phoneRevsUnhidden");
+const COMPANY_REVS_UNHIDDEN = require("../models/companyRevsUnhidden");
 
 
 const config = require("../config");
@@ -187,7 +191,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     refCode = refCode.toUpperCase();
   }
 
-  if(pros.trim() == "" || cons.trim() == "" || compPros.trim() == "" || compCons.trim() == ""){
+  pros = pros.trim();
+  cons = cons.trim();
+  compPros = compPros.trim();
+  compCons = compCons.trim();
+
+  if(pros == "" || cons == "" || compPros == "" || compCons == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -209,20 +218,28 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
   let uA = req.headers['user-agent'];
   let uAObj = useragent.parse(uA);
+  let modelName;
 
   if(uAObj.isMobile){
     if(!uAObj.isiPhone){
       let parsedUa = useragentParser(uA);
-      let modelName = parsedUa.device.model.trim();
-      stage1Proms.push(PHONE.find({otherNames: {$regex: modelName + ",", $options: "i"}}, {name: 1}));
+      modelName = parsedUa.device.model;
+      if(!(modelName == null || modelName.match(/^\s*$/))){
+        modelName = modelName.trim();
+        let vendor = parsedUa.device.vendor;
+        vendor = (vendor == null)? "": vendor.trim();
+        let regex = `,(${vendor})?\\s*${modelName},`;
+        stage1Proms.push(PHONE.find({otherNames: {$regex: regex, $options: "i"}}, {name: 1}));
+      }
     }
   }
 
-  Promise.all(stage1Proms).then((stage1Results)=>{
+  Promise.all(stage1Proms).then(async(stage1Results)=>{
     let phone = stage1Results[0];
     let company = stage1Results[1];
     let pprev = stage1Results[2];
-    let phonesWithTheSameModelName = (stage1Results[3]) ? stage1Results[3] : [];
+    let resultIndex = (refCode)? 4: 3;
+    let phonesWithTheSameModelName = (stage1Results[resultIndex]) ? stage1Results[resultIndex] : [];
     
     if(!phone || !company){
       return res.status(404).json({
@@ -264,7 +281,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     }
 
     if(uAObj.isiPhone){
-      if(phone.name.match(/^Apple/gi)){
+      if(phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
         verificationRatio = -1;
       }
     }
@@ -277,6 +294,24 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
             break;
           }
          }
+      }
+      else if(!(modelName == null || modelName.match(/^\s*$/))){
+        let newPhones = [];
+        try{
+          newPhones = await mapUaToPhones(uA, "," + modelName + ",", null, null, true);
+        }
+        catch(err){
+          console.log(err);
+        }
+        
+        if(newPhones.length > 0){
+          for(let possiblePhone of newPhones){
+            if(possiblePhone.name == phone.name){
+              verificationRatio = (1 / newPhones.length) * 100;
+              break;
+            }
+           }
+        }
       }
     }
 
@@ -1332,7 +1367,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
+      proms1.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1342,9 +1377,18 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
           });
         }
+
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        rev.likes = rev.likes + 1;
 
         if(!lastQueryDoc){
           lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
@@ -1354,6 +1398,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
         }
 
         let proms2 = [];
+        proms2.push(rev.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(PHONE_REVS_UNLIKES.findOneAndRemove({user: req.user._id, review: req.params.revId, createdAt: {$gte: lastQuery}}));
@@ -1389,16 +1434,26 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
     else{
       // creating the like
       // create the like document - give points to the review author
-      PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}})
+      PHONEREV.findOne({_id: req.params.revId, hidden: false})
       .then((rev)=>{
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
           });
         }
 
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        rev.likes = rev.likes + 1;
+
         let proms = [];
+        proms.push(rev.save());
         proms.push(PHONE_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
         proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
@@ -1459,7 +1514,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
 reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -1468,10 +1523,17 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
     if(!rev){
       return res.status(404).json({
         success: false,
-        status: "review not found or you own it"
+        status: "not found"
       });
     }
     
+    if(rev.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
+
     if(rev.likes <= 0){
       return res.status(403).json({
         success: false,
@@ -1489,7 +1551,7 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
 
       let proms1 = [];
       // decreasing number of likes for the review - getting the date of the last query
-      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}}, {new: true}));
+      proms1.push(PHONEREV.findOneAndUpdate({_id: req.params.revId}, {$inc: {likes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -1500,13 +1562,20 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
         if(rev.likes < 0){
           try{
-            await PHONEREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}});
+            await PHONEREV.findOneAndUpdate({_id: req.params.revId}, {$inc: {likes: 1}});
             return res.status(403).json({
               success: false,
               status: "no likes"
@@ -1615,7 +1684,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 
       let proms1 = [];
       // increasing number of likes for the review - getting the date of the last query
-      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {$inc: {likes: 1}}));
+      proms1.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let rev = results[0];
@@ -1625,7 +1694,14 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -1636,7 +1712,10 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
           lastQuery = lastQueryDoc.date;
         }
 
+        rev.likes = rev.likes + 1;
+
         let proms2 = [];
+        proms2.push(rev.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(COMPANY_REVS_UNLIKES.findOneAndRemove({user: req.user._id, review: req.params.revId, createdAt: {$gte: lastQuery}}));
@@ -1672,16 +1751,26 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
     else{
       // creating the like
       // create the like document - give points to the review author
-      COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}})
+      COMPANYREV.findOne({_id: req.params.revId, hidden: false})
       .then((rev)=>{
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
           });
         }
 
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        rev.likes = rev.likes + 1;
+
         let proms = [];
+        proms.push(rev.save());
         proms.push(COMPANY_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
         proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
@@ -1742,7 +1831,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
 reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}));
-  proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -1751,7 +1840,14 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
     if(!rev){
       return res.status(404).json({
         success: false,
-        status: "review not found or you own it"
+        status: "not found"
+      });
+    }
+
+    if(rev.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
       });
     }
     
@@ -1772,7 +1868,7 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
 
       let proms1 = [];
       // decreasing number of likes for the review - getting the date of the last query
-      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: -1}}, {new: true}));
+      proms1.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId}, {$inc: {likes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -1783,13 +1879,20 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
         if(!rev){
           return res.status(404).json({
             success: false,
-            status: "review not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(rev.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
         if(rev.likes < 0){
           try{
-            await COMPANYREV.findOneAndUpdate({_id: req.params.revId, user: {$ne: req.user._id}}, {$inc: {likes: 1}});
+            await COMPANYREV.findOneAndUpdate({_id: req.params.revId}, {$inc: {likes: 1}});
             return res.status(403).json({
               success: false,
               status: "no likes"
@@ -1892,7 +1995,8 @@ reviewRouter.post("/phone/:revId/comments", cors.cors, rateLimit, authenticate.v
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -1955,7 +2059,8 @@ reviewRouter.post("/company/:revId/comments", cors.cors, rateLimit, authenticate
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -2017,7 +2122,8 @@ reviewRouter.post("/phone/comments/:commentId/replies", cors.cors, rateLimit, au
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -2079,7 +2185,8 @@ reviewRouter.post("/company/comments/:commentId/replies", cors.cors, rateLimit, 
   }
 
   // content must not be empty or only spaces
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -2361,7 +2468,7 @@ reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit, authe
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "comment not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -2372,6 +2479,12 @@ reviewRouter.post("/phone/comments/:commentId/like", cors.cors, rateLimit, authe
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /reviews/phone/comments/:commentId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -2425,7 +2538,7 @@ reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit, aut
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "comment not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -2436,6 +2549,12 @@ reviewRouter.post("/company/comments/:commentId/like", cors.cors, rateLimit, aut
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /reviews/company/comments/:commentId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -2489,7 +2608,7 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors,
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -2500,6 +2619,12 @@ reviewRouter.post("/phone/comments/:commentId/replies/:replyId/like", cors.cors,
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /reviews/phone/comments/:commentId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -2554,7 +2679,7 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -2565,6 +2690,12 @@ reviewRouter.post("/company/comments/:commentId/replies/:replyId/like", cors.cor
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /reviews/company/comments/:commentId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -2939,20 +3070,24 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
   }
 
   let proms1 = [];
-  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1, user: 1}).populate("phone", {name: 1}));
+  proms1.push(PHONEREV.findById(req.params.revId, {_id: 1, phone: 1, user: 1, verificationRatio: 1}).populate("phone", {name: 1, company: 1}));
 
   Promise.all(proms1)
     .then(async(results)=>{
         let rev = results[0];
 
-        if(rev == null || !(rev.user.equals(req.user._id))){
-            return res.status(403).json({success: false, status: "review not found or not owned"});
+        if(rev == null){
+            return res.status(404).json({success: false, status: "not found"});
+        }
+
+        if(!(rev.user.equals(req.user._id))){
+            return res.status(403).json({success: false, status: "not owned"});
         }
 
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
-            if(rev.phone.name.match(/^Apple/gi)){
+            if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
                 verificationRatio = -1;
             }
         }
@@ -2960,7 +3095,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(!(modelName == null || modelName == "")){
+            if(!(modelName == null || modelName.match(/^\s*$/))){
               modelName = modelName.trim();
               let vendor = parsedUa.device.vendor;
               vendor = (vendor == null)? "": vendor.trim();
@@ -2975,7 +3110,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
                         phones = newPhones;
                       }
                       catch(err){
-                        // DO NOTHING
+                        console.log(err);
                       }
                   }
                   
@@ -2995,7 +3130,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
         if(verificationRatio == 0){
-          return res.status(200).json({success: true, verificationRatio: verificationRatio});
+          return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
@@ -3021,7 +3156,15 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 
 
 
-
+/*
+  Hiding tracking algorithm:
+  steps:
+    1- if we want to hide, create a document holding the id of the hidden review/question and delete the unhide doc
+      (the document must be unique)
+    2- if we want to unhide:
+      if the hide doc is created after the lastQuery date, delete the hide doc
+      if the hide doc is created after the lastQuery date, delete the hide doc and create a new unhide doc
+*/
 
 // hide a phone review
 reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
@@ -3034,8 +3177,22 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
       });
     }
 
-    return res.status(200).json({
-      success: true
+    let proms = [];
+    proms.push(PHONE_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
+    proms.push(PHONE_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
+    
+    Promise.all(proms)
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/:revId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{
@@ -3056,8 +3213,22 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    return res.status(200).json({
-      success: true
+    let proms = [];
+    proms.push(COMPANY_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
+    proms.push(COMPANY_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
+    
+    Promise.all(proms)
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/:revId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{
@@ -3071,13 +3242,56 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
 
 // unhide a phone review
 reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(PHONE_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
         status: "not found"
       });
+    }
+
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await PHONE_REVS_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /reviews/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone review"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(PHONE_REVS_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(PHONE_REVS_UNHIDDEN.create({review: req.params.revId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /reviews/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone review"});
+        }
+      }
     }
 
     return res.status(200).json({
@@ -3093,13 +3307,56 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
 
 // unhide a company review
 reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(COMPANY_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
         status: "not found"
       });
+    }
+
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await COMPANY_REVS_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /reviews/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company review"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(COMPANY_REVS_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(COMPANY_REVS_UNHIDDEN.create({review: req.params.revId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /reviews/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company review"});
+        }
+      }
     }
 
     return res.status(200).json({

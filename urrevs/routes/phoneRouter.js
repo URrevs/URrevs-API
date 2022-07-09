@@ -409,7 +409,7 @@ phoneRouter.put("/:phone1Id/compare/:phone2Id", cors.cors, rateLimit, authentica
 
 // get similar phones to the given phone
 phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
-    PHONE.findById(req.params.phoneId, {_id: 1}).then(async (phone)=>{
+    PHONE.findById(req.params.phoneId, {_id: 1, company: 1}).then(async (phone)=>{
 
         // if the phone doesn't exist, abort
         if(!phone){
@@ -463,11 +463,13 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
         }
         catch(err){
             console.log("--------------------Similar phones AI failed--------------------");
-            console.log(err.response.status, err.response.data);
+            if(err.response){
+                console.log(err.response.status, err.response.data);
+            }
             // Now, let's do it my way
 
             // get the release date of the phone
-            PSPECS.findOne({_id: phone._id}, {releaseDate: 1, price: 1, _id: 0}).then((currentPhone)=>{
+            PSPECS.findOne({_id: phone._id}, {releaseDate: 1, price: 1, _id: 0}).then(async(currentPhone)=>{
 
                 // if the current phone doesn't exist in nphones, abort
                 if(!currentPhone){
@@ -480,10 +482,25 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
 
                 // make sure that the phones has a price and a release date
                 if(!currentPhone.price){
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json({success: true, phones: [], status: "the phone does not have price"});
-                    return;
+                    try{
+                        let phones = await PHONE.find({_id: {$ne: phone._id}, company: phone.company}, {name: 1, picture: 1}).sort({createdAt: -1}).limit(20);
+                        let result = [];
+                        for(phone of phones){
+                            result.push({
+                                _id: phone._id,
+                                name: phone.name,
+                                picture: phone.picture,
+                                type: "phone"
+                            });
+                        }
+                        return res.status(200).json({success: true, phones: result});
+                    }
+                    catch(err){
+                        console.log("Error from my way /phones/:phoneId/similar: ", err);
+                        res.statusCode = 500;
+                        res.setHeader("Content-Type", "application/json");
+                        res.json({success: false, status: "process failed"});
+                    }
                 }
 
                 if(!currentPhone.releaseDate){
@@ -605,7 +622,7 @@ phoneRouter.get("/my/approx", cors.cors, rateLimit, authenticate.verifyFlexible,
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(modelName == null || modelName == ""){
+            if(modelName == null || modelName.match(/^\s*$/)){
                 return res.status(200).json({success: true, phones: []});
             }
 
@@ -712,20 +729,20 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
     }
 
     let proms1 = [];
-    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1}).populate("phone", {name: 1}));
+    proms1.push(PHONEREV.findOne({user: req.user._id, phone: req.params.phoneId}, {_id: 1, phone: 1, verificationRatio: 1}).populate("phone", {name: 1, company: 1}));
 
     Promise.all(proms1)
     .then(async(results)=>{
         let rev = results[0];
 
         if(rev == null){
-            return res.status(403).json({success: false, status: "phone not found or not owned"});
+            return res.status(404).json({success: false, status: "not found"});
         }
 
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
-            if(rev.phone.name.match(/^Apple/gi)){
+            if(rev.phone.company.equals((process.env.IPHONE_COMPANY || config.IPHONE_COMPANY))){
                 verificationRatio = -1;
             }
         }
@@ -733,7 +750,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             let parsedUa = useragentParser(uA);
             let modelName = parsedUa.device.model;
 
-            if(!(modelName == null || modelName == "")){
+            if(!(modelName == null || modelName.match(/^\s*$/))){
                 modelName = modelName.trim();
                 let vendor = parsedUa.device.vendor;
                 vendor = (vendor == null)? "": vendor.trim();
@@ -749,7 +766,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
                           phones = newPhones;
                         }
                         catch(err){
-                          // DO NOTHING
+                            console.log(err);
                         }
                     }
                     
@@ -769,7 +786,7 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
         if(verificationRatio == 0){
-            return res.status(200).json({success: true, verificationRatio: verificationRatio});
+            return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];

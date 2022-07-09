@@ -90,8 +90,17 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -118,7 +127,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
     }
     
     let proms = [];
-    proms.push(PHONEREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "phoneReview"}));
 
     Promise.all(proms)
@@ -129,7 +138,14 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
         if(!rev){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(rev.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -146,7 +162,7 @@ reportRouter.post("/review/phone/:revId", cors.cors, rateLimit, authenticate.ver
             reportee: rev.user,
             type: "phoneReview",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.revId,
             onModelObj: "pRev"
         })
@@ -210,8 +226,17 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -238,7 +263,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
     }
     
     let proms = [];
-    proms.push(COMPANYREV.findOne({_id: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.revId, reporter: req.user._id, type: "companyReview"}));
 
     Promise.all(proms)
@@ -249,7 +274,14 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
         if(!rev){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(rev.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -266,7 +298,7 @@ reportRouter.post("/review/company/:revId", cors.cors, rateLimit, authenticate.v
             reportee: rev.user,
             type: "companyReview",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.revId,
             onModelObj: "cRev"
         })
@@ -329,8 +361,17 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -357,7 +398,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
     }
     
     let proms = [];
-    proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "phoneQuestion"}));
 
     Promise.all(proms)
@@ -368,7 +409,14 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
         if(!ques){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(ques.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -385,7 +433,7 @@ reportRouter.post("/question/phone/:quesId", cors.cors, rateLimit, authenticate.
             reportee: ques.user,
             type: "phoneQuestion",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.quesId,
             onModelObj: "pQues"
         })
@@ -448,8 +496,17 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -476,7 +533,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
     }
     
     let proms = [];
-    proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.quesId, reporter: req.user._id, type: "companyQuestion"}));
 
     Promise.all(proms)
@@ -487,7 +544,14 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
         if(!ques){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(ques.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -504,7 +568,7 @@ reportRouter.post("/question/company/:quesId", cors.cors, rateLimit, authenticat
             reportee: ques.user,
             type: "companyQuestion",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.quesId,
             onModelObj: "cQues"
         })
@@ -567,8 +631,17 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -598,7 +671,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
     let proms = [];
 
     proms.push(PHONEREV.findOne({_id: req.params.revId, hidden: false}));
-    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(PHONE_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "phoneComment"}));
 
     Promise.all(proms)
@@ -617,7 +690,14 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
         if(!comment){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(comment.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -635,7 +715,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId", cors.cors, rateLim
                 reportee: comment.user,
                 type: "phoneComment",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.commentId,
                 onModelObj: "pRevsComment",
                 parObj: req.params.revId,
@@ -701,8 +781,17 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -732,7 +821,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
     let proms = [];
 
     proms.push(COMPANYREV.findOne({_id: req.params.revId, hidden: false}));
-    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, user: {$ne: req.user._id}, hidden: false}, {user: 1}));
+    proms.push(COMPANY_REVS_COMMENTS.findOne({_id: req.params.commentId, review: req.params.revId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.commentId, reporter: req.user._id, type: "companyComment"}));
 
     Promise.all(proms)
@@ -751,7 +840,14 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
         if(!comment){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(comment.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -769,7 +865,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId", cors.cors, rateL
                 reportee: comment.user,
                 type: "companyComment",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.commentId,
                 onModelObj: "cRevsComment",
                 parObj: req.params.revId,
@@ -835,8 +931,17 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -866,7 +971,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
     let proms = [];
 
     proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
-    proms.push(PANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
+    proms.push(PANS.findOne({_id: req.params.ansId, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "phoneAnswer"}));
 
     Promise.all(proms)
@@ -885,7 +990,14 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
         if(!answer){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(answer.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -903,7 +1015,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId", cors.cors, rateLimit
                 reportee: answer.user,
                 type: "phoneAnswer",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.ansId,
                 onModelObj: "pQuesAnswer",
                 parObj: req.params.quesId,
@@ -969,8 +1081,17 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1000,7 +1121,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
     let proms = [];
 
     proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
-    proms.push(CANS.findOne({_id: req.params.ansId, user: {$ne: req.user._id}, question: req.params.quesId, hidden: false}, {user: 1}));
+    proms.push(CANS.findOne({_id: req.params.ansId, question: req.params.quesId, hidden: false}, {user: 1}));
     proms.push(REPORT.findOne({obj: req.params.ansId, reporter: req.user._id, type: "companyAnswer"}));
 
     Promise.all(proms)
@@ -1019,7 +1140,14 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
         if(!answer){
             return res.status(404).json({
                 success: false,
-                status: "not found or you own it"
+                status: "not found"
+            });
+        }
+
+        if(answer.user.equals(req.user._id)){
+            return res.status(403).json({
+                success: false,
+                status: "owned"
             });
         }
 
@@ -1037,7 +1165,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId", cors.cors, rateLim
                 reportee: answer.user,
                 type: "companyAnswer",
                 reason: reason,
-                info: req.body.info,
+                info: info,
                 obj: req.params.ansId,
                 onModelObj: "cQuesAnswer",
                 parObj: req.params.quesId,
@@ -1104,8 +1232,17 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1169,7 +1306,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1186,7 +1323,7 @@ reportRouter.post("/review/phone/:revId/comments/:commentId/replies/:replyId", c
             reportee: reply.user,
             type: "phoneCommentReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "pRevsComment.replies",
             parObj: req.params.commentId,
@@ -1255,8 +1392,17 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1320,7 +1466,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1337,7 +1483,7 @@ reportRouter.post("/review/company/:revId/comments/:commentId/replies/:replyId",
             reportee: reply.user,
             type: "companyCommentReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "cRevsComment.replies",
             parObj: req.params.commentId,
@@ -1405,8 +1551,17 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1470,7 +1625,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1487,7 +1642,7 @@ reportRouter.post("/question/phone/:quesId/answers/:ansId/replies/:replyId", cor
             reportee: reply.user,
             type: "phoneAnswerReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "pQuesAnswer.replies",
             parObj: req.params.ansId,
@@ -1555,8 +1710,17 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
         }
     }
 
-    if(req.body.info){
-        if(typeof req.body.info !== "string"){
+    let info = req.body.info;
+    if(info != null){
+        if(typeof info !== "string"){
+            return res.status(400).json({
+                success: false,
+                status: "bad request"
+            });
+        }
+
+        info = info.trim();
+        if(info.length == 0){
             return res.status(400).json({
                 success: false,
                 status: "bad request"
@@ -1620,7 +1784,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
         if(reply.user.equals(req.user._id)){
             return res.status(403).json({
                 success: false,
-                status: "you own it"
+                status: "owned"
             });
         }
 
@@ -1637,7 +1801,7 @@ reportRouter.post("/question/company/:quesId/answers/:ansId/replies/:replyId", c
             reportee: reply.user,
             type: "companyAnswerReply",
             reason: reason,
-            info: req.body.info,
+            info: info,
             obj: req.params.replyId,
             onModelObj: "cQuesAnswer.replies",
             parObj: req.params.ansId,
@@ -1823,7 +1987,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
         });
     }
     REPORT.find({closed: true})
-    .sort({createdAt: -1})
+    .sort({closeDate: -1})
     .skip((roundNum - 1) * itemsPerRound)
     .limit(itemsPerRound)
     .populate("reporter", {name: 1, picture: 1}).populate("reportee", {name: 1})
@@ -1953,7 +2117,7 @@ reportRouter.get("/closed", cors.cors, rateLimit, authenticate.verifyUser, authe
 
 // close a report
 reportRouter.put("/:repId/close", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-    REPORT.findByIdAndUpdate(req.params.repId, {closed: true})
+    REPORT.findByIdAndUpdate(req.params.repId, {$set:{closed: true, closeDate: Date.now()}})
     .then((r)=>{
         if(!r){
             return res.status(404).json({

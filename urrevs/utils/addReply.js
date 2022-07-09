@@ -13,7 +13,7 @@ module.exports = (parentResourceCollection, parentResourceId, resourceTypeInPare
         }
 
         // check if the parent resource exists and if exists, add the resource to the parent resource
-        parentResourceCollection.findByIdAndUpdate(parentResourceId, {$push: {[resourceTypeInParent]: resource}}, {new: true})
+        parentResourceCollection.findOneAndUpdate({_id: parentResourceId, hidden: false}, {$push: {[resourceTypeInParent]: resource}}, {new: true})
         .then((parent)=>{
             if(!parent){
                 return resolve(404);

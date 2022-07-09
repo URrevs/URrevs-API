@@ -86,12 +86,16 @@ const reportSchema = new schema({
     hideContent: {
         type: Boolean,
         default: false
+    },
+    closeDate: {
+        type: Date
     }
 },
 {timestamps: true}
 );
 
 reportSchema.index({closed: 1, createdAt: -1});
+reportSchema.index({closed: 1, closeDate: -1});
 reportSchema.index({obj: 1, reporter: 1, type: 1});
 
 module.exports = mongoose.model("Report", reportSchema);

@@ -45,6 +45,10 @@ const PQUES_ACCEPTED_CHANGED = require("../models/phoneQuesAcceptedChanged");
 const CQUES_ACCEPTED = require("../models/companyQuesAccepted");
 const CQUES_ACCEPTED_REMOVED = require("../models/companyQuesAcceptedRemoved");
 const CQUES_ACCEPTED_CHANGED = require("../models/companyQuesAcceptedChanged");
+const PQUES_HIDDEN = require("../models/phoneQuesHidden");
+const CQUES_HIDDEN = require("../models/companyQuesHidden");
+const PQUES_UNHIDDEN = require("../models/phoneQuesUnhidden");
+const CQUES_UNHIDDEN = require("../models/companyQuesUnhidden");
 
 const config = require("../config");
 
@@ -91,7 +95,8 @@ questionRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (re
     })
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -191,7 +196,8 @@ questionRouter.post("/company", cors.cors, rateLimit, authenticate.verifyUser, (
     })
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -290,7 +296,8 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -307,7 +314,7 @@ questionRouter.post("/phone/:quesId/answers", cors.cors, rateLimit, authenticate
     }
 
     let proms1 = [];
-    proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId}, {$inc: {ansCount: 1}}));
+    proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, phone: phoneId, hidden: false}, {$inc: {ansCount: 1}}));
     proms1.push(PANS.findOne({user: req.user._id, question: req.params.quesId}));
     
     Promise.all(proms1)
@@ -402,7 +409,8 @@ questionRouter.post("/phone/answers/:ansId/replies", cors.cors, rateLimit, authe
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -448,7 +456,7 @@ questionRouter.post("/phone/answers/:ansId/like", cors.cors, rateLimit, authenti
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "answer not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -459,6 +467,12 @@ questionRouter.post("/phone/answers/:ansId/like", cors.cors, rateLimit, authenti
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/phone/answers/:ansId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -510,7 +524,7 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, ra
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -521,6 +535,12 @@ questionRouter.post("/phone/answers/:ansId/replies/:replyId/like", cors.cors, ra
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/phone/answers/:ansId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -597,7 +617,8 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -614,7 +635,7 @@ questionRouter.post("/company/:quesId/answers", cors.cors, rateLimit, authentica
     }
 
     let proms1 = [];
-    proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId}, {$inc: {ansCount: 1}}))
+    proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, company: companyId, hidden: false}, {$inc: {ansCount: 1}}))
     proms1.push(CANS.findOne({user: req.user._id, question: req.params.quesId}));
     
     Promise.all(proms1)
@@ -707,7 +728,8 @@ questionRouter.post("/company/answers/:ansId/replies", cors.cors, rateLimit, aut
     });
   }
 
-  if(content.trim() == ""){
+  content = content.trim();
+  if(content == ""){
     return res.status(400).json({
       success: false,
       status: "bad request"
@@ -753,7 +775,7 @@ questionRouter.post("/company/answers/:ansId/like", cors.cors, rateLimit, authen
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "answer not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -764,6 +786,12 @@ questionRouter.post("/company/answers/:ansId/like", cors.cors, rateLimit, authen
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/company/answers/:ansId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -815,7 +843,7 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/like", cors.cors, 
     else if(result == 404){
       return res.status(404).json({
         success: false,
-        status: "reply not found or you own it"
+        status: "not found"
       });
     }
     else if(result == 403){
@@ -826,6 +854,12 @@ questionRouter.post("/company/answers/:ansId/replies/:replyId/like", cors.cors, 
     }
   })
   .catch((err)=>{
+    if(err == 403){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
+      });
+    }
     console.log("Error from POST /questions/company/answers/:ansId/replies/:replyId/like: ", err.e);
     return res.status(500).json({
       success: false,
@@ -1144,8 +1178,8 @@ questionRouter.get("/company/:quesId/answers", cors.cors, rateLimit, authenticat
 questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(PQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(PANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1285,8 +1319,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
 questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(CQUES.findById(req.params.quesId, {acceptedAns: 1, user: 1}));
-  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {acceptedAns: 1, user: 1}));
+  proms.push(CANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1449,8 +1483,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
 questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(PQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
-  proms.push(PANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1, acceptedAns: 1}));
+  proms.push(PANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -1580,8 +1614,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
 questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
 
   let proms = [];
-  proms.push(CQUES.findById(req.params.quesId, {user: 1, acceptedAns: 1}));
-  proms.push(CANS.findById(req.params.ansId, {question: 1, user: 1}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}, {user: 1, acceptedAns: 1}));
+  proms.push(CANS.findOne({_id: req.params.ansId, hidden: false}, {question: 1, user: 1}));
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
@@ -3163,8 +3197,8 @@ questionRouter.get("/phone/owned/by/me", cors.cors, rateLimit, authenticate.veri
       Promise.all(proms)
       .then((likes)=>{
         let quesLike = likes[0];
-        let ansLike = likes[0];
-        let replyLikes = likes[1];
+        let ansLike = likes[1];
+        let replyLikes = likes[2];
   
         for(let like of quesLike){
           let id = like.question;
@@ -3468,7 +3502,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
+      proms1.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3478,7 +3512,14 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+        
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3489,7 +3530,10 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
           lastQuery = lastQueryDoc.date;
         }
 
+        ques.upvotes = ques.upvotes + 1;
+
         let proms2 = [];
+        proms2.push(ques.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(PHONE_QUES_UNLIKES.findOneAndRemove({user: req.user._id, question: req.params.quesId, createdAt: {$gte: lastQuery}}));
@@ -3525,16 +3569,26 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
     else{
       // creating the like
       // create the like document - give points to the question author
-      PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}})
+      PQUES.findOne({_id: req.params.quesId, hidden: false})
       .then((ques)=>{
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
           });
         }
 
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        ques.upvotes = ques.upvotes + 1;
+
         let proms = [];
+        proms.push(ques.save());
         proms.push(PHONE_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
         proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
@@ -3599,7 +3653,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
 questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(PHONE_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(PQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(PQUES.findOne({_id: req.params.quesId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -3608,7 +3662,14 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
     if(!ques){
       return res.status(404).json({
         success: false,
-        status: "question not found or you own it"
+        status: "not found"
+      });
+    }
+
+    if(ques.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
       });
     }
     
@@ -3629,7 +3690,7 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
 
       let proms1 = [];
       // decreasing number of likes for the question - getting the date of the last query
-      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: -1}}, {new: true}));
+      proms1.push(PQUES.findOneAndUpdate({_id: req.params.quesId}, {$inc: {upvotes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -3640,7 +3701,14 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3757,7 +3825,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 
       let proms1 = [];
       // increasing number of upvotes for the question - getting the date of the last query
-      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}, {$inc: {upvotes: 1}}));
+      proms1.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       Promise.all(proms1).then((results)=>{
         let ques = results[0];
@@ -3767,7 +3835,14 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+        
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -3778,7 +3853,10 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
           lastQuery = lastQueryDoc.date;
         }
 
+        ques.upvotes = ques.upvotes + 1;
+
         let proms2 = [];
+        proms2.push(ques.save());
         // if the updatedAt of the like document is newer than the last query, delete the unlike document that is created later than the date of the last query
         if(like.updatedAt >= lastQuery){
           proms2.push(COMPANY_QUES_UNLIKES.findOneAndRemove({user: req.user._id, question: req.params.quesId, createdAt: {$gte: lastQuery}}));
@@ -3814,16 +3892,26 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
     else{
       // creating the like
       // create the like document - give points to the question author
-      CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: 1}})
+      CQUES.findOne({_id: req.params.quesId, hidden: false})
       .then((ques)=>{
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
           });
         }
 
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
+          });
+        }
+
+        ques.upvotes = ques.upvotes + 1;
+
         let proms = [];
+        proms.push(ques.save());
         proms.push(COMPANY_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
         proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
@@ -3888,7 +3976,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
 questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
   let proms = [];
   proms.push(COMPANY_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}));
-  proms.push(CQUES.findOne({_id: req.params.quesId, user: {$ne: req.user._id}, hidden: false}));
+  proms.push(CQUES.findOne({_id: req.params.quesId, hidden: false}));
   
   Promise.all(proms).then((firstResults)=>{
     let like = firstResults[0];
@@ -3897,7 +3985,14 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
     if(!ques){
       return res.status(404).json({
         success: false,
-        status: "question not found or you own it"
+        status: "not found"
+      });
+    }
+
+    if(ques.user.equals(req.user._id)){
+      return res.status(403).json({
+        success: false,
+        status: "owned"
       });
     }
     
@@ -3918,7 +4013,7 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 
       let proms1 = [];
       // decreasing number of likes for the question - getting the date of the last query
-      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId, user: {$ne: req.user._id}}, {$inc: {upvotes: -1}}, {new: true}));
+      proms1.push(CQUES.findOneAndUpdate({_id: req.params.quesId}, {$inc: {upvotes: -1}}, {new: true}));
       proms1.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
       
       Promise.all(proms1).then(async(results)=>{
@@ -3929,7 +4024,14 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
         if(!ques){
           return res.status(404).json({
             success: false,
-            status: "question not found or you own it"
+            status: "not found"
+          });
+        }
+
+        if(ques.user.equals(req.user._id)){
+          return res.status(403).json({
+            success: false,
+            status: "owned"
           });
         }
 
@@ -4008,7 +4110,15 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 });
 
 
-
+/*
+  Hiding tracking algorithm:
+  steps:
+    1- if we want to hide, create a document holding the id of the hidden review/question
+      (the document must be unique)
+    2- if we want to unhide:
+      if the hide doc is created after the lastQuery date, delete the hide doc
+      if the hide doc is created after the lastQuery date, delete the hide doc and create a new unhide doc
+*/
 
 
 // hide a phone question
@@ -4022,8 +4132,22 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
       });
     }
 
-    return res.status(200).json({
-      success: true
+    let proms = [];
+    proms.push(PQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true}));
+    proms.push(PQUES_UNHIDDEN.findOneAndDelete({question: req.params.quesId}));
+    
+    Promise.all(proms)
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/:quesId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
   })
   .catch((err)=>{
@@ -4045,14 +4169,28 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    return res.status(200).json({
-      success: true
+    let proms = [];
+    proms.push(CQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true}));
+    proms.push(CQUES_UNHIDDEN.findOneAndDelete({question: req.params.quesId}));
+    
+    Promise.all(proms)
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/company/:quesId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
   })
   .catch((err)=>{
     console.log("Error from /questions/company/:quesId/hide: ", err);
     return res.status(500).json({success: false, status: "error hiding the company question"});
-  });
+  })
 });
 
 
@@ -4060,13 +4198,56 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
 
 // unhide a phone question
 questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(PQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
         status: "not found"
       });
+    }
+
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await PQUES_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /questions/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone question"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(PQUES_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(PQUES_UNHIDDEN.create({question: req.params.quesId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /questions/phone/:quesId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone question"});
+        }
+      }
     }
 
     return res.status(200).json({
@@ -4083,13 +4264,56 @@ questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.v
 
 // unhide a company question
 questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(CQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
         status: "not found"
       });
+    }
+
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await CQUES_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /questions/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company question"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(CQUES_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(CQUES_UNHIDDEN.create({question: req.params.quesId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /questions/company/:quesId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company question"});
+        }
+      }
     }
 
     return res.status(200).json({
@@ -4097,17 +4321,17 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
     });
   })
   .catch((err)=>{
-    console.log("Error from /questions/company/:quesId/unhide: ", err);
-    return res.status(500).json({success: false, status: "error unhiding the company question"});
-  });
+    console.log("Error from /questions/phone/:quesId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone question"});
+  })
 });
 
 
 
 // hide a phone question answer
 questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true}})
-  .then((r)=>{
+  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
@@ -4115,24 +4339,47 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
       });
     }
 
+    let acceptedState = r.accepted;
     let quesId = r.question;
-    PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}})
-    .then((ques)=>{
-      if(!ques){
-        return res.status(404).json({
-          success: false,
-          status: "not found"
+
+    if(acceptedState){
+      try{
+        let ques = await PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}, $set: {acceptedAns: null}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
+
+        return res.status(200).json({
+          success: true
         });
       }
+      catch(err){
+        console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
+    else{
+      try{
+        let ques = await PQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
 
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
-      return res.status(500).json({success: false, status: "error hiding the phone question answer"});
-    });   
+        return res.status(200).json({
+          success: true
+        });
+      }
+      catch(err){
+        console.log("Error from /questions/phone/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
   })
   .catch((err)=>{
     console.log("Error from /reviews/phone/answers/:ansId/hide: ", err);
@@ -4144,8 +4391,8 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
 
 // hide a company question answer
 questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true}})
-  .then((r)=>{
+  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
@@ -4153,24 +4400,47 @@ questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authent
       });
     }
 
+    let acceptedState = r.accepted;
     let quesId = r.question;
-    CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}})
-    .then((ques)=>{
-      if(!ques){
-        return res.status(404).json({
-          success: false,
-          status: "not found"
+    
+    if(acceptedState){
+      try{
+        let ques = await CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}, $set: {acceptedAns: null}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
+
+        return res.status(200).json({
+          success: true
         });
       }
+      catch(err){
+        console.log("Error from /questions/company/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
+    else{
+      try{
+        let ques = await CQUES.findByIdAndUpdate(quesId, {$inc: {ansCount: -1}});
+        if(!ques){
+          return res.status(404).json({
+            success: false,
+            status: "not found"
+          });
+        }
 
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /questions/company/answers/:ansId/hide: ", err);
-      return res.status(500).json({success: false, status: "error hiding the company question answer"});
-    });   
+        return res.status(200).json({
+          success: true
+        });
+      }
+      catch(err){
+        console.log("Error from /questions/company/answers/:ansId/hide: ", err);
+        return res.status(500).json({success: false, status: "error hiding the phone question answer"});
+      }
+    }
   })
   .catch((err)=>{
     console.log("Error from /reviews/company/answers/:ansId/hide: ", err);

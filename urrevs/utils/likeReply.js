@@ -26,7 +26,7 @@ module.exports = (parentResourceCollection, parentResourceId, resourceTypeInPare
                 let reply = resource.replies.id(resourceId);
 
                 if(reply.user.equals(user)){
-                    return resolve(404);
+                    return reject(403);
                 }
 
                 if(reply.hidden){
