@@ -15,6 +15,7 @@ const COMPANY = require("../models/company");
 const PHONE = require("../models/phone");
 const PSPECS = require("../models/phoneSpecs");
 const NPHONE = require("../models/newPhone");
+const DELETE = require("../models/delete");
 
 const mongoose = require("mongoose");
 const config = require('../config');
@@ -374,6 +375,161 @@ miscRouter.post("/company/:companyId/logo", cors.cors, rateLimit, authenticate.v
     });
   });
 });
+
+
+
+// request deleting my data
+miscRouter.post("/mydata/delete", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+  DELETE.findOne({user: req.user._id})
+  .then((deleteReq)=>{
+    if(deleteReq){
+      return res.status(403).json({
+        success: false,
+        status: "already requested"
+      });
+    }
+
+    DELETE.create({user: req.user._id})
+    .then((delReq)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from DELETE /misc/mydata: " + err);
+      return res.status(500).json({
+        success: false,
+        status: "error creating request"
+      });
+    })
+
+  })
+  .catch((err)=>{
+    console.log("Error from DELETE /misc/mydata: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error finding the delete request"
+    });
+  });
+});
+
+
+
+
+
+// view open users' deletion requests
+miscRouter.get("/mydata/delete/open", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.DELETE_REQS_PER_ROUND|| config.DELETE_REQS_PER_ROUND));
+    let roundNum = req.query.round;
+    if(!roundNum || isNaN(roundNum)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request",
+        });
+    }
+  
+  DELETE.find({closed: false})
+  .sort({createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .then((deleteReqs)=>{
+    let result = [];
+    for(let del of deleteReqs){
+      result.push({
+        _id: del._id,
+        userId: del.user._id,
+        userName: del.user.name,
+        userPicture: del.user.picture,
+        createdAt: del.createdAt
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      deleteReqs: result
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from GET /misc/mydata/delete: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error finding the delete requests"
+    });
+  });
+});
+
+
+
+
+// view closed users' deletion requests
+miscRouter.get("/mydata/delete/closed", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  let itemsPerRound = parseInt((process.env.DELETE_REQS_PER_ROUND|| config.DELETE_REQS_PER_ROUND));
+    let roundNum = req.query.round;
+    if(!roundNum || isNaN(roundNum)){
+        return res.status(400).json({
+            success: false,
+            status: "bad request",
+        });
+    }
+  
+  DELETE.find({closed: true})
+  .sort({createdAt: -1})
+  .skip((roundNum - 1) * itemsPerRound)
+  .limit(itemsPerRound)
+  .populate("user", {name: 1, picture: 1})
+  .then((deleteReqs)=>{
+    let result = [];
+    for(let del of deleteReqs){
+      result.push({
+        _id: del._id,
+        userId: del.user._id,
+        userName: del.user.name,
+        userPicture: del.user.picture,
+        createdAt: del.createdAt
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      deleteReqs: result
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from GET /misc/mydata/delete: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error finding the delete requests"
+    });
+  });
+});
+
+
+
+// close a deletion request
+miscRouter.put("/mydata/delete/:reqId/close", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
+  DELETE.findOneAndUpdate({_id: req.params.reqId}, {$set:{closed: true}})
+  .then((delReq)=>{
+    if(!delReq){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true
+    });
+  })
+  .catch((err)=>{
+    console.log("Error from POST /misc/mydata/delete/:reqId/close: " + err);
+    return res.status(500).json({
+      success: false,
+      status: "error closing the delete request"
+    });
+  });
+});
+
 
 
 module.exports = miscRouter;
