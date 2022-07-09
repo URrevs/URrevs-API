@@ -9,7 +9,8 @@ const schema = mongoose.Schema;
 const hiddenSchema = new schema({
     review: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "cRev"
+        ref: "cRev",
+        index: true
     }
 }, { timestamps: true });
 

@@ -9,7 +9,8 @@ const schema = mongoose.Schema;
 const hiddenSchema = new schema({
     question: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "pQues"
+        ref: "pQues",
+        index: true
     }
 }, { timestamps: true });
 

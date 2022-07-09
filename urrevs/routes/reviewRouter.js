@@ -3154,7 +3154,15 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 
 
 
-
+/*
+  Hiding tracking algorithm:
+  steps:
+    1- if we want to hide, create a document holding the id of the hidden review/question
+      (the document must be unique)
+    2- if we want to unhide:
+      if the hide doc is created after the lastQuery date, delete the hide doc
+      if the hide doc is created after the lastQuery date, delete the hide doc and create a new unhide doc
+*/
 
 // hide a phone review
 reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
@@ -3167,7 +3175,7 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
       });
     }
 
-    PHONE_REVS_HIDDEN.create({review: req.params.revId})
+    PHONE_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true})
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -3199,7 +3207,7 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    COMPANY_REVS_HIDDEN.create({review: req.params.revId})
+    COMPANY_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true})
     .then((h)=>{
       return res.status(200).json({
         success: true

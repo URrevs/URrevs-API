@@ -4108,7 +4108,15 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 });
 
 
-
+/*
+  Hiding tracking algorithm:
+  steps:
+    1- if we want to hide, create a document holding the id of the hidden review/question
+      (the document must be unique)
+    2- if we want to unhide:
+      if the hide doc is created after the lastQuery date, delete the hide doc
+      if the hide doc is created after the lastQuery date, delete the hide doc and create a new unhide doc
+*/
 
 
 // hide a phone question
@@ -4122,7 +4130,7 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
       });
     }
 
-    PQUES_HIDDEN.create({question: req.params.quesId})
+    PQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true})
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -4156,7 +4164,7 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    CQUES_HIDDEN.create({question: req.params.quesId})
+    CQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true})
     .then((h)=>{
       return res.status(200).json({
         success: true
