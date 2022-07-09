@@ -49,6 +49,8 @@ const PHONE_REV_FULL_SCREEN = require("../models/phoneRevsFullScreen");
 const COMPANY_REVS_HATED = require("../models/companyRevsHated");
 const COMPANY_REVS_SEE_MORE = require("../models/companyRevsSeeMore");
 const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
+const PHONE_REVS_HIDDEN = require("../models/phoneRevsHidden");
+const COMPANY_REVS_HIDDEN = require("../models/companyRevsHidden");
 
 
 const config = require("../config");
@@ -3165,8 +3167,18 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
       });
     }
 
-    return res.status(200).json({
-      success: true
+    PHONE_REVS_HIDDEN.create({review: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/phone/:revId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{
@@ -3187,8 +3199,18 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    return res.status(200).json({
-      success: true
+    COMPANY_REVS_HIDDEN.create({review: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /reviews/company/:revId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden review"
+      });
     });
   })
   .catch((err)=>{

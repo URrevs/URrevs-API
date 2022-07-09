@@ -45,6 +45,8 @@ const PQUES_ACCEPTED_CHANGED = require("../models/phoneQuesAcceptedChanged");
 const CQUES_ACCEPTED = require("../models/companyQuesAccepted");
 const CQUES_ACCEPTED_REMOVED = require("../models/companyQuesAcceptedRemoved");
 const CQUES_ACCEPTED_CHANGED = require("../models/companyQuesAcceptedChanged");
+const PQUES_HIDDEN = require("../models/phoneQuesHidden");
+const CQUES_HIDDEN = require("../models/companyQuesHidden");
 
 const config = require("../config");
 
@@ -4120,9 +4122,20 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
       });
     }
 
-    return res.status(200).json({
-      success: true
+    PQUES_HIDDEN.create({question: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/:quesId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
+
   })
   .catch((err)=>{
     console.log("Error from /questions/phone/:quesId/hide: ", err);
@@ -4143,9 +4156,20 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    return res.status(200).json({
-      success: true
+    CQUES_HIDDEN.create({question: req.params.revId})
+    .then((h)=>{
+      return res.status(200).json({
+        success: true
+      });
+    })
+    .catch((err)=>{
+      console.log("Error from /questions/phone/:quesId/hide: ", err);
+      return res.status(500).json({
+        success: false,
+        status: "error tracking the hidden question"
+      });
     });
+
   })
   .catch((err)=>{
     console.log("Error from /questions/company/:quesId/hide: ", err);
