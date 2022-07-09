@@ -267,7 +267,8 @@ userRouter.get("/:userId/phones", cors.cors, rateLimit, (req, res, next)=>{
                 result.push({
                     _id: phone.phone._id,
                     name: phone.phone.name,
-                    type: "phone"
+                    type: "phone",
+                    verificationRatio: phone.verificationRatio
                 });
             }
             res.statusCode = 200;
