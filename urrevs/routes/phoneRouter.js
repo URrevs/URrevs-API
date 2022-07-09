@@ -739,6 +739,10 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             return res.status(404).json({success: false, status: "not found"});
         }
 
+        if(rev.verificationRatio != 0){
+            return res.status(403).json({success: false, status: "already verified"});
+        }
+
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){

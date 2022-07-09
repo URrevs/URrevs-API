@@ -3107,6 +3107,10 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
             return res.status(403).json({success: false, status: "not owned"});
         }
 
+        if(rev.verificationRatio != 0){
+          return res.status(403).json({success: false, status: "already verified"});
+        }
+
         let verificationRatio = 0;
 
         if(uAObj.isiPhone){
