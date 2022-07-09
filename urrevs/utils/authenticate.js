@@ -64,7 +64,8 @@ exports.authorize = (req) => {
                             points: user.absPoints,
                             refCode: user.refCode,
                             questionsAnswered: user.questionsAnswered,
-                            totalViews: user.totalViews
+                            totalViews: user.totalViews,
+                            requestedDelete: user.requestedDelete
                         }
                         return resolve({t: token, a: user.admin, p: prof});
                     }
@@ -94,7 +95,8 @@ exports.authorize = (req) => {
                                         points: newUser.absPoints,
                                         refCode: newUser.refCode,
                                         questionsAnswered: newUser.questionsAnswered,
-                                        totalViews: newUser.totalViews
+                                        totalViews: newUser.totalViews,
+                                        requestedDelete: newUser.requestedDelete
                                     }
                                     return resolve({t: token, a: newUser.admin, p: prof});
                                 }
@@ -187,6 +189,7 @@ exports.verifyUser = (req, res, next)=>{
                         blockedFromAnswer: tokenDoc.user.blockedFromAnswer,
                         blockedFromReplyComment: tokenDoc.user.blockedFromReplyComment,
                         blockedFromReplyAnswer: tokenDoc.user.blockedFromReplyAnswer,
+                        requestedDelete: tokenDoc.user.requestedDelete
                     };
                     return next();
                 }

@@ -152,6 +152,7 @@ userRouter.get("/profile", cors.cors, rateLimit, authenticate.verifyUser, (req, 
         result.points = req.user.absPoints;
         result.questionsAnswered = req.user.questionsAnswered;
         result.totalViews = req.user.totalViews;
+        result.requestedDelete = req.user.requestedDelete;
 
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
