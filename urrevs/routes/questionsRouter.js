@@ -47,6 +47,8 @@ const CQUES_ACCEPTED_REMOVED = require("../models/companyQuesAcceptedRemoved");
 const CQUES_ACCEPTED_CHANGED = require("../models/companyQuesAcceptedChanged");
 const PQUES_HIDDEN = require("../models/phoneQuesHidden");
 const CQUES_HIDDEN = require("../models/companyQuesHidden");
+const PQUES_UNHIDDEN = require("../models/phoneQuesUnhidden");
+const CQUES_UNHIDDEN = require("../models/companyQuesUnhidden");
 
 const config = require("../config");
 
@@ -4130,7 +4132,11 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
       });
     }
 
-    PQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true})
+    let proms = [];
+    proms.push(PQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true}));
+    proms.push(PQUES_UNHIDDEN.findOneAndDelete({question: req.params.quesId}));
+    
+    Promise.all(proms)
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -4143,7 +4149,6 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
         status: "error tracking the hidden question"
       });
     });
-
   })
   .catch((err)=>{
     console.log("Error from /questions/phone/:quesId/hide: ", err);
@@ -4164,7 +4169,11 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    CQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true})
+    let proms = [];
+    proms.push(CQUES_HIDDEN.findOneAndUpdate({question: req.params.quesId}, {}, {upsert: true}));
+    proms.push(CQUES_UNHIDDEN.findOneAndDelete({question: req.params.quesId}));
+    
+    Promise.all(proms)
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -4177,12 +4186,11 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
         status: "error tracking the hidden question"
       });
     });
-
   })
   .catch((err)=>{
     console.log("Error from /questions/company/:quesId/hide: ", err);
     return res.status(500).json({success: false, status: "error hiding the company question"});
-  });
+  })
 });
 
 
@@ -4190,8 +4198,24 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
 
 // unhide a phone question
 questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(PQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
@@ -4199,18 +4223,35 @@ questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.v
       });
     }
 
-    PQUES_HIDDEN.findOneAndDelete({question: req.params.quesId})
-    .then((h)=>{
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /questions/phone/:quesId/unhide: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "error tracking the hidden question"
-      });
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await PQUES_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /questions/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone question"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(PQUES_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(PQUES_UNHIDDEN.create({question: req.params.quesId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /questions/phone/:quesId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone question"});
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true
     });
   })
   .catch((err)=>{
@@ -4223,8 +4264,24 @@ questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.v
 
 // unhide a company question
 questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(CQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
@@ -4232,24 +4289,41 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
       });
     }
 
-    CQUES_HIDDEN.findOneAndDelete({question: req.params.quesId})
-    .then((h)=>{
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /questions/company/:quesId/unhide: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "error tracking the hidden question"
-      });
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await CQUES_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /questions/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company question"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(CQUES_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(CQUES_UNHIDDEN.create({question: req.params.quesId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /questions/company/:quesId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company question"});
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true
     });
   })
   .catch((err)=>{
-    console.log("Error from /questions/company/:quesId/unhide: ", err);
-    return res.status(500).json({success: false, status: "error unhiding the company question"});
-  });
+    console.log("Error from /questions/phone/:quesId/unhide: ", err);
+    return res.status(500).json({success: false, status: "error unhiding the phone question"});
+  })
 });
 
 

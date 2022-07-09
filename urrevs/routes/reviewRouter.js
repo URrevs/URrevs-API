@@ -51,6 +51,8 @@ const COMPANY_REVS_SEE_MORE = require("../models/companyRevsSeeMore");
 const COMPANY_REVS_FULL_SCREEN = require("../models/companyRevsFullScreen");
 const PHONE_REVS_HIDDEN = require("../models/phoneRevsHidden");
 const COMPANY_REVS_HIDDEN = require("../models/companyRevsHidden");
+const PHONE_REVS_UNHIDDEN = require("../models/phoneRevsUnhidden");
+const COMPANY_REVS_UNHIDDEN = require("../models/companyRevsUnhidden");
 
 
 const config = require("../config");
@@ -3157,7 +3159,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 /*
   Hiding tracking algorithm:
   steps:
-    1- if we want to hide, create a document holding the id of the hidden review/question
+    1- if we want to hide, create a document holding the id of the hidden review/question and delete the unhide doc
       (the document must be unique)
     2- if we want to unhide:
       if the hide doc is created after the lastQuery date, delete the hide doc
@@ -3175,7 +3177,11 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
       });
     }
 
-    PHONE_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true})
+    let proms = [];
+    proms.push(PHONE_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
+    proms.push(PHONE_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
+    
+    Promise.all(proms)
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -3207,7 +3213,11 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    COMPANY_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true})
+    let proms = [];
+    proms.push(COMPANY_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
+    proms.push(COMPANY_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
+    
+    Promise.all(proms)
     .then((h)=>{
       return res.status(200).json({
         success: true
@@ -3232,8 +3242,24 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
 
 // unhide a phone review
 reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(PHONE_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
@@ -3241,18 +3267,35 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
-    PHONE_REVS_HIDDEN.findOneAndDelete({review: req.params.revId})
-    .then((h)=>{
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /reviews/phone/:revId/unhide: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "error tracking the hidden review"
-      });
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await PHONE_REVS_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /reviews/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone review"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(PHONE_REVS_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(PHONE_REVS_UNHIDDEN.create({review: req.params.revId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /reviews/phone/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the phone review"});
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true
     });
   })
   .catch((err)=>{
@@ -3264,8 +3307,24 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
 
 // unhide a company review
 reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}})
-  .then((r)=>{
+  let proms = [];
+  proms.push(COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
+  proms.push(COMPANY_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
+
+  Promise.all(proms)
+  .then(async(results)=>{
+    let r = results[0];
+    let lastQueryDoc = results[1];
+    let lastQuery;
+
+    if(!lastQueryDoc){
+      lastQuery = new Date((process.env.AI_LAST_QUERY_DEFAULT || config.AI_LAST_QUERY_DEFAULT));
+    }
+    else{
+      lastQuery = lastQueryDoc.date;
+    }
+
     if(!r){
       return res.status(404).json({
         success: false,
@@ -3273,18 +3332,35 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
       });
     }
 
-    COMPANY_REVS_HIDDEN.findOneAndDelete({review: req.params.revId})
-    .then((h)=>{
-      return res.status(200).json({
-        success: true
-      });
-    })
-    .catch((err)=>{
-      console.log("Error from /reviews/company/:revId/unhide: ", err);
-      return res.status(500).json({
-        success: false,
-        status: "error tracking the hidden review"
-      });
+    let hideDoc = results[2];
+
+    if(hideDoc){
+      if(hideDoc.createdAt >= lastQuery){
+        try{
+          await COMPANY_REVS_HIDDEN.findByIdAndDelete(hideDoc._id);
+        }
+        catch(err){
+          console.log("Error from /reviews/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company review"});
+        }
+      }
+      else{
+        let proms1 = [];
+        proms1.push(COMPANY_REVS_HIDDEN.findByIdAndDelete(hideDoc._id));
+        proms1.push(COMPANY_REVS_UNHIDDEN.create({review: req.params.revId}));
+
+        try{
+          await Promise.all(proms1);
+        }
+        catch(err){
+          console.log("Error from /reviews/company/:revId/unhide: ", err);
+          return res.status(500).json({success: false, status: "error unhiding the company review"});
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true
     });
   })
   .catch((err)=>{
