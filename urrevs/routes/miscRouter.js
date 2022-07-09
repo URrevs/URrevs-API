@@ -429,7 +429,15 @@ miscRouter.put("/mydata/delete/undo", cors.cors, rateLimit, authenticate.verifyU
   proms.push(USER.findOneAndUpdate({_id: req.user._id}, {$set: {requestedDelete: false}}));
 
   Promise.all(proms)
-  .then((delReq)=>{
+  .then((results)=>{
+    let deleteReq = results[0];
+    if(!deleteReq){
+      return res.status(404).json({
+        success: false,
+        status: "not found"
+      });
+    }
+
     return res.status(200).json({
       success: true
     });
