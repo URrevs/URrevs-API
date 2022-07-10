@@ -330,15 +330,15 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
     if(verificationRatio == 0){
       numUnverified += 1;
+      if(numUnverified > x){
+        return res.status(403).json({
+          success: false,
+          status: "too many unverified"
+        });
+      }
     }
-
-    if(numUnverified > x){
-      return res.status(403).json({
-        success: false,
-        status: "too many unverified"
-      });
-    }
-
+    
+    
     // calculate the average company rating
     let oldAvgRating = company.avgRating;
     let oldTotalRevs = company.totalRevsCount;
