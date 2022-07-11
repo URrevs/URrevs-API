@@ -441,6 +441,16 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         let minCount = parseInt((process.env.MIN_COUNT || config.MIN_COUNT));
         grade = 30 * (count_filtered - minCount) / (max_count - minCount) + 10;
         grade = Math.round(grade);
+
+        let MAX_GRADE = parseInt(process.env.MAX_GRADE || config.MAX_GRADE);
+        let MIN_GRADE = parseInt(process.env.MIN_GRADE || config.MIN_GRADE);
+
+        if(grade > MAX_GRADE){
+          grade = MAX_GRADE;
+        }
+        else if(grade < MIN_GRADE){
+          grade = MIN_GRADE;
+        }
       }
 
       // give points to the user
