@@ -338,8 +338,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         });
       }
     }
+    else if(verificationRatio == -1){
+      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_APPLE || config.VERIFICATION_REV_POINTS_APPLE);
+
+    }
     else{
-      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
+      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
     }
     
     // calculate the average company rating
