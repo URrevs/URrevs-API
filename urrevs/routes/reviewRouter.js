@@ -204,6 +204,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   }
 
   let bonusPoints = 0; // if there is a valid referral code entered, the reviewer will get bonus points equal to the referral rev points
+  let bonusVerificationPoints = 0;
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
   let stage1Proms = [];
   stage1Proms.push(PHONE.findById(phoneId));
@@ -337,7 +338,9 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
         });
       }
     }
-    
+    else{
+      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
+    }
     
     // calculate the average company rating
     let oldAvgRating = company.avgRating;
@@ -442,7 +445,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
 
       // give points to the user
       let staeg3Proms = [];
-      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: grade + bonusPoints, absPoints: grade + bonusPoints}}));
+      let overallUserGrade = grade + bonusPoints + bonusVerificationPoints;
+      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: overallUserGrade, absPoints: overallUserGrade}}));
       staeg3Proms.push(PHONEREV.create({
         user: req.user._id,
         phone: phoneId,
@@ -505,7 +509,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
           res.status(200).json({
             success: true,
             review: resultRev,
-            earnedPoints: grade,
+            earnedPoints: overallUserGrade,
             useMobile: (uAObj.isMobile) ? true : false
           });
         })
@@ -3156,15 +3160,20 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
         }
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
+        let bonusVerificationPoints = 0;
         if(verificationRatio == 0){
           return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
+        }
+        else{
+          bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
         proms2.push(rev.save());
         proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: rev.phone._id}, {$set: {verificationRatio: verificationRatio}}));
         proms2.push(COMPANYREV.findOneAndUpdate({corresPrev: rev._id}, {$set: {verificationRatio: verificationRatio}}));
-    
+        proms2.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: bonusVerificationPoints, absPoints: bonusVerificationPoints}}));
+
         Promise.all(proms2)
         .then((results2)=>{
             return res.status(200).json({success: true, verificationRatio: verificationRatio});

@@ -26,6 +26,7 @@ const PHONECOMPARISON = require("../models/phoneComparison");
 const OWNED_PHONE = require("../models/ownedPhone");
 const PHONEREV = require("../models/phoneReview");
 const COMPANYREV = require("../models/companyReview");
+const USER = require("../models/user");
 
 const config = require("../config");
 
@@ -789,15 +790,20 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
         }
 
         // update the verification ratio in the owned phones, phone reviews, company reviews
+        let bonusVerificationPoints = 0;
         if(verificationRatio == 0){
             return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
+        }
+        else{
+            bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
         proms2.push(rev.save());
         proms2.push(OWNED_PHONE.findOneAndUpdate({user: req.user._id, phone: req.params.phoneId}, {$set: {verificationRatio: verificationRatio}}));
         proms2.push(COMPANYREV.findOneAndUpdate({corresPrev: rev._id}, {$set: {verificationRatio: verificationRatio}}));
-    
+        proms2.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: bonusVerificationPoints, absPoints: bonusVerificationPoints}}));
+
         Promise.all(proms2)
         .then((results2)=>{
             return res.status(200).json({success: true, verificationRatio: verificationRatio});
