@@ -270,6 +270,40 @@ leaderBoardRouter.get("/top", cors.cors, rateLimit, (req, res, next)=>{
 
 
 
+// get the top users of the latest competition (valid until a new competition is created)
+leaderBoardRouter.get("/top/latest", cors.cors, rateLimit, (req, res, next)=>{
+    let topUsers = parseInt(process.env.TOP_USERS || config.TOP_USERS);
+    // sort by comPoints
+    USER.find({}, {name: 1, picture: 1, comPoints: 1}).sort({comPoints: -1}).limit(topUsers)
+    .then((topDocs)=>{
+        let top = topDocs.map((user)=>{
+            return {
+                _id: user._id,
+                name: user.name,
+                picture: user.picture,
+                points: user.comPoints
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            users: top
+        });
+    })
+    .catch((err)=>{
+        console.log("Error from GET comPoints /competitions/top: ", err);
+        return res.status(500).json({
+            success: false,
+            status: "internal server error",
+            err: "find users error"
+        });
+    }); 
+});
+
+
+
+
+
 
 // get my rank
 leaderBoardRouter.get("/rank", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
