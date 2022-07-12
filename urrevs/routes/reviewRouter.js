@@ -270,8 +270,9 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     // you can't review the same phone twice
     // you can't have more than x unverified reviews
     let x = parseInt(process.env.MAX_UNVERIFIED_REVIEWS || config.MAX_UNVERIFIED_REVIEWS);
+    let maxVerified = parseInt(process.env.MAX_VERIFIED_REVIEWS || config.MAX_VERIFIED_REVIEWS);
     let numUnverified = 0;
-
+    let numVerified = 0;
     for(let p of owned){
 
       if(p.phone.equals(phoneId)){
@@ -283,6 +284,9 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
 
       if(p.verificationRatio == 0){
         numUnverified += 1;
+      }
+      else{
+        numVerified += 1;
       }
     }
 
@@ -348,12 +352,20 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
         });
       }
     }
-    else if(verificationRatio == -1){
-      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_APPLE || config.VERIFICATION_REV_POINTS_APPLE);
-
-    }
     else{
-      bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
+      if(numVerified + 1 > maxVerified){
+        return res.status(403).json({
+          success: false,
+          status: "too many verified"
+        });
+      }
+      if(verificationRatio == -1){
+        bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_APPLE || config.VERIFICATION_REV_POINTS_APPLE);
+  
+      }
+      else{
+        bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
+      }
     }
     
     // calculate the average company rating
