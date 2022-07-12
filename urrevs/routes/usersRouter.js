@@ -10,6 +10,8 @@ const useragent = require("express-useragent");
 const rateLimit = require("../utils/rateLimit/regular");
 const cors = require("../utils/cors");
 const authenticate = require("../utils/authenticate");
+const isThereAcompetition = require("../utils/isThereAcompetition");
+
 const config = require("../config");
 
 const USER = require("../models/user");
@@ -74,11 +76,19 @@ userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (
         return res.status(400).json({success: false, status: "not a mobile device"});
     }
 
-    USER.findOne({_id: req.user._id}).then((user)=>{
+    USER.findOne({_id: req.user._id}).then(async(user)=>{
         if(user){
+            // check if there is a currently running competition or not
+            let isCompetition = false;
+            try{
+            isCompetition = await isThereAcompetition();
+            }
+            catch(result){
+            isCompetition = result;
+            }
             if(!(user.loggedInUsingMobile)){
                 user.loggedInUsingMobile = true;
-                user.comPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
+                user.comPoints += (isCompetition)?parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE)):0;
                 user.absPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
                 user.save().then((user)=>{
                     res.statusCode = 200;

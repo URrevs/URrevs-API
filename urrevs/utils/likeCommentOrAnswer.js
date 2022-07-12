@@ -6,6 +6,8 @@
 const config = require("../config");
 const USER = require("../models/user");
 
+const isThereAcompetition = require("../utils/isThereAcompetition");
+
 module.exports = (resourceCollection, user, resourceId, likeCollection, resourceType)=>{
     return new Promise((resolve, reject)=>{
 
@@ -18,7 +20,7 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
 
             // check resource existence + increment the likes by 1
             resourceCollection.findOne({_id: resourceId, hidden: false}, {user: 1, likes: 1})
-            .then((resoruce)=>{
+            .then(async(resoruce)=>{
                 if(!resoruce){
                     return resolve(404);
                 }
@@ -35,8 +37,16 @@ module.exports = (resourceCollection, user, resourceId, likeCollection, resource
                 proms.push(resoruce.save());
                 
                 if(resourceType == "answer"){
+                    // check if there is a currently running competition or not
+                    let isCompetition = false;
+                    try{
+                    isCompetition = await isThereAcompetition();
+                    }
+                    catch(result){
+                    isCompetition = result;
+                    }
                     // if the resource is answer, give the answer author points
-                    proms.push(USER.findByIdAndUpdate(resoruce.user, {$inc: {comPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS), absPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}}))
+                    proms.push(USER.findByIdAndUpdate(resoruce.user, {$inc: {comPoints: (isCompetition)?parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS):0, absPoints: parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}}))
                 }
                 
                 Promise.all(proms)
