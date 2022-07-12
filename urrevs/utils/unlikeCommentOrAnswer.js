@@ -6,6 +6,8 @@
 const USER = require("../models/user");
 const config = require("../config");
 
+const isThereAcompetition = require("../utils/isThereAcompetition");
+
 module.exports = (resourceCollection, likeCollection, user, resourceId, resourceType)=>{
     return new Promise((resolve, reject)=>{
         likeCollection.findOneAndDelete({user: user, [resourceType]: resourceId})
@@ -25,9 +27,17 @@ module.exports = (resourceCollection, likeCollection, user, resourceId, resource
                     }
 
                     if(resourceType == "answer"){
+                        // check if there is a currently running competition or not
+                        let isCompetition = false;
+                        try{
+                        isCompetition = await isThereAcompetition();
+                        }
+                        catch(result){
+                        isCompetition = result;
+                        }
                         // if the resource is answer, deduct user points
                         try{
-                            await USER.findByIdAndUpdate(resource.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS), absPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}});
+                            await USER.findByIdAndUpdate(resource.user, {$inc: {comPoints: (isCompetition)?-parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS):0, absPoints: -parseInt(process.env.ANSWER_LIKE_POINTS || config.ANSWER_LIKE_POINTS)}});
                             return resolve(200);
                         }
                         catch(err){

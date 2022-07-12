@@ -25,6 +25,7 @@ const increaseShares = require("../utils/increaseShares");
 const addComment = require("../utils/addComment");
 const lameTrack = require("../utils/lameTrack");
 const mapUaToPhones = require("../utils/mapUaToPhones");
+const isThereAcompetition = require("../utils/isThereAcompetition");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -101,7 +102,7 @@ reviewRouter.options("*", cors.cors, (req, res, next)=>{
   23- send the phone review as a response
 */
 
-reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
   
   if(req.user.blockedFromReviews){
     return res.status(403).json({
@@ -203,6 +204,15 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
     });
   }
 
+  // check if there is a currently running competition or not
+  let isCompetition = false;
+  try{
+    isCompetition = await isThereAcompetition();
+  }
+  catch(result){
+    isCompetition = result;
+  }
+
   let bonusPoints = 0; // if there is a valid referral code entered, the reviewer will get bonus points equal to the referral rev points
   let bonusVerificationPoints = 0;
   // checking if the phone exists - checking if the company exists - checking if the user has already reviewed the phone - give points to the referral (if exists). the referral must not be the user himself
@@ -211,7 +221,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
   stage1Proms.push(COMPANY.findById(companyId));
   stage1Proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1}));
   if(refCode){
-    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS), absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: (isCompetition)?parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS):0, absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
     bonusPoints = parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS);
   }
   
@@ -460,7 +470,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, (req,
       // give points to the user
       let staeg3Proms = [];
       let overallUserGrade = grade + bonusPoints + bonusVerificationPoints;
-      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: overallUserGrade, absPoints: overallUserGrade}}));
+      staeg3Proms.push(USER.findByIdAndUpdate(req.user._id, {$inc: {comPoints: (isCompetition)?overallUserGrade:0, absPoints: overallUserGrade}}));
       staeg3Proms.push(PHONEREV.create({
         user: req.user._id,
         phone: phoneId,
@@ -1394,9 +1404,17 @@ reviewRouter.get("/company/on/:companyId", cors.cors, rateLimit, authenticate.ve
       4.3- create a new like document
       4.4- give points to the review author
 */
-reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
+reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
 
   // checking if the user already liked the review
+  // check if there is a currently running competition or not
+  let isCompetition = false;
+  try{
+    isCompetition = await isThereAcompetition();
+  }
+  catch(result){
+    isCompetition = result;
+  }
   PHONE_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}).then((like)=>{
     if(like){
       if(like.unliked == false){
@@ -1447,7 +1465,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
         // updating the like document to have the unliked = false
         proms2.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -1476,7 +1494,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
       // creating the like
       // create the like document - give points to the review author
       PHONEREV.findOne({_id: req.params.revId, hidden: false})
-      .then((rev)=>{
+      .then(async(rev)=>{
         if(!rev){
           return res.status(404).json({
             success: false,
@@ -1496,7 +1514,7 @@ reviewRouter.post("/phone/:revId/like", cors.cors, rateLimit, authenticate.verif
         let proms = [];
         proms.push(rev.save());
         proms.push(PHONE_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -1639,6 +1657,15 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
           lastQuery = lastQueryDoc.date;
         }
 
+        // check if there is a currently running competition or not
+        let isCompetition = false;
+        try{
+          isCompetition = await isThereAcompetition();
+        }
+        catch(result){
+          isCompetition = result;
+        }
+
         let proms = [];
         // modify the like to be unliked - remove points from the review author - create an unlike document
         if((like.createdAt < lastQuery && like.updatedAt < lastQuery) || 
@@ -1646,7 +1673,7 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
           proms.push(PHONE_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
         }
         proms.push(PHONE_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?-parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
@@ -1711,8 +1738,15 @@ reviewRouter.post("/phone/:revId/unlike", cors.cors, rateLimit, authenticate.ver
       4.3- create a new like document
       4.4- give points to the review author
 */
-reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-
+reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
+  // check if there is a currently running competition or not
+  let isCompetition = false;
+  try{
+    isCompetition = await isThereAcompetition();
+  }
+  catch(result){
+    isCompetition = result;
+  }
   // checking if the user already liked the review
   COMPANY_REVS_LIKES.findOne({user: req.user._id, review: req.params.revId}).then((like)=>{
     if(like){
@@ -1764,7 +1798,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
         // updating the like document to have the unliked = false
         proms2.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -1813,7 +1847,7 @@ reviewRouter.post("/company/:revId/like", cors.cors, rateLimit, authenticate.ver
         let proms = [];
         proms.push(rev.save());
         proms.push(COMPANY_REVS_LIKES.create({user: req.user._id, review: req.params.revId}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -1956,6 +1990,15 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
           lastQuery = lastQueryDoc.date;
         }
 
+        // check if there is a currently running competition or not
+        let isCompetition = false;
+        try{
+          isCompetition = await isThereAcompetition();
+        }
+        catch(result){
+          isCompetition = result;
+        }
+
         let proms = [];
         // modify the like to be unliked - remove points from the review author - create an unlike document
         if((like.createdAt < lastQuery && like.updatedAt < lastQuery) || 
@@ -1963,7 +2006,7 @@ reviewRouter.post("/company/:revId/unlike", cors.cors, rateLimit, authenticate.v
           proms.push(COMPANY_REVS_UNLIKES.create({user: req.user._id, review: req.params.revId}));
         }
         proms.push(COMPANY_REVS_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)), absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: rev.user}, {$inc: {comPoints: (isCompetition)?-parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS)):0, absPoints: -parseInt((process.env.REV_LIKE_POINTS|| config.REV_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({

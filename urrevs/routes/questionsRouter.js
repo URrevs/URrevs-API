@@ -16,6 +16,7 @@ const likeReply = require("../utils/likeReply");
 const unlikeReply = require("../utils/unlikeReply");
 const lameTrack = require("../utils/lameTrack");
 const increaseShares = require("../utils/increaseShares");
+const isThereAcompetition = require("../utils/isThereAcompetition");
 
 const USER = require("../models/user");
 const PHONE = require("../models/phone");
@@ -1183,7 +1184,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
-  .then((result)=>{
+  .then(async(result)=>{
     let question = result[0];
     let answer = result[1];
     let lastQueryDoc = result[2];
@@ -1224,13 +1225,22 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     if(!question.acceptedAns){
       // there is no accepted answer yet
       question.acceptedAns = answer._id;
       let proms1 = [];
       proms1.push(question.save());
       proms1.push(PQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
-      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms1.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
@@ -1272,8 +1282,8 @@ questionRouter.post("/phone/:quesId/answers/:ansId/accept", cors.cors, rateLimit
       //question.acceptedAns = answer._id;
       let proms2 = [];
       proms2.push(PQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
-      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: (isCompetition)?-parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
       proms2.push(PANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
@@ -1324,7 +1334,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
-  .then((result)=>{
+  .then(async(result)=>{
     let question = result[0];
     let answer = result[1];
     let lastQueryDoc = result[2];
@@ -1365,13 +1375,22 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     if(!question.acceptedAns){
       // there is no accepted answer yet
       question.acceptedAns = answer._id;
       let proms1 = [];
       proms1.push(question.save());
       proms1.push(CQUES_ACCEPTED_REMOVED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
-      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms1.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms1.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
 
       Promise.all(proms1)
@@ -1413,8 +1432,8 @@ questionRouter.post("/company/:quesId/answers/:ansId/accept", cors.cors, rateLim
       //question.acceptedAns = answer._id;
       let proms2 = [];
       proms2.push(CQUES.findOneAndUpdate({_id: question._id}, {$set: {acceptedAns: answer._id}}));
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
-      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(oldAns.user, {$inc: {comPoints: (isCompetition)?-parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOne({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: true}}));
       proms2.push(CANS.findByIdAndUpdate(oldAns, {$set: {accepted: false}}));
@@ -1488,7 +1507,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
-  .then((results)=>{
+  .then(async(results)=>{
     let question = results[0];
     let answer = results[1];
     let lastQueryDoc = results[2];
@@ -1529,6 +1548,15 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     if(!question.acceptedAns){
       // there is no accepted answer yet
       return res.status(400).json({
@@ -1548,7 +1576,7 @@ questionRouter.post("/phone/:quesId/answers/:ansId/reject", cors.cors, rateLimit
       question.acceptedAns = null;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?-parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(PQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(PANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
@@ -1619,7 +1647,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}));
 
   Promise.all(proms)
-  .then((results)=>{
+  .then(async(results)=>{
     let question = results[0];
     let answer = results[1];
     let lastQueryDoc = results[2];
@@ -1660,6 +1688,15 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     if(!question.acceptedAns){
       // there is no accepted answer yet
       return res.status(400).json({
@@ -1679,7 +1716,7 @@ questionRouter.post("/company/:quesId/answers/:ansId/reject", cors.cors, rateLim
       question.acceptedAns = null;
       let proms2 = [];
       proms2.push(question.save());
-      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS), absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
+      proms2.push(USER.findByIdAndUpdate(answer.user, {$inc: {comPoints: (isCompetition)?-parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS):0, absPoints: -parseInt(process.env.ANSWER_ACCEPTED_POINTS || config.ANSWER_ACCEPTED_POINTS)}}));
       proms2.push(CQUES_ACCEPTED.findOneAndDelete({user: req.user._id, question: question._id, createdAt: {$gte: lastQuery}}));
       proms2.push(CANS.findByIdAndUpdate(answer._id, {$set: {accepted: false}}));
 
@@ -3488,8 +3525,15 @@ questionRouter.put("/company/:reviewId/share", cors.cors, rateLimit, (req, res, 
       4.3- create a new like document
       4.4- give points to the question author
 */
-questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-
+questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
+  // check if there is a currently running competition or not
+  let isCompetition = false;
+  try{
+    isCompetition = await isThereAcompetition();
+  }
+  catch(result){
+    isCompetition = result;
+  }
   // checking if the user already liked the question
   PHONE_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}).then((like)=>{
     if(like){
@@ -3541,7 +3585,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
         // updating the like document to have the unliked = false
         proms2.push(PHONE_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -3590,7 +3634,7 @@ questionRouter.post("/phone/:quesId/like", cors.cors, rateLimit, authenticate.ve
         let proms = [];
         proms.push(ques.save());
         proms.push(PHONE_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -3737,6 +3781,15 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
           lastQuery = lastQueryDoc.date;
         }
 
+        // check if there is a currently running competition or not
+        let isCompetition = false;
+        try{
+          isCompetition = await isThereAcompetition();
+        }
+        catch(result){
+          isCompetition = result;
+        }
+        
         let proms = [];
         // modify the like to be unliked - remove points from the question author - create an unlike document
         if((like.createdAt < lastQuery && like.updatedAt < lastQuery) || 
@@ -3744,7 +3797,7 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
           proms.push(PHONE_QUES_UNLIKES.create({user: req.user._id, question: req.params.quesId}));
         }
         proms.push(PHONE_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?-parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
@@ -3811,8 +3864,15 @@ questionRouter.post("/phone/:quesId/unlike", cors.cors, rateLimit, authenticate.
       4.3- create a new like document
       4.4- give points to the question author
 */
-questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-
+questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
+  // check if there is a currently running competition or not
+  let isCompetition = false;
+  try{
+    isCompetition = await isThereAcompetition();
+  }
+  catch(result){
+    isCompetition = result;
+  }
   // checking if the user already liked the question
   COMPANY_QUES_LIKES.findOne({user: req.user._id, question: req.params.quesId}).then((like)=>{
     if(like){
@@ -3864,7 +3924,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         // updating the like document to have the unliked = false
         proms2.push(COMPANY_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: false}}));
         // giving points to the user
-        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms2.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
         Promise.all(proms2).then((result2)=>{
           return res.status(200).json({
             success: true
@@ -3913,7 +3973,7 @@ questionRouter.post("/company/:quesId/like", cors.cors, rateLimit, authenticate.
         let proms = [];
         proms.push(ques.save());
         proms.push(COMPANY_QUES_LIKES.create({user: req.user._id, question: req.params.quesId}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}))
         
         Promise.all(proms).then((result3)=>{
           return res.status(200).json({
@@ -4060,6 +4120,15 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
           lastQuery = lastQueryDoc.date;
         }
 
+        // check if there is a currently running competition or not
+        let isCompetition = false;
+        try{
+          isCompetition = await isThereAcompetition();
+        }
+        catch(result){
+          isCompetition = result;
+        }
+
         let proms = [];
         // modify the like to be unliked - remove points from the question author - create an unlike document
         if((like.createdAt < lastQuery && like.updatedAt < lastQuery) || 
@@ -4067,7 +4136,7 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
           proms.push(COMPANY_QUES_UNLIKES.create({user: req.user._id, question: req.params.quesId}));
         }
         proms.push(COMPANY_QUES_LIKES.findByIdAndUpdate(like._id, {$set: {unliked: true}}));
-        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)), absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
+        proms.push(USER.findOneAndUpdate({_id: ques.user}, {$inc: {comPoints: (isCompetition)?-parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS)):0, absPoints: -parseInt((process.env.QUES_LIKE_POINTS|| config.QUES_LIKE_POINTS))}}));
       
         Promise.all(proms).then((result)=>{
           return res.status(200).json({
