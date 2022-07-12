@@ -13,6 +13,7 @@ const COMPETITION = require("../models/competition");
 const USER = require("../models/user");
 const authenticate = require("../utils/authenticate");
 const config = require("../config");
+const isThereAcompetition = require("../utils/isThereAcompetition");
 
 
 // preflight
@@ -271,7 +272,23 @@ leaderBoardRouter.get("/top", cors.cors, rateLimit, (req, res, next)=>{
 
 
 // get the top users of the latest competition (valid until a new competition is created)
-leaderBoardRouter.get("/top/latest", cors.cors, rateLimit, (req, res, next)=>{
+leaderBoardRouter.get("/top/latest", cors.cors, rateLimit, async(req, res, next)=>{
+    
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
+    if(isCompetition == true){
+        return res.status(403).json({
+            success: false,
+            status: "running"
+        });
+    }
+    
     let topUsers = parseInt(process.env.TOP_USERS || config.TOP_USERS);
     // sort by comPoints
     USER.find({}, {name: 1, picture: 1, comPoints: 1}).sort({comPoints: -1}).limit(topUsers)
