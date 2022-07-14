@@ -50,8 +50,15 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
     let resultCques = [];
 
     if(req.user){
-        let userDoc = await USER.findByIdAndUpdate(req.user._id, {$inc: {currentRoundForRecommendation: 1}});
-        let roundNum = userDoc.currentRoundForRecommendation;
+        let roundNum = 1;
+        try{
+          let userDoc = await USER.findByIdAndUpdate(req.user._id, {$inc: {currentRoundForRecommendation: 1}});
+          roundNum = userDoc.currentRoundForRecommendation;
+        }
+        catch(err){
+          console.log("Error in finding user in GET /home/recommended: ", err);
+          return res.status(500).json({success: false, status: "process failed"});
+        }
         // get recommendations for authenticated user
         try{
             let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
