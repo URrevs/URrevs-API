@@ -57,7 +57,7 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
         }
         catch(err){
           console.log("Error in finding user in GET /home/recommended: ", err);
-          res.status(500).json({success: false, status: "process failed"});
+          return res.status(500).json({success: false, status: "process failed"});
         }
         // get recommendations for authenticated user
         try{
