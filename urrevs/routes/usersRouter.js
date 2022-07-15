@@ -69,12 +69,12 @@ userRouter.get("/authenticate", cors.cors, rateLimit, (req, res, next)=>{
 
 // give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
 userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-    let uA = req.headers['user-agent'];
-    let uAObj = useragent.parse(uA);
+    // let uA = req.headers['user-agent'];
+    // let uAObj = useragent.parse(uA);
 
-    if(!uAObj.isMobile){
-        return res.status(400).json({success: false, status: "not a mobile device"});
-    }
+    // if(!uAObj.isMobile){
+    //     return res.status(400).json({success: false, status: "not a mobile device"});
+    // }
 
     USER.findOne({_id: req.user._id}).then(async(user)=>{
         if(user){
