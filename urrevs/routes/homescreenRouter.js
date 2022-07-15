@@ -424,10 +424,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
             let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
             
             let proms = [];
-            proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-            proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+            proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
           
             Promise.all(proms)
             .then(async([pRevs, cRevs, pQues, cQues]) => {
@@ -1065,10 +1065,10 @@ homeRouter.get("/recommended", cors.cors, rateLimit, authenticate.verifyFlexible
           let itemsPerRound = parseInt((process.env.HOME_SCREEN|| config.HOME_SCREEN));
           
           let proms = [];
-          proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
-          proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CREVS.find({hidden: false}).sort({likes: -1, commentsCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(PQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("phone", {name: 1}).populate("user", {name: 1, picture: 1}));
+          proms.push(CQUES.find({hidden: false}).sort({upvotes: -1, ansCount: -1, createdAt: -1}).skip((roundNum - 1) * itemsPerRound).limit(itemsPerRound).populate("company", {name: 1}).populate("user", {name: 1, picture: 1}));
         
           Promise.all(proms)
           .then(async([pRevs, cRevs, pQues, cQues]) => {

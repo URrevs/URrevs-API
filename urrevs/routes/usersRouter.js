@@ -68,58 +68,42 @@ userRouter.get("/authenticate", cors.cors, rateLimit, (req, res, next)=>{
 
 
 // give points to the user who has logged in using his mobile phone (ONE TIME ONLY)
-userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, (req, res, next)=>{
-    let uA = req.headers['user-agent'];
-    let uAObj = useragent.parse(uA);
+userRouter.put("/login/mobile", cors.cors, rateLimit, authenticate.verifyUser, async(req, res, next)=>{
+    // let uA = req.headers['user-agent'];
+    // let uAObj = useragent.parse(uA);
 
-    if(!uAObj.isMobile){
-        return res.status(400).json({success: false, status: "not a mobile device"});
-    }
+    // if(!uAObj.isMobile){
+    //     return res.status(400).json({success: false, status: "not a mobile device"});
+    // }
 
-    USER.findOne({_id: req.user._id}).then(async(user)=>{
-        if(user){
-            // check if there is a currently running competition or not
-            let isCompetition = false;
-            try{
-            isCompetition = await isThereAcompetition();
-            }
-            catch(result){
-            isCompetition = result;
-            }
-            if(!(user.loggedInUsingMobile)){
-                user.loggedInUsingMobile = true;
-                user.comPoints += (isCompetition)?parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE)):0;
-                user.absPoints += parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE));
-                user.save().then((user)=>{
-                    res.statusCode = 200;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json({success: true, status: "points added successfully"});
-                })
-                .catch((err)=>{
-                    console.log("Error from /authenticate/mobile: ", err);
-                    res.statusCode = 500;
-                    res.setHeader("Content-Type", "application/json");
-                    res.json({success: false, status: "process failed"});
-                });
-            }
-            else{
-                res.statusCode = 400;
-                res.setHeader("Content-Type", "application/json");
-                res.json({success: true, status: "user already logged in using mobile before"});
-            }
-        }
-        else{
-            res.statusCode = 404;
-            res.setHeader("Content-Type", "application/json");
-            res.json({success: false, status: "you do not exist in the system"});
-        }
-    })
-    .catch((err)=>{
-        console.log("Error from /authenticate/mobile: ", err);
-        res.statusCode = 500;
-        res.setHeader("Content-Type", "application/json");
-        res.json({success: false, status: "process failed"});
-    });
+     // check if there is a currently running competition or not
+     let isCompetition = false;
+     try{
+     isCompetition = await isThereAcompetition();
+     }
+     catch(result){
+     isCompetition = result;
+     }
+     
+     if(!(req.user.loggedInUsingMobile)){
+        USER.findByIdAndUpdate(req.user._id, {$set: {loggedInUsingMobile: true}, $inc: {comPoints: (isCompetition)?parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE)):0, absPoints: parseInt((process.env.POINTS_FOR_SIGNING_IN_WITH_MOBILE || config.POINTS_FOR_SIGNING_IN_WITH_MOBILE))}})
+        .then((user)=>{
+             res.statusCode = 200;
+             res.setHeader("Content-Type", "application/json");
+             res.json({success: true, status: "points added successfully"});
+        })
+         .catch((err)=>{
+             console.log("Error from /authenticate/mobile: ", err);
+             res.statusCode = 500;
+             res.setHeader("Content-Type", "application/json");
+             res.json({success: false, status: "process failed"});
+        });
+     }
+     else{
+         res.statusCode = 400;
+         res.setHeader("Content-Type", "application/json");
+         res.json({success: true, status: "user already logged in using mobile before"});
+     }
 });
 
 

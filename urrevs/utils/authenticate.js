@@ -189,7 +189,8 @@ exports.verifyUser = (req, res, next)=>{
                         blockedFromAnswer: tokenDoc.user.blockedFromAnswer,
                         blockedFromReplyComment: tokenDoc.user.blockedFromReplyComment,
                         blockedFromReplyAnswer: tokenDoc.user.blockedFromReplyAnswer,
-                        requestedDelete: tokenDoc.user.requestedDelete
+                        requestedDelete: tokenDoc.user.requestedDelete,
+                        loggedInUsingMobile: tokenDoc.user.loggedInUsingMobile
                     };
                     return next();
                 }
