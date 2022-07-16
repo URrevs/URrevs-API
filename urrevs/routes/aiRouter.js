@@ -45,21 +45,28 @@ aiRouter.put("/lastquery/set", rateLimit, authenticate.verifyAPIkey("X-Api-Key")
 });
 
 
+const delay = (milliseconds)=>{
+  return new Promise((resolve, reject)=>{
+      setTimeout(()=>{
+          resolve();
+      }, milliseconds);
+  });
+}
 
 
 // activate stopping training services
-aiRouter.get("/training/services/stop", rateLimit, authenticate.verifyAPIkey("X-Api-Key"), (req, res, next)=>{
+aiRouter.get("/training/services/stop", rateLimit, authenticate.verifyAPIkey("X-Api-Key"), async(req, res, next)=>{
+  res.sendStatus(200);
+  await delay(2000);
   let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
   axios.get(process.env.AI_LINK + "/training/services/stop",
             {headers: {'X-Api-Key': process.env.AI_API_KEY}},
             {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })})
         .then(()=>{
             console.log("Activate stopping training services (SUCCESS)..........................");
-            res.sendStatus(200);
         })
         .catch((err)=>{
             console.log("Activate stopping training services (FAILURE)..........................", err);
-            res.sendStatus(500);
         });
 });
 
