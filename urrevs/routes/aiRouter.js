@@ -8,6 +8,10 @@ const aiRouter = express.Router();
 
 const authenticate = require("../utils/authenticate");
 const rateLimit = require("../utils/rateLimit/regular");
+const config = require("../config");
+
+const axios = require("axios");
+const https = require("https");
 
 const CONSTANT = require("../models/constants");
 const USER = require("../models/user");
@@ -39,6 +43,26 @@ aiRouter.put("/lastquery/set", rateLimit, authenticate.verifyAPIkey("X-Api-Key")
       });
     }
 });
+
+
+
+
+// activate stopping training services
+aiRouter.get("/training/services/stop", rateLimit, authenticate.verifyAPIkey("X-Api-Key"), (req, res, next)=>{
+  let TIMEOUT = process.env.TIMEOUT || config.TIMEOUT;
+  axios.get(process.env.AI_LINK + "/training/services/stop",
+            {headers: {'X-Api-Key': process.env.AI_API_KEY}},
+            {timeout: TIMEOUT, httpsAgent: new https.Agent({ keepAlive: true })})
+        .then(()=>{
+            console.log("Activate stopping training services (SUCCESS)..........................");
+            res.sendStatus(200);
+        })
+        .catch((err)=>{
+            console.log("Activate stopping training services (FAILURE)..........................", err);
+            res.sendStatus(500);
+        });
+});
+
 
 
 module.exports = aiRouter;
