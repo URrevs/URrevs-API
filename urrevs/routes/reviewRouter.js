@@ -221,7 +221,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
   stage1Proms.push(COMPANY.findById(companyId));
   stage1Proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1}));
   if(refCode){
-    stage1Proms.push(USER.findOneAndUpdate({refCode: refCode, _id: {$ne: req.user._id}}, {$inc: {comPoints: (isCompetition)?parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS):0, absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}}));
+    stage1Proms.push(USER.findOne({refCode: refCode, _id: {$ne: req.user._id}}));
     bonusPoints = parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS);
   }
   
@@ -263,14 +263,21 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     let ownDate = new Date(Date.parse(ownedDate));
     let relDate = new Date(Date.parse(phone.releaseDate))
 
-    if(ownDate.getYear() < relDate.getYear()){
-      return res.status(400).json({
-        success: false,
-        status: "past date"
-      });
-    }
+    // if(ownDate.getYear() < relDate.getYear()){
+    //   return res.status(400).json({
+    //     success: false,
+    //     status: "past date"
+    //   });
+    // }
 
-    if(ownDate.getMonth() < relDate.getMonth()){
+    // if(ownDate.getMonth() < relDate.getMonth()){
+    //   return res.status(400).json({
+    //     success: false,
+    //     status: "past date"
+    //   });
+    // }
+
+    if(ownDate < relDate){
       return res.status(400).json({
         success: false,
         status: "past date"
@@ -306,16 +313,6 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
         success: false,
         status: "phone and company do not match"
       });
-    }
-
-    if(refCode){
-      let referral = stage1Results[3];
-      if(!referral){
-        return res.status(400).json({
-          success: false,
-          status: "invalid referral code"
-        });
-      }
     }
 
     if(uAObj.isiPhone){
@@ -375,6 +372,17 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
       }
       else{
         bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
+      }
+    }
+
+    if(refCode){
+      let referral = stage1Results[3];
+      await USER.findOneAndUpdate({_id: referral._id}, {$inc: {comPoints: (isCompetition)?parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS):0, absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}});
+      if(!referral){
+        return res.status(400).json({
+          success: false,
+          status: "invalid referral code"
+        });
       }
     }
     
