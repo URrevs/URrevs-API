@@ -3274,7 +3274,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 // hide a phone review
 reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
-  .then((r)=>{
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
@@ -3282,9 +3282,19 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     let proms = [];
     proms.push(PHONE_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
     proms.push(PHONE_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
+    proms.push(USER.findByIdAndUpdate(r.user, {$inc: {comPoints: (isCompetition)?-Math.floor(r.totalGrade/2):0, absPoints: -Math.floor(r.totalGrade/2)}}));
     
     Promise.all(proms)
     .then((h)=>{
@@ -3310,7 +3320,7 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
 // hide a company review
 reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
-  .then((r)=>{
+  .then(async(r)=>{
     if(!r){
       return res.status(404).json({
         success: false,
@@ -3318,10 +3328,20 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
       });
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
     let proms = [];
     proms.push(COMPANY_REVS_HIDDEN.findOneAndUpdate({review: req.params.revId}, {}, {upsert: true}));
     proms.push(COMPANY_REVS_UNHIDDEN.findOneAndDelete({review: req.params.revId}));
-    
+    proms.push(USER.findByIdAndUpdate(r.user, {$inc: {comPoints: (isCompetition)?-Math.floor(r.totalGrade/2):0, absPoints: -Math.floor(r.totalGrade/2)}}));
+
     Promise.all(proms)
     .then((h)=>{
       return res.status(200).json({
