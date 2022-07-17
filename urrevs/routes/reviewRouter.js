@@ -3273,7 +3273,7 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
 
 // hide a phone review
 reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
+  PHONEREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$set: {hidden: true}})
   .then(async(r)=>{
     if(!r){
       return res.status(404).json({
@@ -3319,7 +3319,7 @@ reviewRouter.put("/phone/:revId/hide", cors.cors, rateLimit, authenticate.verify
 
 // hide a company review
 reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: true}})
+  COMPANYREV.findOneAndUpdate({_id: req.params.revId, hidden: false}, {$set: {hidden: true}})
   .then(async(r)=>{
     if(!r){
       return res.status(404).json({
@@ -3368,7 +3368,7 @@ reviewRouter.put("/company/:revId/hide", cors.cors, rateLimit, authenticate.veri
 // unhide a phone review
 reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   let proms = [];
-  proms.push(PHONEREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(PHONEREV.findOneAndUpdate({_id: req.params.revId, hidden: true}, {$set: {hidden: false}}))
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
   proms.push(PHONE_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
 
@@ -3450,7 +3450,7 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
 // unhide a company review
 reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   let proms = [];
-  proms.push(COMPANYREV.findByIdAndUpdate(req.params.revId, {$set: {hidden: false}}))
+  proms.push(COMPANYREV.findOneAndUpdate({_id: req.params.revId, hidden: true}, {$set: {hidden: false}}))
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
   proms.push(COMPANY_REVS_HIDDEN.findOne({review: req.params.revId}, {createdAt: 1}))
 
@@ -3534,7 +3534,7 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
 
 // hide a phone review comment
 reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  PHONE_REVS_COMMENTS.findOneAndUpdate({_id: req.params.commentId, hidden: false}, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3572,7 +3572,7 @@ reviewRouter.put("/phone/comments/:commentId/hide", cors.cors, rateLimit, authen
 
 // hide a company review comment
 reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: true}})
+  COMPANY_REVS_COMMENTS.findOneAndUpdate({_id: req.params.commentId, hidden: false}, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3611,7 +3611,7 @@ reviewRouter.put("/company/comments/:commentId/hide", cors.cors, rateLimit, auth
 
 // unhide a phone review comment
 reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PHONE_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  PHONE_REVS_COMMENTS.findOneAndUpdate({_id: req.params.commentId, hidden: true}, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3649,7 +3649,7 @@ reviewRouter.put("/phone/comments/:commentId/unhide", cors.cors, rateLimit, auth
 
 // unhide a company review comment
 reviewRouter.put("/company/comments/:commentId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  COMPANY_REVS_COMMENTS.findByIdAndUpdate(req.params.commentId, {$set: {hidden: false}})
+  COMPANY_REVS_COMMENTS.findOneAndUpdate({_id: req.params.commentId, hidden: true}, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -3698,6 +3698,9 @@ reviewRouter.put("/phone/comments/:commentId/replies/:replyId/hide", cors.cors, 
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == true){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = true;
         break;
       }
@@ -3733,6 +3736,9 @@ reviewRouter.put("/company/comments/:commentId/replies/:replyId/hide", cors.cors
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == true){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = true;
         break;
       }
@@ -3767,6 +3773,9 @@ reviewRouter.put("/phone/comments/:commentId/replies/:replyId/unhide", cors.cors
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == false){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = false;
         break;
       }
@@ -3802,6 +3811,9 @@ reviewRouter.put("/company/comments/:commentId/replies/:replyId/unhide", cors.co
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == false){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = false;
         break;
       }

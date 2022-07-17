@@ -4192,7 +4192,7 @@ questionRouter.post("/company/:quesId/unlike", cors.cors, rateLimit, authenticat
 
 // hide a phone question
 questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: true}})
+  PQUES.findOneAndUpdate({_id: req.params.quesId, hidden: false}, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -4229,7 +4229,7 @@ questionRouter.put("/phone/:quesId/hide", cors.cors, rateLimit, authenticate.ver
 
 // hide a company question
 questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: true}})
+  CQUES.findOneAndUpdate({_id: req.params.quesId, hidden: false}, {$set: {hidden: true}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -4268,7 +4268,7 @@ questionRouter.put("/company/:quesId/hide", cors.cors, rateLimit, authenticate.v
 // unhide a phone question
 questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   let proms = [];
-  proms.push(PQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(PQUES.findOneAndUpdate({_id: req.params.quesId, hidden: true}, {$set: {hidden: false}}))
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
   proms.push(PQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
 
@@ -4334,7 +4334,7 @@ questionRouter.put("/phone/:quesId/unhide", cors.cors, rateLimit, authenticate.v
 // unhide a company question
 questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
   let proms = [];
-  proms.push(CQUES.findByIdAndUpdate(req.params.quesId, {$set: {hidden: false}}))
+  proms.push(CQUES.findOneAndUpdate({_id: req.params.quesId, hidden: true}, {$set: {hidden: false}}))
   proms.push(CONSTANT.findOne({name: "AILastQuery"}, {date: 1, _id: 0}))
   proms.push(CQUES_HIDDEN.findOne({question: req.params.quesId}, {createdAt: 1}))
 
@@ -4399,7 +4399,7 @@ questionRouter.put("/company/:quesId/unhide", cors.cors, rateLimit, authenticate
 
 // hide a phone question answer
 questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
+  PANS.findOneAndUpdate({_id: req.params.ansId, hidden: false}, {$set: {hidden: true, accepted: false}})
   .then(async(r)=>{
     if(!r){
       return res.status(404).json({
@@ -4460,7 +4460,7 @@ questionRouter.put("/phone/answers/:ansId/hide", cors.cors, rateLimit, authentic
 
 // hide a company question answer
 questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: true, accepted: false}})
+  CANS.findOneAndUpdate({_id: req.params.ansId, hidden: false}, {$set: {hidden: true, accepted: false}})
   .then(async(r)=>{
     if(!r){
       return res.status(404).json({
@@ -4522,7 +4522,7 @@ questionRouter.put("/company/answers/:ansId/hide", cors.cors, rateLimit, authent
 
 // unhide a phone question answer
 questionRouter.put("/phone/answers/:ansId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  PANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: false}})
+  PANS.findOneAndUpdate({_id: req.params.ansId, hidden: true}, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -4561,7 +4561,7 @@ questionRouter.put("/phone/answers/:ansId/unhide", cors.cors, rateLimit, authent
 
 // unhide a company question answer
 questionRouter.put("/company/answers/:ansId/unhide", cors.cors, rateLimit, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next)=>{
-  CANS.findByIdAndUpdate(req.params.ansId, {$set: {hidden: false}})
+  CANS.findOneAndUpdate({_id: req.params.ansId, hidden: true}, {$set: {hidden: false}})
   .then((r)=>{
     if(!r){
       return res.status(404).json({
@@ -4609,6 +4609,9 @@ questionRouter.put("/phone/answers/:ansId/replies/:replyId/hide", cors.cors, rat
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == true){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = true;
         break;
       }
@@ -4642,6 +4645,9 @@ questionRouter.put("/company/answers/:ansId/replies/:replyId/hide", cors.cors, r
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == true){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = true;
         break;
       }
@@ -4677,6 +4683,9 @@ questionRouter.put("/phone/answers/:ansId/replies/:replyId/unhide", cors.cors, r
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == false){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = false;
         break;
       }
@@ -4710,6 +4719,9 @@ questionRouter.put("/company/answers/:ansId/replies/:replyId/unhide", cors.cors,
 
     for(let i = 0; i < comment.replies.length; i++){
       if(comment.replies[i]._id.equals(req.params.replyId)){
+        if(comment.replies[i].hidden == false){
+          return res.status(404).json({success: false, status: "not found"});
+        }
         comment.replies[i].hidden = false;
         break;
       }
