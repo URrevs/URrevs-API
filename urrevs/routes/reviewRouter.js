@@ -3419,6 +3419,23 @@ reviewRouter.put("/phone/:revId/unhide", cors.cors, rateLimit, authenticate.veri
       }
     }
 
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
+    try{
+      await USER.findByIdAndUpdate(r.user, {$inc: {comPoints: (isCompetition)?Math.floor(r.totalGrade/2):0, absPoints: Math.floor(r.totalGrade/2)}})
+    }
+    catch(err){
+      console.log("Error from /reviews/phone/:revId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error returning user points"});
+    }
+
     return res.status(200).json({
       success: true
     });
@@ -3482,6 +3499,23 @@ reviewRouter.put("/company/:revId/unhide", cors.cors, rateLimit, authenticate.ve
           return res.status(500).json({success: false, status: "error unhiding the company review"});
         }
       }
+    }
+
+    // check if there is a currently running competition or not
+    let isCompetition = false;
+    try{
+      isCompetition = await isThereAcompetition();
+    }
+    catch(result){
+      isCompetition = result;
+    }
+
+    try{
+      await USER.findByIdAndUpdate(r.user, {$inc: {comPoints: (isCompetition)?Math.floor(r.totalGrade/2):0, absPoints: Math.floor(r.totalGrade/2)}})
+    }
+    catch(err){
+      console.log("Error from /reviews/company/:revId/unhide: ", err);
+      return res.status(500).json({success: false, status: "error returning user points"});
     }
 
     return res.status(200).json({
