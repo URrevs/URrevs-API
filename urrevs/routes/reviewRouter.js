@@ -377,6 +377,12 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
 
     if(refCode){
       let referral = stage1Results[3];
+      if(!referral){
+        return res.status(400).json({
+          success: false,
+          status: "invalid referral code"
+        });
+      }
       try{
         await USER.findOneAndUpdate({_id: referral._id}, {$inc: {comPoints: (isCompetition)?parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS):0, absPoints: parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS)}});
       }
@@ -385,12 +391,6 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
         return res.status(500).json({
           success: false,
           status: "error updating user points"
-        });
-      }
-      if(!referral){
-        return res.status(400).json({
-          success: false,
-          status: "invalid referral code"
         });
       }
     }
