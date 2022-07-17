@@ -222,7 +222,6 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
   stage1Proms.push(OWNED_PHONE.find({user: req.user._id}, {phone: 1, verificationRatio: 1}));
   if(refCode){
     stage1Proms.push(USER.findOne({refCode: refCode, _id: {$ne: req.user._id}}));
-    bonusPoints = parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS);
   }
   
   // checking verification
@@ -393,6 +392,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
           status: "error updating user points"
         });
       }
+      bonusPoints = parseInt(process.env.REFFERAL_REV_POINTS || config.REFFERAL_REV_POINTS);
     }
     
     // calculate the average company rating
