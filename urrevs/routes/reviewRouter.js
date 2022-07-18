@@ -261,6 +261,7 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     
     let ownDate = new Date(Date.parse(ownedDate));
     let relDate = new Date(Date.parse(phone.releaseDate))
+    relDate.setDate(1);
 
     // if(ownDate.getYear() < relDate.getYear()){
     //   return res.status(400).json({
