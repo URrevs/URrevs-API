@@ -259,8 +259,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
       });
     }
     
-    let ownDate = new Date(Date.parse(ownedDate));
-    let relDate = new Date(Date.parse(phone.releaseDate))
+    let ownDate = new Date(ownedDate);
+    let relDate = new Date(phone.releaseDate)
     relDate.setDate(1);
 
     // if(ownDate.getYear() < relDate.getYear()){
@@ -276,6 +276,9 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     //     status: "past date"
     //   });
     // }
+
+    console.log(ownDate);
+    console.log(relDate);
 
     if(ownDate < relDate){
       return res.status(400).json({
