@@ -279,8 +279,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     //   });
     // }
 
-    console.log(ownDate);
-    console.log(relDate);
+    console.log("ownDate (owned date after mod): ", ownDate);
+    console.log("release date", relDate);
 
     if(ownDate < relDate){
       return res.status(400).json({
@@ -3267,7 +3267,12 @@ reviewRouter.put("/phone/:revId/verify", cors.cors, rateLimit, authenticate.veri
           return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
         }
         else{
-          bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
+          if(verificationRatio == -1){
+            bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_APPLE || config.VERIFICATION_REV_POINTS_APPLE);
+          }
+          else{
+            bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
+          }
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];

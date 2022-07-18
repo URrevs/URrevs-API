@@ -795,7 +795,12 @@ phoneRouter.put("/:phoneId/verify", cors.cors, rateLimit, authenticate.verifyUse
             return res.status(200).json({success: true, verificationRatio: rev.verificationRatio});
         }
         else{
-            bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS || config.VERIFICATION_REV_POINTS);
+            if(verificationRatio == -1){
+                bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_APPLE || config.VERIFICATION_REV_POINTS_APPLE);
+            }
+            else{
+                bonusVerificationPoints = parseInt(process.env.VERIFICATION_REV_POINTS_ANDROID || config.VERIFICATION_REV_POINTS_ANDROID);
+            }
         }
         rev.verificationRatio = verificationRatio;
         let proms2 = [];
