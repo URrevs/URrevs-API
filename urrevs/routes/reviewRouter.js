@@ -279,8 +279,8 @@ reviewRouter.post("/phone", cors.cors, rateLimit, authenticate.verifyUser, async
     //   });
     // }
 
-    console.log(ownDate);
-    console.log(relDate);
+    console.log("ownDate (owned date after mod): ", ownDate);
+    console.log("release date", relDate);
 
     if(ownDate < relDate){
       return res.status(400).json({
