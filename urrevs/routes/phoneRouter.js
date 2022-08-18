@@ -264,7 +264,7 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
                 let day = new Date(relDate).getDate();
                 let year = new Date(relDate).getFullYear();
                 let month = convertMonthNumToName(new Date(relDate).getMonth());
-                relDate = year + ", " + month + " " + (day<10)?"0"+day:day;
+                relDate = year + ", " + month + " " + ((day<10)?"0"+day:day);
             }
             result.releaseDate =  relDate;
             result.dimensions = specs.dimensions;
