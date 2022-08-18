@@ -575,7 +575,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
 
             console.log("Adding: ", newPhones[i].url);
 
-            let searchword = newPhones[i].name;
+            let searchWord = newPhones[i].name;
             searchWord = searchWord.trim();
   
             // replace multiple spaces with single space then convert to array
