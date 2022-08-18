@@ -30,6 +30,23 @@ const USER = require("../models/user");
 
 const config = require("../config");
 
+const convertMonthNumToName = (monthNum)=>{
+    switch(monthNum){
+        case 0: return "January";
+        case 1: return "February";
+        case 2: return "March";
+        case 3: return "April";
+        case 4: return "May";
+        case 5: return "June";
+        case 6: return "July";
+        case 7: return "August";
+        case 8: return "September";
+        case 9: return "October";
+        case 10: return "November";
+        case 11: return "December";
+    }
+}
+
 //--------------------------------------------------------------------
 
 phoneRouter.options("*", cors.cors, (req, res, next)=>{
@@ -146,7 +163,6 @@ phoneRouter.get("/:phoneId/company", cors.cors, rateLimit, (req, res, next)=>{
 });
 
 
-
 // get the phone's specs
 phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
     
@@ -243,7 +259,14 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             // result.priceInr = (specs.price)? (specs.price * eurToInr) : null;
             // result.priceGbp = (specs.price)? (specs.price * eurToGbp) : null;
             // result.priceEur = specs.price;
-            result.releaseDate =  specs.releaseDate;
+            let relDate = specs.releaseDate;
+            if(relDate.match("GMT")){
+                let day = relDate.getDate();
+                let year = relDate.getFullYear();
+                let month = convertMonth(relDate.getMonth());
+                relDate = year + "," + month + " " + day;
+            }
+            result.releaseDate =  relDate;
             result.dimensions = specs.dimensions;
             result.network = specs.newtork;
             result.screenType = specs.screenType;
