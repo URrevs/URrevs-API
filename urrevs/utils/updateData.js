@@ -1263,14 +1263,14 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               name: brand.name + ' ' + newPhones[i].name,
               company: brand._id,
               picture: newPhones[i].img,
-              releaseDate: launchReleaseDate
+              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date()
             });
 
             // creating a document for the specs of the phone
             await phoneSpecsCollection.create({
               _id: phoneBasic._id,
               price: isNaN(miscPrice)?null:miscPrice,
-              releaseDate: launchReleaseDate,
+              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date(),
               dimensions: bodyDimensions,
               newtork: networkTech,
               weight: bodyWeight,
@@ -1324,7 +1324,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               price: (miscPrice == null || isNaN(miscPrice))?null:miscPrice.toString(),
               name: brand.name + ' ' + newPhones[i].name,
               company: brand.name,
-              releaseDate: launchReleaseDate,
+              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date(),
               length: length,
               width: width,
               height: height,
