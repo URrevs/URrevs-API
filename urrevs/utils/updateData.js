@@ -575,8 +575,39 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
 
             console.log("Adding: ", newPhones[i].url);
 
+            let searchword = newPhones[i].name;
+            searchWord = searchWord.trim();
+  
+            // replace multiple spaces with single space then convert to array
+            searchWord = searchWord.replace(/\s+/g, " "); 
+            searchWord = searchWord.split("");
+            
+            // add braces to each word in search word then join the words together
+            searchWord = searchWord.map((word)=>{
+              word = "[{(" + word + ")}]";
+              return word;
+            });
+            searchWord = searchWord.join(" ");
+            
+            // escaping special characters
+            searchWord = searchWord.replace(/[\[\]\\^$*+?.()|{}]/g, "\\$&");
+          
+            // replace any space with any number of spaces
+            searchWord = searchWord.replace(/\s+/g, "\\s*"); 
+          
+            // allowing any number of round brackets
+            searchWord = searchWord.replace(/\(/g, "(*");
+            searchWord = searchWord.replace(/\)/g, ")*");
+          
+            // allowing any number of square brackets
+            searchWord = searchWord.replace(/\[/g, "[*");
+            searchWord = searchWord.replace(/\]/g, "]*");
+          
+            // allowing any number of curly brackets
+            searchWord = searchWord.replace(/\{/g, "{*");
+            searchWord = searchWord.replace(/\}/g, "}*");
 
-            let testDoc = await phoneCollection.findOneAndUpdate({name: {$regex: "^"+brand.name+" "+newPhones[i].name+"$", $options: "i"}}, {$set: {company: brand._id}});
+            let testDoc = await phoneCollection.findOneAndUpdate({name: {$regex: "^"+brand.name+" "+searchword+"$", $options: "i"}}, {$set: {company: brand._id}});
             if(testDoc){
               console.log("Phone: ", newPhones[i].name, " already exists in the DB. Upading company id");
               continue;
