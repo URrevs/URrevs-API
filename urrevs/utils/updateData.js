@@ -304,7 +304,8 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         // }];
 
         // initialize an update log (isUpdating: true)
-        updateLog =  await updateCollection.create({createdAt: new Date(), automatic: scheduled}); 
+        let updateDate = new Date();
+        updateLog =  await updateCollection.create({createdAt: updateDate, automatic: scheduled}); 
         
         
         // for each brand, do the following
@@ -1263,14 +1264,14 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               name: brand.name + ' ' + newPhones[i].name,
               company: brand._id,
               picture: newPhones[i].img,
-              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date()
+              releaseDate: (launchReleaseDate)? launchReleaseDate : updateDate
             });
 
             // creating a document for the specs of the phone
             await phoneSpecsCollection.create({
               _id: phoneBasic._id,
               price: isNaN(miscPrice)?null:miscPrice,
-              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date(),
+              releaseDate: (launchReleaseDate)? launchReleaseDate : updateDate,
               dimensions: bodyDimensions,
               newtork: networkTech,
               weight: bodyWeight,
@@ -1324,7 +1325,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
               price: (miscPrice == null || isNaN(miscPrice))?null:miscPrice.toString(),
               name: brand.name + ' ' + newPhones[i].name,
               company: brand.name,
-              releaseDate: (launchReleaseDate)? launchReleaseDate : new Date(),
+              releaseDate: (launchReleaseDate)? launchReleaseDate : updateDate,
               length: length,
               width: width,
               height: height,
