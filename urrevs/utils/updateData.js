@@ -299,8 +299,8 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         brands = await getBrandsInfo();
         
         // brands = [{
-        //   "name": "Realme",
-        //   "url": "realme-phones-118.php"
+        //   "name": "Cat",
+        //   "url": "cat-phones-89.php"
         // }];
 
         // initialize an update log (isUpdating: true)
@@ -351,7 +351,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 if(latestToxic[brands[x].name.toLowerCase()]){
                   // toxic brand
                   if(latestToxic[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
-                    console.log("Brand ", brands[x].name, " is considered toxic and its currently latest phone is toxic as well")
+                    console.log("Brand ", brands[x].name, " is considered toxic")
                     goNextPage = false;
                     break;
                   }
@@ -362,19 +362,23 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 }
                 else{
                   // new brand
-                  newPhones.push(phone);
+                  if(!(brand.name + ' ' + phone.name == latestPhone && latestPhone != null)){
+                    newPhones.push(phone);
+                  }
                 }
               }
               else if(latestSemiToxic[brands[x].name.toLowerCase()]){
                 // semi-toxic brand
                 if(latestSemiToxic[brands[x].name.toLowerCase()].toLowerCase() == phone.name.toLowerCase()){
-                  console.log("Brand ", brands[x].name, " is considered semi-toxic and its currently latest product is considered semi-toxic as well")
+                  console.log("Brand ", brands[x].name, " is considered semi-toxic")
                   goNextPage = false;
                   break;
                 }
                 else{
                   // semi-toxic brands but has new phones
-                  newPhones.push(phone);
+                  if(!(brand.name + ' ' + phone.name == latestPhone && latestPhone != null)){
+                    newPhones.push(phone);
+                  }
                 }
               }
               else if(brand.name + ' ' + phone.name == latestPhone && latestPhone != null){
