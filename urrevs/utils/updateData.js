@@ -357,7 +357,9 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                   }
                   else{
                     // toxic brands but has new phones
-                    newPhones.push(phone);
+                    if(!(brand.name + ' ' + phone.name == latestPhone && latestPhone != null)){
+                      newPhones.push(phone);
+                    }
                   }
                 }
                 else{
