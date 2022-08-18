@@ -362,9 +362,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
                 }
                 else{
                   // new brand
-                  if(!(brand.name + ' ' + phone.name == latestPhone && latestPhone != null)){
-                    newPhones.push(phone);
-                  }
+                  newPhones.push(phone);
                 }
               }
               else if(latestSemiToxic[brands[x].name.toLowerCase()]){
