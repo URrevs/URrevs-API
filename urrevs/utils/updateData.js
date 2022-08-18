@@ -607,7 +607,7 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
             searchWord = searchWord.replace(/\{/g, "{*");
             searchWord = searchWord.replace(/\}/g, "}*");
 
-            let testDoc = await phoneCollection.findOneAndUpdate({name: {$regex: "^"+brand.name+" "+searchword+"$", $options: "i"}}, {$set: {company: brand._id}});
+            let testDoc = await phoneCollection.findOneAndUpdate({name: {$regex: "^"+brand.name+" "+searchWord+"$", $options: "i"}}, {$set: {company: brand._id}});
             if(testDoc){
               console.log("Phone: ", newPhones[i].name, " already exists in the DB. Upading company id");
               continue;
