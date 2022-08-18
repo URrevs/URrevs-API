@@ -261,9 +261,9 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             // result.priceEur = specs.price;
             let relDate = specs.releaseDate;
             if(relDate.match("GMT")){
-                let day = relDate.getDate();
-                let year = relDate.getFullYear();
-                let month = convertMonth(relDate.getMonth());
+                let day = new Date(relDate).getDate();
+                let year = new Date(relDate).getFullYear();
+                let month = convertMonth(new Date(relDate).getMonth());
                 relDate = year + "," + month + " " + day;
             }
             result.releaseDate =  relDate;
