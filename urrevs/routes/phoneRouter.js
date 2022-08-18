@@ -263,7 +263,7 @@ phoneRouter.get("/:phoneId/specs", cors.cors, rateLimit, (req, res, next)=>{
             if(relDate.match("GMT")){
                 let day = new Date(relDate).getDate();
                 let year = new Date(relDate).getFullYear();
-                let month = convertMonth(new Date(relDate).getMonth());
+                let month = convertMonthNumToName(new Date(relDate).getMonth());
                 relDate = year + "," + month + " " + day;
             }
             result.releaseDate =  relDate;
