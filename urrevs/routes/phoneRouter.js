@@ -540,6 +540,15 @@ phoneRouter.get("/:phoneId/similar", cors.cors, rateLimit, (req, res, next)=>{
                 let upperLimit = (price + price20Percent);
                 let lowerLimit = (price - price20Percent);
                 let year = currentPhone.releaseDate.split(" ")[0];
+                
+                if(year[year.length-1] == ","){
+                    year = year.slice(0, year.length-1);
+                }
+
+                if(isNaN(year)){
+                    year = currentPhone.releaseDate.split(" ")[3];
+                }
+                
 
                
                 /*
