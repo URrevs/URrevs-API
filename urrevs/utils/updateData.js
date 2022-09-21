@@ -307,6 +307,28 @@ exports.updatePhonesFromSource = (brandCollection, phoneCollection, phoneSpecsCo
         let updateDate = new Date();
         updateLog =  await updateCollection.create({createdAt: updateDate, automatic: scheduled}); 
         
+        const convertMonthNumToName = (monthNum)=>{
+          switch(monthNum){
+              case 0: return "January";
+              case 1: return "February";
+              case 2: return "March";
+              case 3: return "April";
+              case 4: return "May";
+              case 5: return "June";
+              case 6: return "July";
+              case 7: return "August";
+              case 8: return "September";
+              case 9: return "October";
+              case 10: return "November";
+              case 11: return "December";
+          }
+        }
+
+        let day = new Date(updateDate).getDate();
+        let year = new Date(updateDate).getFullYear();
+        let month = convertMonthNumToName(new Date(updateDate).getMonth());
+        updateDate = year + ", " + month + " " + ((day<10)?"0"+day:day);
+        //console.log(updateDate)
         
         // for each brand, do the following
         for(let x=0; x<brands.length; x++){
